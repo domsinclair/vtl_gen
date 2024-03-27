@@ -794,7 +794,15 @@ class Vtl_faker extends Trongate
 
     }
 
-    public function createIndex(){
+    /**
+     * Function to create indexes for selected rows in a specified table.
+     *
+     * This function receives JSON data containing information about the selected table, rows, and index type.
+     * It processes the data, creates indexes based on the provided parameters, and provides feedback on the success
+     * or failure of each index creation operation.
+     */
+    public function createIndex(): void
+    {
         $rawPostData = file_get_contents('php://input');
         $postData = json_decode($rawPostData, true);
 
@@ -872,7 +880,10 @@ class Vtl_faker extends Trongate
 
     }
 
-    public function deleteIndex()
+    /**
+     * Delete indexes from the specified table.
+     */
+    public function deleteIndex(): void
     {
         $rawPostData = file_get_contents('php://input');
         $postData = json_decode($rawPostData, true);
@@ -925,6 +936,12 @@ class Vtl_faker extends Trongate
             echo 'No Rows were selected';
         }
     }
+
+        public function exportDatabase(){
+            $rawPostData = file_get_contents('php://input');
+            $postData = json_decode($rawPostData, true);
+            echo 'Post Data =',json($postData);
+        }
         function __destruct()
         {
             $this->parent_module = '';

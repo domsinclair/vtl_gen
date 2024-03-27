@@ -24,7 +24,7 @@ class Vtl_gen extends Trongate
      * @return void
      * @throws Exception
      */
-    public function index()
+    public function index(): void
     {
 //        if ($this->isDaylightSavingTime()) {
 //            echo "Daylight saving time is in effect.";
@@ -65,7 +65,8 @@ class Vtl_gen extends Trongate
 
     }
 
-    public function deleteIndex(){
+    public function deleteIndex(): void
+    {
 //        $sql = 'SHOW INDEX FROM trongate_pages';
 //        $result = $this->model->query($sql,'array');
 //        $data['result'] = $result;
@@ -76,7 +77,7 @@ class Vtl_gen extends Trongate
         $this->template('public', $data);
     }
 
-    private function setupTablesForDropdown()
+    private function setupTablesForDropdown(): array
     {
         $tables = $this->getAllTables();
         $starterArray = ['Select table...'];
@@ -84,7 +85,7 @@ class Vtl_gen extends Trongate
         return $tables;
     }
 
-    private function getAllTables()
+    private function getAllTables(): array
     {
         $tables = [];
         $sql = 'SHOW TABLES';
@@ -99,7 +100,7 @@ class Vtl_gen extends Trongate
         return $tables;
     }
 
-    private function getAllTablesAndTheirIndexes()
+    private function getAllTablesAndTheirIndexes(): array
     {
         $tablesAndIndexes = [];
 
@@ -119,7 +120,8 @@ class Vtl_gen extends Trongate
         return $tablesAndIndexes;
     }
 
-    public function createData(){
+    public function createData(): void
+    {
         $data['tables'] = $this->setupTablesForDropdown();
         $data['columnInfo'] = $this->getAllTablesAndTheirColumnData();
         $data['dropdownLabel'] = 'Tables in ' . DATABASE;
@@ -128,7 +130,7 @@ class Vtl_gen extends Trongate
         $this->template('public', $data);
     }
 
-    private function getAllTablesAndTheirColumnData()
+    private function getAllTablesAndTheirColumnData(): array
     {
         $tablesAndColumns = [];
 
@@ -148,7 +150,8 @@ class Vtl_gen extends Trongate
         return $tablesAndColumns;
     }
 
-    public function createIndex(){
+    public function createIndex(): void
+    {
         $data['tables'] = $this->setupTablesForDropdown();
         $data['columnInfo'] = $this->getAllTablesAndTheirColumnData();
         $data['dropdownLabel'] = 'Tables in ' . DATABASE;
@@ -157,21 +160,49 @@ class Vtl_gen extends Trongate
         $this->template('public', $data);
     }
 
-    public function deleteData(){
+    public function deleteData(): void
+    {
         $data['tables'] = $this->setupTablesForDatabaseAdmin();
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'deletedata';
         $this->template('public', $data);
     }
 
-    private function setupTablesForDatabaseAdmin()
+    public function export(): void
+    {
+        $data['tables'] = $this->setupTablesForDatabaseAdmin();
+        $data['view_module'] = 'vtl_gen';
+        $data['view_file'] = 'export';
+        $this->template('public', $data);
+    }
+    private function createExportScript(): array
+    {
+        ini_set('display_errors', 1);
+        ini_set('display_startup_errors', 1);
+        error_reporting(E_ALL);
+
+        $database = DATABASE;
+        $user = USER;
+        $pass = PASSWORD;
+        $host = HOST;
+        $dir = dirname(__FILE__) . '/dump.sql';
+
+        echo "<h3>Backing up database to `<code>{$dir}</code>`</h3>";
+
+        exec("mysqldump --user={$user} --password={$pass} --host={$host} {$database} --result-file={$dir} 2>&1", $output);
+
+        return $output;
+    }
+
+    private function setupTablesForDatabaseAdmin(): array
     {
         $tables = $this->getAllTables();
         $tables = array_merge( $tables);
         return $tables;
     }
 
-    public function clearData(){
+    public function clearData(): void
+    {
         // Retrieve raw POST data from the request body
         $rawPostData = file_get_contents('php://input');
 
@@ -235,7 +266,7 @@ class Vtl_gen extends Trongate
 
     }
 
-    protected function extractBaseType($type)
+    protected function extractBaseType($type): string
     {
         // Use a regular expression to match the base type
         if (preg_match('/^(\w+)(?:\(\d+\))?/', $type, $matches)) {

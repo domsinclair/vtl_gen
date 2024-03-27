@@ -15,7 +15,7 @@
     <?php echo anchor('vtl_gen/deleteData', 'Delete Data', array("class" => "button")); ?>
     <?php echo anchor('vtl_gen/createIndex', 'Create Index', array("class" => "button")); ?>
     <?php echo anchor('vtl_gen/deleteIndex', 'Delete Index', array("class" => "button")); ?>
-    <?php echo anchor('vtl_gen', 'Export Database', array("class" => "button")); ?>
+    <?php echo anchor('vtl_gen/export', 'Export Database', array("class" => "button")); ?>
 
 </div>
 
