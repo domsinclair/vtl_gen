@@ -1,12 +1,22 @@
 <?php
 
 require_once __DIR__ . '/../assets/vendor/autoload.php';
+include_once(__DIR__ . '/../assets/vendor/ifsnop/mysqldump-php/src/Ifsnop/Mysqldump/Mysqldump.php');
 
+use Ifsnop\Mysqldump as IMysqldump;
 class Vtl_faker extends Trongate
 {
     //protected mixed $settings;
 
     protected mixed $applicationModules;
+
+    private string $host = HOST;
+
+    private string $dbname = DATABASE;
+
+    private string $user = USER;
+
+    private string $pass = PASSWORD;
 
     /**
      * Constructor for the Vtl_faker class.
@@ -982,7 +992,6 @@ class Vtl_faker extends Trongate
                 'single-transaction' => true,
                 'reset-auto-increment' => true
             );
-            echo 'Dump Settings = ', json_encode($dumpSettings, JSON_PRETTY_PRINT);
             $pdoSettings = array(
                 PDO::ATTR_PERSISTENT => true,
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
