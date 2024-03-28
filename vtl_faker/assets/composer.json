@@ -1,5 +1,8 @@
 {
   "require-dev": {
     "fakerphp/faker": "^1.23"
+  },
+  "require": {
+    "ifsnop/mysqldump-php": "^2.12"
   }
 }

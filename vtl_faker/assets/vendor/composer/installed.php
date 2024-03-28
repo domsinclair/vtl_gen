@@ -3,7 +3,7 @@
         'name' => '__root__',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '10ff8d3620906f0b71a53eb0b6425db5c50afd95',
+        'reference' => '903b8640aa4cd735a396d95ff1d62f79e4d2cbaa',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         '__root__' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '10ff8d3620906f0b71a53eb0b6425db5c50afd95',
+            'reference' => '903b8640aa4cd735a396d95ff1d62f79e4d2cbaa',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -26,6 +26,15 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../fakerphp/faker',
             'aliases' => array(),
+            'dev_requirement' => true,
+        ),
+        'ifsnop/mysqldump-php' => array(
+            'pretty_version' => 'v2.12',
+            'version' => '2.12.0.0',
+            'reference' => '2d3a43fc0c49f23bf7dee392b0dd1f8c799f89d3',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../ifsnop/mysqldump-php',
+            'aliases' => array(),
             'dev_requirement' => false,
         ),
         'psr/container' => array(
@@ -35,7 +44,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../psr/container',
             'aliases' => array(),
-            'dev_requirement' => false,
+            'dev_requirement' => true,
         ),
         'symfony/deprecation-contracts' => array(
             'pretty_version' => 'v3.4.0',
@@ -44,7 +53,7 @@
             'type' => 'library',
             'install_path' => __DIR__ . '/../symfony/deprecation-contracts',
             'aliases' => array(),
-            'dev_requirement' => false,
+            'dev_requirement' => true,
         ),
     ),
 );

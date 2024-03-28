@@ -12,7 +12,7 @@
 <div class="flex">
     <?php echo anchor('vtl_gen/index', 'Back', array("class" => "button")); ?>
 </div>
-<p>Select those tables you wish to work with.</p>
+<p>Select those tables you wish to delete data from.</p>
 
 <table>
     <thead>

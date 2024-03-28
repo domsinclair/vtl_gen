@@ -34,28 +34,33 @@ class Vtl_gen extends Trongate
 //        $data['tables'] = $this->setupTablesForDropdown();
 //        $data['columnInfo'] = $this->getAllTablesAndTheirColumnData();
 //        $data['dropdownLabel'] = 'Tables in ' . DATABASE;
-
+        $image1 = BASE_URL.'vtl_gen_module/assets.help/images/exportdata1.jpg';
         $filepathIntro = __DIR__ . '/../assets/help/intro.md';
         $filepathCreateData = __DIR__ . '/../assets/help/createdata.md';
         $filepathDeleteData = __DIR__ . '/../assets/help/deletedata.md';
         $filepathCreateIndex = __DIR__ . '/../assets/help/createindex.md';
         $filepathDeleteIndex = __DIR__ . '/../assets/help/deleteindex.md';
+        $filepathExport = __DIR__ . '/../assets/help/export.md';
         $parsedown = new Parsedown();
         $fileIntro = fopen($filepathIntro, 'r');
         $fileCreateData = fopen($filepathCreateData, 'r');
         $fileDeleteData = fopen($filepathDeleteData, 'r');
         $fileCreateIndex = fopen($filepathCreateIndex, 'r');
         $fileDeleteIndex = fopen($filepathDeleteIndex, 'r');
+        $fileExport = fopen($filepathExport, 'r');
         $markdownIntro = $parsedown->text(fread($fileIntro, filesize($filepathIntro)));
         $markdownCreateData = $parsedown->text(fread($fileCreateData, filesize($filepathCreateData)));
         $markdownDeleteData = $parsedown->text(fread($fileDeleteData, filesize($filepathDeleteData)));
         $markdownCreateIndex = $parsedown->text(fread($fileCreateIndex, filesize($filepathCreateIndex)));
         $markdownDeleteIndex = $parsedown->text(fread($fileDeleteIndex, filesize($filepathDeleteIndex)));
+        $markdownExport = $parsedown->text(fread($fileExport, filesize($filepathExport)));
         $data['markdownIntro'] = $markdownIntro;
         $data['markdownCreateData'] = $markdownCreateData;
         $data['markdownDeleteData'] = $markdownDeleteData;
         $data['markdownCreateIndex'] = $markdownCreateIndex;
         $data['markdownDeleteIndex'] = $markdownDeleteIndex;
+        $data['markdownExport'] = $markdownExport;
+        $data['image1']=$image1;
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'vtl_gen';
         $this->template('public', $data);
@@ -67,9 +72,6 @@ class Vtl_gen extends Trongate
 
     public function deleteIndex(): void
     {
-//        $sql = 'SHOW INDEX FROM trongate_pages';
-//        $result = $this->model->query($sql,'array');
-//        $data['result'] = $result;
         $data['tables'] = $this->setupTablesForDropdown();
         $data['indexInfo'] = $this->getAllTablesAndTheirIndexes();
         $data['view_module'] = 'vtl_gen';

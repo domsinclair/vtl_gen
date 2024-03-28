@@ -15,6 +15,10 @@ class ComposerStaticInit662aedcc6781129fa81bbdd533343456
         array (
             'Psr\\Container\\' => 14,
         ),
+        'I' => 
+        array (
+            'Ifsnop\\' => 7,
+        ),
         'F' => 
         array (
             'Faker\\' => 6,
@@ -25,6 +29,10 @@ class ComposerStaticInit662aedcc6781129fa81bbdd533343456
         'Psr\\Container\\' => 
         array (
             0 => __DIR__ . '/..' . '/psr/container/src',
+        ),
+        'Ifsnop\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/ifsnop/mysqldump-php/src/Ifsnop',
         ),
         'Faker\\' => 
         array (

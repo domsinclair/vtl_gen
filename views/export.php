@@ -34,7 +34,18 @@
 <div class="flex">
     <button id="exportBtn" class="button">Export</button>
 </div>
-
+<div class="modal" id="response-modal" style="display: none">
+    <div class="modal-heading">Deleted Indexes</div>
+    <div class="modal-body">
+        <p id="the-response"></p>
+        <p class="text-center">
+            <button onclick="closeModal()" class="alt">Close</button>
+        </p>
+    </div>
+</div>
+<script src="<?= BASE_URL ?>js/app.js"></script>
+</body>
+</html>
 <script>
     document.getElementById("export-all").addEventListener("change", function() {
         var checkboxes = document.querySelectorAll("input[name='tables[]']");
@@ -122,20 +133,22 @@
         // Define a callback function to handle the response
         xhr.onload = function() {
             if (xhr.status === 200) {
+
                 // Handle the response here
                 var response = xhr.responseText;
-                // Display the response message or perform any other action
-                console.log(response);
+                openModal('response-modal');
+                const targetEl = document.getElementById('the-response');
+                targetEl.innerHTML = xhr.responseText;
+
+
             } else {
-                // Handle errors here
-                console.error('Request failed with status:', xhr.status);
+                openModal('response-modal');
+                const targetEl = document.getElementById('the-response');
+                targetEl.innerHTML = xhr.status;
             }
         };
     });
 </script>
-
-</body>
-</html>
 
 
 

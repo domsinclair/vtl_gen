@@ -89,7 +89,7 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
         document.getElementById('columnInfoTableContainer').insertAdjacentHTML('beforeend', containerHtml);
 
         // Add a button beneath the table (initially hidden)
-        var buttonHtml = '<button id="submitBtn" onclick="submitForm()" style="display: none;">Generate Faker Statement</button>';
+        var buttonHtml = '<button id="submitBtn" onclick="submitForm()" style="display: none;">Generate Fake Data</button>';
         document.getElementById('columnInfoTableContainer').insertAdjacentHTML('beforeend', buttonHtml);
 
 

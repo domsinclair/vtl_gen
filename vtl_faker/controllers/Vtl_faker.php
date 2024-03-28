@@ -937,10 +937,67 @@ class Vtl_faker extends Trongate
         }
     }
 
-        public function exportDatabase(){
+    /**
+     * Export database tables with specified settings.
+     * Retrieves post data containing information about tables to export and their settings.
+     * Exports the specified tables' structure and optionally skips exporting data for certain tables.
+     * Utilizes mysqldump-php library to perform the database export.
+     *
+     * @throws \Exception When there's an error during the export process.
+     *
+     * @return void
+     */
+        public function exportDatabase(): void
+        {
             $rawPostData = file_get_contents('php://input');
             $postData = json_decode($rawPostData, true);
-            echo 'Post Data =',json($postData);
+            // Extract tables to export from post data
+            $tablesToExport = $postData['tablesToExport'];
+
+            // Extract tables with data to export from post data
+            $tablesWithDataToExport = $postData['tablesWithDataToExport'];
+
+            // Array to store tables that should not have data exported
+            $tablesToSkipDataExport = [];
+
+            // Loop through tables to export
+            foreach ($tablesToExport as $table) {
+                // If the table is in tables with data to export, skip it
+                if (in_array($table, $tablesWithDataToExport)) {
+                    continue;
+                }
+                // Otherwise, add it to the tables to skip data export
+                $tablesToSkipDataExport[] = $table;
+
+            }
+
+            // Now $tablesToSkipDataExport contains tables whose data should not be exported
+            // and can be added to the dump settings.
+            $dumpSettings = array(
+                'include-tables' => $tablesToExport,
+                'no-data' => $tablesToSkipDataExport,
+                'add-drop-database' => true,
+                'no-create-db' => false,
+                'add-drop-table' => true,
+                'single-transaction' => true,
+                'reset-auto-increment' => true
+            );
+            echo 'Dump Settings = ', json_encode($dumpSettings, JSON_PRETTY_PRINT);
+            $pdoSettings = array(
+                PDO::ATTR_PERSISTENT => true,
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+            );
+
+            try {
+
+                $dump = new IMysqldump\Mysqldump('mysql:host='.$this->host.';dbname='.$this->dbname, $this->user, $this->pass, $dumpSettings, $pdoSettings);
+                $dateSuffix = date('Ymd_His'); // Current date and time format: YYYYMMDD_HHmmss
+                $backupFilename = __DIR__ . '/../assets/backups/backup_' . $dateSuffix . '.sql';
+                $dump->start($backupFilename);
+                echo 'Success, your database script ( backup'.$dateSuffix.'.sql )is in the folder modules/vtl_gen/vtl_faker/assets/backups';
+            } catch (\Exception $e) {
+                echo 'mysqldump-php error: ' . $e->getMessage();
+            }
         }
         function __destruct()
         {
