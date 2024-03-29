@@ -16,6 +16,7 @@
 </head>
 <body>
 <h1 class="text-center">Vtl Data Generator</h1>
+<?php //echo "<pre>"; var_dump($images); echo "</pre>"; ?>
 <div class="flex">
     <?php echo anchor('vtl_gen/createData', 'Create Data', array("class" => "button")); ?>
     <?php echo anchor('vtl_gen/deleteData', 'Delete Data', array("class" => "button")); ?>
@@ -37,19 +38,47 @@
         <hr style="height:2px;border-width:0;color:gray;background-color:gray">
     </div>
 </section>
-
+<section>
+    <h4 class="text-center">Create Data Gallery</h4>
+    <div class = "container flex">
+        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[0]?>" >
+        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[1]?>" >
+    </div>
+    <div class = "container flex">
+        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[2]?>" >
+        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[3]?>" >
+    </div>
+    <hr style="height:2px;border-width:0;color:gray;background-color:gray">
+</section>
 <section>
     <div class="container">
         <div><?php echo $markdownDeleteData; ?></div>
         <hr style="height:2px;border-width:0;color:gray;background-color:gray">
     </div>
 </section>
-
+<section>
+    <h4 class="text-center">Delete Data Gallery</h4>
+    <div class = "container flex">
+        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[7]?>" >
+    </div>
+    <hr style="height:2px;border-width:0;color:gray;background-color:gray">
+</section>
 <section>
     <div class="container">
         <div><?php echo $markdownCreateIndex; ?></div>
         <hr style="height:2px;border-width:0;color:gray;background-color:gray">
     </div>
+</section>
+<section>
+    <h4 class="text-center">Create Index Gallery</h4>
+    <div class = "container flex">
+        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[4]?>" >
+        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[5]?>" >
+    </div>
+    <div class = "container flex">
+        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[6]?>" >
+    </div>
+    <hr style="height:2px;border-width:0;color:gray;background-color:gray">
 </section>
 
 <section>
@@ -58,7 +87,18 @@
         <hr style="height:2px;border-width:0;color:gray;background-color:gray">
     </div>
 </section>
-
+<section>
+    <h4 class="text-center">Delete Index Gallery</h4>
+    <div class = "container flex">
+        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[8]?>" >
+        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[9]?>" >
+    </div>
+    <div class = "container flex">
+        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[10]?>" >
+        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[11]?>" >
+    </div>
+    <hr style="height:2px;border-width:0;color:gray;background-color:gray">
+</section>
 <section>
     <div class="container">
         <div><?php echo $markdownExport; ?></div>
@@ -66,8 +106,17 @@
 </section>
 
 <section>
-
-    <div><img src=".././assets/help/images/exportdata1.jpg" alt="" </div>
+    <h4 class="text-center">Export Database Gallery</h4>
+    <div class = "container flex">
+    <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[12]?>" >
+    <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[13]?>" >
+    </div>
 </section>
 </body>
 </html>
+
+<style>
+    .flex{
+        gap: 20px
+    }
+</style>

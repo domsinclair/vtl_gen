@@ -31,6 +31,7 @@
     <?php endforeach; ?>
     </tbody>
 </table>
+
 <div class="flex">
     <button id="exportBtn" class="button">Export</button>
 </div>
@@ -47,6 +48,8 @@
 </body>
 </html>
 <script>
+
+
     document.getElementById("export-all").addEventListener("change", function() {
         var checkboxes = document.querySelectorAll("input[name='tables[]']");
         checkboxes.forEach(function(checkbox) {

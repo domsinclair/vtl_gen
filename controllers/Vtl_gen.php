@@ -60,7 +60,7 @@ class Vtl_gen extends Trongate
         $data['markdownCreateIndex'] = $markdownCreateIndex;
         $data['markdownDeleteIndex'] = $markdownDeleteIndex;
         $data['markdownExport'] = $markdownExport;
-        $data['image1']=$image1;
+        $data['images']= $this -> getImagesForDisplay();
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'vtl_gen';
         $this->template('public', $data);
@@ -69,7 +69,19 @@ class Vtl_gen extends Trongate
 
 
     }
-
+    private function getImagesForDisplay(): array {
+        $basedir = APPPATH . 'modules/vtl_gen/assets/help/images/';
+        $arrFilename = array();
+        if ($handle = opendir($basedir)){
+            while (false !== ($filename = readdir($handle))){
+                if ($filename != "." && $filename != ".."){
+                    array_push($arrFilename, $filename);
+                }
+            }
+            closedir($handle);
+        }
+        return $arrFilename;
+    }
     public function deleteIndex(): void
     {
         $data['tables'] = $this->setupTablesForDropdown();

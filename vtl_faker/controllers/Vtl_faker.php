@@ -981,6 +981,45 @@ class Vtl_faker extends Trongate
 
             }
 
+            //if no dump settings are defined below the the following defaults will end up being applied
+
+//            $dumpSettingsDefault = array(
+//                'include-tables' => array(),
+//                'exclude-tables' => array(),
+//                'compress' => Mysqldump::NONE,
+//                'init_commands' => array(),
+//                'no-data' => array(),
+//                'if-not-exists' => false,
+//                'reset-auto-increment' => false,
+//                'add-drop-database' => false,
+//                'add-drop-table' => false,
+//                'add-drop-trigger' => true,
+//                'add-locks' => true,
+//                'complete-insert' => false,
+//                'databases' => false,
+//                'default-character-set' => Mysqldump::UTF8,
+//                'disable-keys' => true,
+//                'extended-insert' => true,
+//                'events' => false,
+//                'hex-blob' => true, /* faster than escaped content */
+//                'insert-ignore' => false,
+//                'net_buffer_length' => self::MAXLINESIZE,
+//                'no-autocommit' => true,
+//                'no-create-db' => false,
+//                'no-create-info' => false,
+//                'lock-tables' => true,
+//                'routines' => false,
+//                'single-transaction' => true,
+//                'skip-triggers' => false,
+//                'skip-tz-utc' => false,
+//                'skip-comments' => false,
+//                'skip-dump-date' => false,
+//                'skip-definer' => false,
+//                'where' => '',
+//                /* deprecated */
+//                'disable-foreign-keys-check' => true
+//            );
+
             // Now $tablesToSkipDataExport contains tables whose data should not be exported
             // and can be added to the dump settings.
             $dumpSettings = array(
@@ -997,11 +1036,22 @@ class Vtl_faker extends Trongate
                 PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
             );
 
-            try {
 
+            try {
+                //run a check to see if there is a backups directory in the assets folder
+                $folderPath =  __DIR__ . '/../assets/backups';
+                if (is_dir($folderPath)) {
+                        // we have a folder
+                } else {
+                    if (mkdir($folderPath, 0777, true)) {
+                        // Creates the directory recursively if it doesn't exist
+                    } else {
+                        echo "Failed to create folder!";
+                    }
+                }
                 $dump = new IMysqldump\Mysqldump('mysql:host='.$this->host.';dbname='.$this->dbname, $this->user, $this->pass, $dumpSettings, $pdoSettings);
                 $dateSuffix = date('Ymd_His'); // Current date and time format: YYYYMMDD_HHmmss
-                $backupFilename = __DIR__ . '/../assets/backups/backup_' . $dateSuffix . '.sql';
+                $backupFilename = $folderPath.'/backup_' . $dateSuffix . '.sql';
                 $dump->start($backupFilename);
                 echo 'Success, your database script ( backup'.$dateSuffix.'.sql )is in the folder modules/vtl_gen/vtl_faker/assets/backups';
             } catch (\Exception $e) {
