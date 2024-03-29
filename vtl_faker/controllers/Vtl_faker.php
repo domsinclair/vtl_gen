@@ -213,9 +213,18 @@ class Vtl_faker extends Trongate
                 $count = $this->generateMultipleRowsAndInsertViaApi($faker, $selectedRows, $selectedTable, $numRows);
                 echo 'Number of records inserted =  ', $count;
             }
-        } else {
-            // Inform the user if no API exists for the selected table
-            echo 'No API Exists';
+        } elseif($selectedRows != null && $apiJsonExists == false) {
+            // in this case we can still use the api logic as it happens
+            if ($numRows == 1) {
+                $newRecordId = $this->generateSingleRowAndInsertViaApi($faker, $selectedRows, $selectedTable);
+                echo 'New Record Id = ' . $newRecordId;
+            }
+            else{
+                //and again we can still use the api logic
+                $count = $this->generateMultipleRowsAndInsertViaApi($faker, $selectedRows, $selectedTable, $numRows);
+                echo 'Number of records inserted =  ', $count;
+            }
+
         }
     }
 
@@ -303,6 +312,60 @@ class Vtl_faker extends Trongate
             return $e->getMessage();
         }
 
+    }
+
+    //At some point this will need to be used potentially for creating transactions
+    private function generateSingleRowAndInsertViaSql($faker, $selectedRows, $selectedTable){
+        $columns = '(';
+        $values = '(';
+
+        // Iterate over selected rows to generate fake data for each field
+        foreach ($selectedRows as $key => $selectedRow) {
+            $originalFieldName = $selectedRow['field'];
+            $columns.= $originalFieldName;
+            // Process field name and generate fake value based on field specifications
+            $field = $this->processFieldName($selectedRow['field']);
+            $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field);
+            //This is where you should add code to generate custom field data
+            //it needs to be in the form of:
+            //  if($field === '<add your field name here') {
+            //      $fieldFakerStatement = $faker -> rgbColor();
+            //  }
+
+            // If no specific Faker statement is available, generate value based on field type
+            if ($fieldFakerStatement == "nothing") {
+                $typeWithBrackets = $selectedRow['type'];
+                $valueInBrackets = 0;
+                $type = $this->extractType($typeWithBrackets, $valueInBrackets);
+                $typeFakerStatement = $this->generateValueFromType($faker, $type, $valueInBrackets);
+                $values .= $typeFakerStatement;
+            } else {
+                $values .= $fieldFakerStatement;
+            }
+            // Check if the current element is the last one in the array
+            if ($key === array_key_last($selectedRows)) {
+                $columns .= ')';
+                $values .= ')';
+            } else {
+                $columns .= ',';
+                $values .= ',';
+            }
+        }
+
+        // now create the sql statement
+        $sql = 'INSERT INTO ' . $selectedTable . ' '.$columns . ' VALUES ' . $values. '; '.'SELECT LAST_INSERT_ID();';
+
+
+        try{
+            $data=[];
+            $result = $this->model->prepare_and_execute($sql,$data);
+            echo 'Result =' ,$result;
+            die();
+            return $this-> model->query($sql,'array');
+        }
+        catch (Exception $e) {
+            return $e->getMessage();
+        }
     }
 
 

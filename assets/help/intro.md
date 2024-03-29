@@ -4,7 +4,7 @@ work easier.
 It will allow you to create and delete data, create and delete indexes and generate an export script when it comes time
 to move your project into production.
 If this is the first time that you've used the Vtl Data Generator then please take some time and read through the help
-here to aquaint yourself with what the module does and how it does it.
+here to acquaint yourself with what the module does and how it does it.
 
 Once you are familiar with the way the module works you can just jump to whichever function you wish to employ from the
 navigation buttons at the top of the page.
