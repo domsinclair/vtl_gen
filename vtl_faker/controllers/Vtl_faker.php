@@ -296,7 +296,13 @@ class Vtl_faker extends Trongate
         // Decode the JSON object into an associative array
         $newValuesArray = json_decode($values, true);
         // Insert the generated data into the specified table using the model's insert method
-        return $this->model->insert($newValuesArray, $selectedTable);
+        try {
+            return $this->model->insert($newValuesArray, $selectedTable);
+        }
+        catch (Exception $e) {
+            return $e->getMessage();
+        }
+
     }
 
 
@@ -720,7 +726,13 @@ class Vtl_faker extends Trongate
                 }
             }
         }
-        return $this->model->insert_batch($selectedTable, $records);
+        try {
+            return $this->model->insert_batch($selectedTable, $records);
+        }
+        catch(Exception $e) {
+            return $e->getMessage();
+        }
+
     }
 
     /**
