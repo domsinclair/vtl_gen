@@ -1,9 +1,10 @@
 <?php
+// Include Parsedown library
 require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
 
 class Vtl_gen extends Trongate
 {
-
+// Function to check if daylight saving time is in effect
     function isDaylightSavingTime() {
         $currentTime = time();
         $timezone = new DateTimeZone(date_default_timezone_get());
@@ -21,6 +22,7 @@ class Vtl_gen extends Trongate
 
 
     /**
+     * Index function - renders the main page
      * @return void
      * @throws Exception
      */
@@ -34,41 +36,58 @@ class Vtl_gen extends Trongate
 //        $data['tables'] = $this->setupTablesForDropdown();
 //        $data['columnInfo'] = $this->getAllTablesAndTheirColumnData();
 //        $data['dropdownLabel'] = 'Tables in ' . DATABASE;
-        $image1 = BASE_URL.'vtl_gen_module/assets.help/images/exportdata1.jpg';
+        // Construct file paths for markdown files
         $filepathIntro = __DIR__ . '/../assets/help/intro.md';
         $filepathCreateData = __DIR__ . '/../assets/help/createdata.md';
         $filepathDeleteData = __DIR__ . '/../assets/help/deletedata.md';
         $filepathCreateIndex = __DIR__ . '/../assets/help/createindex.md';
         $filepathDeleteIndex = __DIR__ . '/../assets/help/deleteindex.md';
         $filepathExport = __DIR__ . '/../assets/help/export.md';
+
+        // Initialize Parsedown
         $parsedown = new Parsedown();
+
+        // Open markdown files
         $fileIntro = fopen($filepathIntro, 'r');
         $fileCreateData = fopen($filepathCreateData, 'r');
         $fileDeleteData = fopen($filepathDeleteData, 'r');
         $fileCreateIndex = fopen($filepathCreateIndex, 'r');
         $fileDeleteIndex = fopen($filepathDeleteIndex, 'r');
         $fileExport = fopen($filepathExport, 'r');
+
+        // Read markdown content and parse it
         $markdownIntro = $parsedown->text(fread($fileIntro, filesize($filepathIntro)));
         $markdownCreateData = $parsedown->text(fread($fileCreateData, filesize($filepathCreateData)));
         $markdownDeleteData = $parsedown->text(fread($fileDeleteData, filesize($filepathDeleteData)));
         $markdownCreateIndex = $parsedown->text(fread($fileCreateIndex, filesize($filepathCreateIndex)));
         $markdownDeleteIndex = $parsedown->text(fread($fileDeleteIndex, filesize($filepathDeleteIndex)));
         $markdownExport = $parsedown->text(fread($fileExport, filesize($filepathExport)));
+
+        // Close markdown files
+        fclose($fileIntro);
+        fclose($fileCreateData);
+        fclose($fileDeleteData);
+        fclose($fileCreateIndex);
+        fclose($fileDeleteIndex);
+        fclose($fileExport);
+
+        // Store parsed markdown content in data array
         $data['markdownIntro'] = $markdownIntro;
         $data['markdownCreateData'] = $markdownCreateData;
         $data['markdownDeleteData'] = $markdownDeleteData;
         $data['markdownCreateIndex'] = $markdownCreateIndex;
         $data['markdownDeleteIndex'] = $markdownDeleteIndex;
         $data['markdownExport'] = $markdownExport;
+
+        // Get images for display
         $data['images']= $this -> getImagesForDisplay();
+
+
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'vtl_gen';
         $this->template('public', $data);
-
-
-
-
     }
+    // Function to get images for display
     private function getImagesForDisplay(): array {
         $basedir = APPPATH . 'modules/vtl_gen/assets/help/images/';
         $arrFilename = array();
@@ -82,6 +101,8 @@ class Vtl_gen extends Trongate
         }
         return $arrFilename;
     }
+
+    // Function to render delete index page
     public function deleteIndex(): void
     {
         $data['tables'] = $this->setupTablesForDropdown();
@@ -91,6 +112,8 @@ class Vtl_gen extends Trongate
         $this->template('public', $data);
     }
 
+
+    // Function to setup tables for dropdown
     private function setupTablesForDropdown(): array
     {
         $tables = $this->getAllTables();

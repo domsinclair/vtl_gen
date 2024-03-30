@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../assets/vendor/autoload.php';
+require_once __DIR__ . '/../assets/vtl_faker_config.php';
 include_once(__DIR__ . '/../assets/vendor/ifsnop/mysqldump-php/src/Ifsnop/Mysqldump/Mysqldump.php');
 
 use Ifsnop\Mysqldump as IMysqldump;
@@ -34,9 +35,9 @@ class Vtl_faker extends Trongate
 
         // Initialize the Faker instance
         $faker = null;
-        $this->$faker = \Faker\Factory::create('en_GB');
+        $this->$faker = \Faker\Factory::create(FAKER_LOCALE);
 
-        //Get a list of all modules in the application and whether or not they have an api.
+        //Get a list of all modules in the application and whether they have an api.
         $this->applicationModules = $this -> list_all_modules();
 
 
