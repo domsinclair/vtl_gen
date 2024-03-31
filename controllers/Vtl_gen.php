@@ -112,6 +112,13 @@ class Vtl_gen extends Trongate
         $this->template('public', $data);
     }
 
+    public function showData(): void
+    {
+        $data['tables'] = $this->setupTablesForDropdown();
+        $data['view_module'] = 'vtl_gen';
+        $data['view_file'] = 'showdata';
+        $this->template('public', $data);
+    }
 
     // Function to setup tables for dropdown
     private function setupTablesForDropdown(): array
