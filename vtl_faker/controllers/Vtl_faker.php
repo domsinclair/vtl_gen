@@ -19,9 +19,7 @@ class Vtl_faker extends Trongate
 
     private string $pass = PASSWORD;
 
-    //used for pagination
-    private $default_limit = 20;
-    private $per_page_options = array(10, 20, 50, 100);
+
 
     /**
      * Constructor for the Vtl_faker class.
@@ -1143,64 +1141,7 @@ class Vtl_faker extends Trongate
             }
         }
 
-        public function retrieveDataFromSelectedTable(){
-            $this->module('trongate_security');
-            $this->trongate_security->_make_sure_allowed();
-            $params =[];
-            $sql = 'SELECT * From orders';
-            $result = $this->model->query_bind($sql, $params, 'object');
-            $rows = $this -> _reduce_rows($result);
-            print_r($rows);
-        }
 
-    function _reduce_rows(array $all_rows): array {
-        $rows = [];
-        $start_index = $this->_get_offset();
-        $limit = $this->_get_limit();
-        $end_index = $start_index + $limit;
-
-        $count = -1;
-        foreach ($all_rows as $row) {
-            $count++;
-            if (($count>=$start_index) && ($count<$end_index)) {
-                $rows[] = $row;
-            }
-        }
-
-        return $rows;
-    }
-
-    /**
-     * Get the limit for pagination.
-     *
-     * @return int Limit for pagination.
-     */
-    function _get_limit(): int {
-        if (isset($_SESSION['selected_per_page'])) {
-            $limit = $this->per_page_options[$_SESSION['selected_per_page']];
-        } else {
-            $limit = $this->default_limit;
-        }
-
-        return $limit;
-    }
-
-    /**
-     * Get the offset for pagination.
-     *
-     * @return int Offset for pagination.
-     */
-    function _get_offset(): int {
-        $page_num = (int) segment(3);
-
-        if ($page_num>1) {
-            $offset = ($page_num-1)*$this->_get_limit();
-        } else {
-            $offset = 0;
-        }
-
-        return $offset;
-    }
         function __destruct()
         {
             $this->parent_module = '';

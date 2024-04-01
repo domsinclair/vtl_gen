@@ -12,16 +12,44 @@
 <div class="flex">
     <?php echo anchor('vtl_gen/index', 'Back', array("class" => "button")); ?>
 </div>
-<p>Select the table in the database from the drop down below for which you wish to see the data.</p>
-<?php
-$tableChoiceAttr['id'] = 'tableChoiceDropdown';
-$tableChoiceAttr['onchange'] = 'selectedTable()';
-echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
+<div>
+    <?php echo Pagination::display($pagination_data); ?>
+</div>
 
+
+<?php
+// Check if rows data exists and has rows
+if (!empty($rows)) {
+    ?>
+    <table>
+        <thead>
+        <tr>
+            <?php foreach (array_keys((array)$data['rows'][0]) as $header): ?>
+                <th><?= $header ?></th>
+            <?php endforeach; ?>
+        </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($data['rows'] as $row): ?>
+            <tr>
+                <?php foreach ($row as $value): ?>
+                    <td><?= $value ?></td>
+                <?php endforeach; ?>
+            </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+
+
+<?php
+    if(count($rows)>9) {
+        unset($pagination_data['include_showing_statement']);
+        echo Pagination::display($pagination_data);
+    }
+} else {
+    echo "There is no data in the table that you selected.";
+}
 ?>
 
-<div class="flex">
-    <?php echo anchor('vtl_gen-vtl_faker/retrieveDataFromSelectedTable', 'Back', array("class" => "button")); ?>
-</div>-
 </body>
 </html>
