@@ -12,9 +12,11 @@
 <div class="flex">
     <?php echo anchor('vtl_gen/index', 'Back', array("class" => "button")); ?>
 </div>
-<div>
-    <?php echo Pagination::display($pagination_data); ?>
-</div>
+<section>
+    <div>
+        <?php echo Pagination::display($pagination_data); ?>
+    </div>
+</section>
 
 
 <?php

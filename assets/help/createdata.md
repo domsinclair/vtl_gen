@@ -75,6 +75,32 @@ transaction will be employed rather than the api batch insert.
 
 Once the operation has been completed a modal popup will inform you of the results.
 
+#### The Inserted Data is not very Realistic
+
+The first thing that you should do in this instance is to check that you have correctly set the FAKER_LOCALE to your own locale. That will greatly improve things like address and name generation.
+
+If the generator is able to use field names as the key to generation your end results will be better, falling back to type is not ideal, but at least it does provide some data to work with.
+
+It is possible to create very realistic data but to do so involves a great deal of customisation. 
+
+#### Images
+
+The Vtl Data Generator ships with a number of images (all of one of my dogs as it happens) that will be used by the generator to add image names to your data tables.
+There are some important caveats to this.  The first is that , currently at least, only the following field names will end up with a valid image name in the database.
+- Picture
+- Picture Url
+- Product Image
+- Product Image Url
+- Image
+- Image Url
+
+> <b> Remember that when working with field names the generator will convert everything to lowercase and strip out all spaces and underscores.</b>
+
+The assumption behind doing it this way is that you will likely use Trongate's BASE_URL to generate links back to the actual image location.
+
+In the case of the Vtl Data Generator the provided images can be found at this location  vtl_gen/vtl_faker/assets/images
+
+
 #### Current Limitations
 
 The biggest issue faced at present is with some, but not all, of the basic tables that form part of a basic Trongate
@@ -84,5 +110,5 @@ need to refer to those tables from your own tables.
 My current thoughts are that maybe a predefined number of users and associate levels should be created but I'm still
 undecided on that point.
 
-There is currently no inbuilt method to generate images (or image links).
+
 

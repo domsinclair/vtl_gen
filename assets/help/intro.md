@@ -9,6 +9,12 @@ here to acquaint yourself with what the module does and how it does it.
 Once you are familiar with the way the module works you can just jump to whichever function you wish to employ from the
 navigation buttons at the top of the page.
 
+#### Issues
+
+If you find an issue with the VTL Data Generator then pleas report it [here](https://github.com/domsinclair/vtl_gen/issues). Items reported on github will automatically generate an email to me and as such you're likely to get a faster response.  General questions can of course be raised on the Trongate Help Bar.
+
+Please bear in mind that it's not always possible to respond immediately.
+
 #### Disclaimer
 
 The free version of this is supplied as is with no implied warranty. The code is open source and you are free to do with

@@ -16,15 +16,7 @@
 </head>
 <body>
 <h1 class="text-center">Vtl Data Generator</h1>
-<?php //echo "<pre>"; var_dump($images); echo "</pre>"; ?>
-<!--<div class="flex">-->
-<!--    --><?php //echo anchor('vtl_gen/createData', 'Create Data', array("class" => "button")); ?>
-<!--    --><?php //echo anchor('vtl_gen/createData', 'Show Data', array("class" => "button")); ?>
-<!--    --><?php //echo anchor('vtl_gen/deleteData', 'Delete Data', array("class" => "button")); ?>
-<!--    --><?php //echo anchor('vtl_gen/createIndex', 'Create Index', array("class" => "button")); ?>
-<!--    --><?php //echo anchor('vtl_gen/deleteIndex', 'Delete Index', array("class" => "button")); ?>
-<!--    --><?php //echo anchor('vtl_gen/export', 'Export Database', array("class" => "button")); ?>
-<!--</div>-->
+
 <div class="grid-container">
     <div class="grid-item data-heading" colspan="3">Data</div>
     <div class="grid-item index-heading" colspan="2">Indexes</div>
@@ -71,6 +63,12 @@
         <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[3]?>" >
     </div>
     <hr style="height:2px;border-width:0;color:gray;background-color:gray">
+</section>
+<section>
+    <div class="container">
+        <div><?php echo $markdownShowData; ?></div>
+        <hr style="height:2px;border-width:0;color:gray;background-color:gray">
+    </div>
 </section>
 <section>
     <div class="container">

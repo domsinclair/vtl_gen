@@ -34,6 +34,7 @@ class Vtl_gen extends Trongate
      */
     public function index(): void
     {
+        unset($_SESSION['selectedDataTable']);
 //        if ($this->isDaylightSavingTime()) {
 //            echo "Daylight saving time is in effect.";
 //        } else {
@@ -48,6 +49,7 @@ class Vtl_gen extends Trongate
         // Construct file paths for markdown files
         $filepathIntro = __DIR__ . '/../assets/help/intro.md';
         $filepathCreateData = __DIR__ . '/../assets/help/createdata.md';
+        $filepathShowData = __DIR__ . '/../assets/help/showdata.md';
         $filepathDeleteData = __DIR__ . '/../assets/help/deletedata.md';
         $filepathCreateIndex = __DIR__ . '/../assets/help/createindex.md';
         $filepathDeleteIndex = __DIR__ . '/../assets/help/deleteindex.md';
@@ -59,6 +61,7 @@ class Vtl_gen extends Trongate
         // Open markdown files
         $fileIntro = fopen($filepathIntro, 'r');
         $fileCreateData = fopen($filepathCreateData, 'r');
+        $fileShowData = fopen($filepathShowData, 'r');
         $fileDeleteData = fopen($filepathDeleteData, 'r');
         $fileCreateIndex = fopen($filepathCreateIndex, 'r');
         $fileDeleteIndex = fopen($filepathDeleteIndex, 'r');
@@ -67,6 +70,7 @@ class Vtl_gen extends Trongate
         // Read markdown content and parse it
         $markdownIntro = $parsedown->text(fread($fileIntro, filesize($filepathIntro)));
         $markdownCreateData = $parsedown->text(fread($fileCreateData, filesize($filepathCreateData)));
+        $markdownShowData = $parsedown->text(fread($fileShowData, filesize($filepathShowData)));
         $markdownDeleteData = $parsedown->text(fread($fileDeleteData, filesize($filepathDeleteData)));
         $markdownCreateIndex = $parsedown->text(fread($fileCreateIndex, filesize($filepathCreateIndex)));
         $markdownDeleteIndex = $parsedown->text(fread($fileDeleteIndex, filesize($filepathDeleteIndex)));
@@ -75,6 +79,7 @@ class Vtl_gen extends Trongate
         // Close markdown files
         fclose($fileIntro);
         fclose($fileCreateData);
+        fclose($fileShowData);
         fclose($fileDeleteData);
         fclose($fileCreateIndex);
         fclose($fileDeleteIndex);
@@ -83,6 +88,7 @@ class Vtl_gen extends Trongate
         // Store parsed markdown content in data array
         $data['markdownIntro'] = $markdownIntro;
         $data['markdownCreateData'] = $markdownCreateData;
+        $data['markdownShowData'] = $markdownShowData;
         $data['markdownDeleteData'] = $markdownDeleteData;
         $data['markdownCreateIndex'] = $markdownCreateIndex;
         $data['markdownDeleteIndex'] = $markdownDeleteIndex;
@@ -252,19 +258,24 @@ class Vtl_gen extends Trongate
 
         // Extract the selected table from the query parameters
 
-        //this is currently throwing an error with pagination
-         $selectedTable = $_GET['selectedTable'];
+        //show table from Get request and set session variable on other pages
+        if (isset($_GET['selectedTable'])) {
+            $selectedDataTable = $_GET['selectedTable'];
+            $_SESSION['selectedDataTable'] = $selectedDataTable;
+        } else {
+            $selectedDataTable = $_SESSION['selectedDataTable'];
+        }
 
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
-        $rows = $this->model->get(target_tbl:  $selectedTable);
+        $rows = $this->model->get(target_tbl:  $selectedDataTable);
 
 
         $pagination_data['total_rows'] = count($rows);
         $pagination_data['page_num_segment'] = 3;
         $pagination_data['limit'] = $this->_get_limit();
         $pagination_data['pagination_root'] = 'vtl_gen/showData';
-        $pagination_data['record_name_plural'] =  $selectedTable;
+        $pagination_data['record_name_plural'] =  $selectedDataTable;
         $pagination_data['include_showing_statement'] = true;
 
 
@@ -280,31 +291,7 @@ class Vtl_gen extends Trongate
         $this->template('public', $data);
     }
 
-    public function showPageData($selectedData){
-        $this->module('trongate_security');
-        $this->trongate_security->_make_sure_allowed();
-        $rows = $this->model->get(target_tbl:  $selectedTable);
 
-
-        $pagination_data['total_rows'] = count($rows);
-        $pagination_data['page_num_segment'] = 3;
-        $pagination_data['limit'] = $this->_get_limit();
-        $pagination_data['pagination_root'] = 'vtl_gen/showPageData($selectedTable)';
-        $pagination_data['record_name_plural'] =  $selectedTable;
-        $pagination_data['include_showing_statement'] = true;
-        $pagination_data['selectedTable'] = $selectedTable;
-
-
-        $data['rows'] = $this -> _reduce_rows($rows);
-        $data['pagination_data'] = $pagination_data;
-        $data['selected_per_page'] =  $this->_get_selected_per_page();
-        $data['per_page_options'] = $this->per_page_options;
-
-        //finally pass this to a view.
-        $data['view_module'] = 'vtl_gen';
-        $data['view_file'] = 'showdata';
-        $this->template('public', $data);
-    }
     public function clearData(): void
     {
         // Retrieve raw POST data from the request body
