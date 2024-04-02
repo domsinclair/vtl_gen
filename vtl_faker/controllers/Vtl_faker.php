@@ -19,6 +19,8 @@ class Vtl_faker extends Trongate
 
     private string $pass = PASSWORD;
 
+
+
     /**
      * Constructor for the Vtl_faker class.
      *
@@ -37,11 +39,15 @@ class Vtl_faker extends Trongate
         $faker = null;
         $this->$faker = \Faker\Factory::create(FAKER_LOCALE);
 
+
+
         //Get a list of all modules in the application and whether they have an api.
         $this->applicationModules = $this -> list_all_modules();
 
 
     }
+
+
 
     /**
      * This function was create by Simon Field aka Dafa.
@@ -215,14 +221,14 @@ class Vtl_faker extends Trongate
                 echo 'Number of records inserted =  ', $count;
             }
         } elseif($selectedRows != null && $apiJsonExists == false) {
-            // in this case we can still use the api logic as it happens
+
             if ($numRows == 1) {
-                $newRecordId = $this->generateSingleRowAndInsertViaApi($faker, $selectedRows, $selectedTable);
+                $newRecordId = $this->generateSingleRowAndInsertViaSql($faker, $selectedRows, $selectedTable);
                 echo 'New Record Id = ' . $newRecordId;
             }
             else{
-                //and again we can still use the api logic
-                $count = $this->generateMultipleRowsAndInsertViaApi($faker, $selectedRows, $selectedTable, $numRows);
+
+                $count = $this->generateMultipleRowsAndInsertViaSql($faker, $selectedRows, $selectedTable, $numRows);
                 echo 'Number of records inserted =  ', $count;
             }
 
@@ -305,11 +311,15 @@ class Vtl_faker extends Trongate
 
         // Decode the JSON object into an associative array
         $newValuesArray = json_decode($values, true);
+
+
         // Insert the generated data into the specified table using the model's insert method
         try {
+
             return $this->model->insert($newValuesArray, $selectedTable);
         }
         catch (Exception $e) {
+
             return $e->getMessage();
         }
 
@@ -359,10 +369,7 @@ class Vtl_faker extends Trongate
 
         try{
             $data=[];
-            $result = $this->model->prepare_and_execute($sql,$data);
-            echo 'Result =' ,$result;
-            die();
-            return $this-> model->query($sql,'array');
+            return  $this->model->prepare_and_execute($sql,$data);
         }
         catch (Exception $e) {
             return $e->getMessage();
@@ -455,15 +462,15 @@ class Vtl_faker extends Trongate
                 break;
 
             case 'city':
+            case 'town':
                 $value = $faker -> city();
                 $statement = '"'.$value.'"';
                 break;
 
-            case 'town':
-                $value = $faker -> town();
-                $statement = '"'.$value.'"';
-                break;
 
+            case 'addressline1':
+            case 'addressline2':
+            case 'addressline3':
             case 'streetaddress':
                 $value = $faker -> streetAddress();
                 $statement = '"'.$value.'"';
@@ -556,6 +563,15 @@ class Vtl_faker extends Trongate
                 $statement = '"'.$value.'"';
                 break;
 
+            case 'picture':
+            case 'pictureurl':
+            case 'productimage':
+            case 'productimageurl':
+            case 'image':
+            case 'imageurl':
+                $value = $faker -> randomElement(['img1.jpg', 'img2.jpg', 'img3.jpg', 'img4.jpg', 'img5.jpg', 'img6.jpg','img7.jpg', 'img8.jpg', 'img9.jpg', 'img10.jpg', 'img11.jpg']);
+                $statement = '"'.$value.'"';
+                break;
             case 'totalamount':
             case 'total':
             case 'ordernumber':
@@ -610,6 +626,8 @@ class Vtl_faker extends Trongate
             default:
                 $statement = 'nothing';
         }
+        //allow for the fact that a known field name may still fail to get data
+        if ($statement === null) { $statement = 'nothing'; }
         return $statement;
     }
 
@@ -798,6 +816,91 @@ class Vtl_faker extends Trongate
         }
 
     }
+
+    private function generateMultipleRowsAndInsertViaSql(mixed $faker, mixed $selectedRows, mixed $selectedTable, mixed $numRows)
+    {
+        if (!is_int($numRows)) {
+            $numRows = intval($numRows);
+        }
+        $columns = '(';
+
+
+        for ($i = 0; $i < $numRows; $i++) {
+
+            //we need to keep track of both loops to ensure that we get the sql syntax correct.
+            $isFirstOuterIteration = ($i === 0); // Check if it's the first iteration of the outer loop
+            $isLastOuterIteration = ($i === $numRows - 1); // Check if it's the last iteration of the outer loop
+
+            foreach ($selectedRows as $key => $selectedRow) {
+
+                $values = '(';
+                $isLastInnerIteration = ($key === count($selectedRows) - 1); // Check if it's the last iteration of the inner loop
+
+                $originalFieldName = $selectedRow['field'];
+                $field = $this->processFieldName($selectedRow['field']);
+                $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field);
+
+                //This is where you should add code to generate custom field data
+                //it needs to be in the form of:
+                //  if($field === '<add your field name here') {
+                //      $fieldFakerStatement = $faker -> rgbColor();
+                //  }
+
+                if ($fieldFakerStatement == "nothing") {
+                    $typeWithBrackets = $selectedRow['type'];
+                    $valueInBrackets = 0;
+                    $type = $this->extractType($typeWithBrackets, $valueInBrackets);
+                    $typeFakerStatement = $this->generateValueFromType($faker, $type, $valueInBrackets);
+                    $values .= $typeFakerStatement;
+                } else {
+                    $values .= $fieldFakerStatement;
+                }
+
+                // Check if it's the first iteration of the outer loop and last of the inner
+                // so that we can tidy up $columns
+                if ($isFirstOuterIteration && $isLastInnerIteration) {
+                    $columns .= $originalFieldName . ')';
+                } else {
+                    $columns .= $originalFieldName . ',';
+                }
+
+
+                // Check if it's the last iteration of the inner loop to tidy up
+                //the $values statement
+                if ($isLastInnerIteration) {
+                    $values .= ')';
+                }
+                else{
+                    $values .= ',';
+                }
+
+
+            }
+
+            // Check if it's the last iteration of the outer loop and the inner loop
+            // this should complete the values statement part
+            if ($isLastOuterIteration ) {
+                $values .= ';';
+            }
+            else{
+                $values .= ',';
+            }
+        }
+
+        //we should now have the component parts of our sql insert statement
+        $sql = 'INSERT INTO ' . $selectedTable . ' '.$columns . ' VALUES ' . $values;
+
+        try{
+            $data=[];
+            $this->model->prepare_and_execute($sql,$data);
+            return 'The following number rows were inserted into ' . $selectedTable . ': '.$numRows;
+        }
+        catch (Exception $e) {
+            return $e->getMessage();
+        }
+
+    }
+
 
     /**
      * Clears data from selected tables.
@@ -1134,10 +1237,14 @@ class Vtl_faker extends Trongate
                 echo 'mysqldump-php error: ' . $e->getMessage();
             }
         }
+
+
         function __destruct()
         {
             $this->parent_module = '';
             $this->child_module = '';
         }
+
+
 
 }
