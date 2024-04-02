@@ -2,15 +2,14 @@
 // Include Parsedown library
 require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
 
-class Vtl_gen extends Trongate
-{
+class Vtl_gen extends Trongate {
 
     //used for pagination
 
     private $showSelectedDataTable;
     private $default_limit = 20;
     private $per_page_options = array(10, 20, 50, 100);
-// Function to check if daylight saving time is in effect
+    // Function to check if daylight saving time is in effect
     function isDaylightSavingTime() {
         $currentTime = time();
         $timezone = new DateTimeZone(date_default_timezone_get());
@@ -32,16 +31,18 @@ class Vtl_gen extends Trongate
      * @return void
      * @throws Exception
      */
-    public function index(): void
-    {
-//        if ($this->isDaylightSavingTime()) {
-//            echo "Daylight saving time is in effect.";
-//        } else {
-//            echo "Daylight saving time is not in effect.";
-//        }
-//        $data['tables'] = $this->setupTablesForDropdown();
-//        $data['columnInfo'] = $this->getAllTablesAndTheirColumnData();
-//        $data['dropdownLabel'] = 'Tables in ' . DATABASE;
+    public function index(): void {
+        //        if ($this->isDaylightSavingTime()) {
+        //            echo "Daylight saving time is in effect.";
+        //        } else {
+        //            echo "Daylight saving time is not in effect.";
+        //        }
+        //        $data['tables'] = $this->setupTablesForDropdown();
+        //        $data['columnInfo'] = $this->getAllTablesAndTheirColumnData();
+        //        $data['dropdownLabel'] = 'Tables in ' . DATABASE;
+
+        // DaFa > remove any previous selected tables
+        unset($_SESSION['selectedTable']);
 
         // Get a list of all tables
         $data['tables'] = $this->setupTablesForDropdown();
@@ -89,7 +90,7 @@ class Vtl_gen extends Trongate
         $data['markdownExport'] = $markdownExport;
 
         // Get images for display
-        $data['images']= $this -> getImagesForDisplay();
+        $data['images'] = $this->getImagesForDisplay();
 
 
         $data['view_module'] = 'vtl_gen';
@@ -100,9 +101,9 @@ class Vtl_gen extends Trongate
     private function getImagesForDisplay(): array {
         $basedir = APPPATH . 'modules/vtl_gen/assets/help/images/';
         $arrFilename = array();
-        if ($handle = opendir($basedir)){
-            while (false !== ($filename = readdir($handle))){
-                if ($filename != "." && $filename != ".."){
+        if ($handle = opendir($basedir)) {
+            while (false !== ($filename = readdir($handle))) {
+                if ($filename != "." && $filename != "..") {
                     array_push($arrFilename, $filename);
                 }
             }
@@ -112,8 +113,7 @@ class Vtl_gen extends Trongate
     }
 
     // Function to render delete index page
-    public function deleteIndex(): void
-    {
+    public function deleteIndex(): void {
         $data['tables'] = $this->setupTablesForDropdown();
         $data['indexInfo'] = $this->getAllTablesAndTheirIndexes();
         $data['view_module'] = 'vtl_gen';
@@ -124,16 +124,14 @@ class Vtl_gen extends Trongate
 
 
     // Function to setup tables for dropdown
-    private function setupTablesForDropdown(): array
-    {
+    private function setupTablesForDropdown(): array {
         $tables = $this->getAllTables();
         $starterArray = ['Select table...'];
         $tables = array_merge($starterArray, $tables);
         return $tables;
     }
 
-    private function getAllTables(): array
-    {
+    private function getAllTables(): array {
         $tables = [];
         $sql = 'SHOW TABLES';
         $column_name = 'Tables_in_' . DATABASE;
@@ -147,8 +145,7 @@ class Vtl_gen extends Trongate
         return $tables;
     }
 
-    private function getAllTablesAndTheirIndexes(): array
-    {
+    private function getAllTablesAndTheirIndexes(): array {
         $tablesAndIndexes = [];
 
         $tables = $this->getAllTables();
@@ -167,8 +164,7 @@ class Vtl_gen extends Trongate
         return $tablesAndIndexes;
     }
 
-    public function createData(): void
-    {
+    public function createData(): void {
         $data['tables'] = $this->setupTablesForDropdown();
         $data['columnInfo'] = $this->getAllTablesAndTheirColumnData();
         $data['dropdownLabel'] = 'Tables in ' . DATABASE;
@@ -177,8 +173,7 @@ class Vtl_gen extends Trongate
         $this->template('public', $data);
     }
 
-    private function getAllTablesAndTheirColumnData(): array
-    {
+    private function getAllTablesAndTheirColumnData(): array {
         $tablesAndColumns = [];
 
         $tables = $this->getAllTables();
@@ -197,8 +192,7 @@ class Vtl_gen extends Trongate
         return $tablesAndColumns;
     }
 
-    public function createIndex(): void
-    {
+    public function createIndex(): void {
         $data['tables'] = $this->setupTablesForDropdown();
         $data['columnInfo'] = $this->getAllTablesAndTheirColumnData();
         $data['dropdownLabel'] = 'Tables in ' . DATABASE;
@@ -207,23 +201,20 @@ class Vtl_gen extends Trongate
         $this->template('public', $data);
     }
 
-    public function deleteData(): void
-    {
+    public function deleteData(): void {
         $data['tables'] = $this->setupTablesForDatabaseAdmin();
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'deletedata';
         $this->template('public', $data);
     }
 
-    public function export(): void
-    {
+    public function export(): void {
         $data['tables'] = $this->setupTablesForDatabaseAdmin();
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'export';
         $this->template('public', $data);
     }
-    private function createExportScript(): array
-    {
+    private function createExportScript(): array {
         ini_set('display_errors', 1);
         ini_set('display_startup_errors', 1);
         error_reporting(E_ALL);
@@ -241,23 +232,27 @@ class Vtl_gen extends Trongate
         return $output;
     }
 
-    private function setupTablesForDatabaseAdmin(): array
-    {
+    private function setupTablesForDatabaseAdmin(): array {
         $tables = $this->getAllTables();
-        $tables = array_merge( $tables);
+        $tables = array_merge($tables);
         return $tables;
     }
-    public function showData(): void
-    {
+    public function showData(): void {
 
         // Extract the selected table from the query parameters
 
-        //this is currently throwing an error with pagination
-         $selectedTable = $_GET['selectedTable'];
+        // DaFa > show table from Get request and set session variable on other pages
+        if (isset($_GET['selectedTable'])) {
+            $selectedTable = $_GET['selectedTable'];
+            $_SESSION['selectedTable'] = $selectedTable;
+        } else {
+            $selectedTable = $_SESSION['selectedTable'];
+        }
+
 
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
-        $rows = $this->model->get(target_tbl:  $selectedTable);
+        $rows = $this->model->get(target_tbl: $selectedTable);
 
 
         $pagination_data['total_rows'] = count($rows);
@@ -269,7 +264,7 @@ class Vtl_gen extends Trongate
 
 
 
-        $data['rows'] = $this -> _reduce_rows($rows);
+        $data['rows'] = $this->_reduce_rows($rows);
         $data['pagination_data'] = $pagination_data;
         $data['selected_per_page'] =  $this->_get_selected_per_page();
         $data['per_page_options'] = $this->per_page_options;
@@ -280,10 +275,10 @@ class Vtl_gen extends Trongate
         $this->template('public', $data);
     }
 
-    public function showPageData($selectedData){
+    public function showPageData($selectedData) {
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
-        $rows = $this->model->get(target_tbl:  $selectedTable);
+        $rows = $this->model->get(target_tbl: $selectedTable);
 
 
         $pagination_data['total_rows'] = count($rows);
@@ -295,7 +290,7 @@ class Vtl_gen extends Trongate
         $pagination_data['selectedTable'] = $selectedTable;
 
 
-        $data['rows'] = $this -> _reduce_rows($rows);
+        $data['rows'] = $this->_reduce_rows($rows);
         $data['pagination_data'] = $pagination_data;
         $data['selected_per_page'] =  $this->_get_selected_per_page();
         $data['per_page_options'] = $this->per_page_options;
@@ -305,8 +300,7 @@ class Vtl_gen extends Trongate
         $data['view_file'] = 'showdata';
         $this->template('public', $data);
     }
-    public function clearData(): void
-    {
+    public function clearData(): void {
         // Retrieve raw POST data from the request body
         $rawPostData = file_get_contents('php://input');
 
@@ -316,62 +310,61 @@ class Vtl_gen extends Trongate
         // Extract relevant data from the decoded JSON
         $selectedTables = $postData['selectedTables'];
 
-       if ($selectedTables != null && $selectedTables != "") {
-           $responseText = '';
-           $deletedTables = [];
-           $failedTables = [];
+        if ($selectedTables != null && $selectedTables != "") {
+            $responseText = '';
+            $deletedTables = [];
+            $failedTables = [];
 
-           try {
-               foreach ($selectedTables as $key => $selectedTable) {
+            try {
+                foreach ($selectedTables as $key => $selectedTable) {
 
-                   // Create our SQL statement here
-                   $sql = 'DELETE FROM ' . $selectedTable;
-                   switch ($selectedTable) {
-                       case 'trongate_users':
-                       case 'trongate_user_levels':
-                       case 'trongate_administrators':
-                           $sql .= ' Where id > 1';
-                           break;
-                       default:
-                           break;
-                   }
-                   try {
-                       // Enclose the query method in a try-catch block
-                       $this->model->query($sql, '');
+                    // Create our SQL statement here
+                    $sql = 'DELETE FROM ' . $selectedTable;
+                    switch ($selectedTable) {
+                        case 'trongate_users':
+                        case 'trongate_user_levels':
+                        case 'trongate_administrators':
+                            $sql .= ' Where id > 1';
+                            break;
+                        default:
+                            break;
+                    }
+                    try {
+                        // Enclose the query method in a try-catch block
+                        $this->model->query($sql, '');
 
-                       // If the query was successful, add the table to the list of deleted tables
-                       $deletedTables[] = $selectedTable;
-                   } catch (Exception $e) {
-                       // Handle the exception here, you can log it, display an error message, or take any other appropriate action
-                       // In this example, we're just logging the error message
-                       echo 'Error: ' . $e->getMessage();
-                       // Add the table to the list of failed tables
-                       $failedTables[] = $selectedTable;
-                   }
-               }
+                        // If the query was successful, add the table to the list of deleted tables
+                        $deletedTables[] = $selectedTable;
+                    } catch (Exception $e) {
+                        // Handle the exception here, you can log it, display an error message, or take any other appropriate action
+                        // In this example, we're just logging the error message
+                        echo 'Error: ' . $e->getMessage();
+                        // Add the table to the list of failed tables
+                        $failedTables[] = $selectedTable;
+                    }
+                }
 
-               // If no exception was thrown, it means all queries were successful
-               $responseText .= 'Operation completed successfully.';
-           } catch (Exception $e) {
-               // If an exception was thrown outside of the foreach loop, handle it here
-               echo 'Error: ' . $e->getMessage();
-               $responseText .= 'Operation failed.'.$e;
-           }
+                // If no exception was thrown, it means all queries were successful
+                $responseText .= 'Operation completed successfully.';
+            } catch (Exception $e) {
+                // If an exception was thrown outside of the foreach loop, handle it here
+                echo 'Error: ' . $e->getMessage();
+                $responseText .= 'Operation failed.' . $e;
+            }
 
             // Append the list of deleted tables to the response text
-           $responseText .= ' Deleted tables: ' . implode(', ', $deletedTables) . '.';
+            $responseText .= ' Deleted tables: ' . implode(', ', $deletedTables) . '.';
             // Append the list of failed tables to the response text
-           $responseText .= ' Failed tables: ' . implode(', ', $failedTables) . '.';
+            $responseText .= ' Failed tables: ' . implode(', ', $failedTables) . '.';
 
             // Now $responseText contains the report for the whole operation
-           echo $responseText;
-       }
-       else{ echo 'No Tables were selected';}
-
+            echo $responseText;
+        } else {
+            echo 'No Tables were selected';
+        }
     }
 
-    protected function extractBaseType($type): string
-    {
+    protected function extractBaseType($type): string {
         // Use a regular expression to match the base type
         if (preg_match('/^(\w+)(?:\(\d+\))?/', $type, $matches)) {
             return $matches[1];
@@ -379,8 +372,7 @@ class Vtl_gen extends Trongate
         return $type; // Return the original type if no match
     }
 
-    private function getValueForKey($section, $key)
-    {
+    private function getValueForKey($section, $key) {
         // Check if the section exists
         if (!isset($this->settings[$section])) {
             throw new Exception("Section not found: $section");
@@ -407,7 +399,7 @@ class Vtl_gen extends Trongate
         $count = -1;
         foreach ($all_rows as $row) {
             $count++;
-            if (($count>=$start_index) && ($count<$end_index)) {
+            if (($count >= $start_index) && ($count < $end_index)) {
                 $rows[] = $row;
             }
         }
@@ -438,8 +430,8 @@ class Vtl_gen extends Trongate
     function _get_offset(): int {
         $page_num = (int) segment(3);
 
-        if ($page_num>1) {
-            $offset = ($page_num-1)*$this->_get_limit();
+        if ($page_num > 1) {
+            $offset = ($page_num - 1) * $this->_get_limit();
         } else {
             $offset = 0;
         }
@@ -456,5 +448,4 @@ class Vtl_gen extends Trongate
 
         return $selected_per_page;
     }
-
 }
