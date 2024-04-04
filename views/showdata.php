@@ -9,8 +9,8 @@
 </head>
 <body>
 <h2 class="text-center">Vtl Data Generator: Show Data</h2>
-<div class="flex">
-    <?php echo anchor('vtl_gen/index', 'Back', array("class" => "button")); ?>
+<div class="flex" style ="margin-bottom: 15px">
+    <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
 </div>
 <section>
     <div>
@@ -23,6 +23,7 @@
 // Check if rows data exists and has rows
 if (!empty($rows)) {
     ?>
+
     <table>
         <thead>
         <tr>
@@ -43,7 +44,7 @@ if (!empty($rows)) {
     </table>
 
 
-<?php
+    <?php
     if(count($rows)>9) {
         unset($pagination_data['include_showing_statement']);
         echo Pagination::display($pagination_data);

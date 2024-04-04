@@ -319,13 +319,20 @@ class Vtl_faker extends Trongate
             return $this->model->insert($newValuesArray, $selectedTable);
         }
         catch (Exception $e) {
-
+            echo 'Failed This is the NewValuesArray  ',$newValuesArray;
             return $e->getMessage();
         }
 
     }
 
-    //At some point this will need to be used potentially for creating transactions
+    /**
+     * Generates fake data for a single row and inserts it into the specified table via SQL.
+     *
+     * @param Faker\Generator $faker The Faker generator instance.
+     * @param array $selectedRows An array of selected rows containing field information.
+     * @param string $selectedTable The name of the table where the data will be inserted.
+     * @return mixed Returns the result of the database insertion or an error message if an exception occurs.
+     */
     private function generateSingleRowAndInsertViaSql($faker, $selectedRows, $selectedTable){
         $columns = '(';
         $values = '(';
@@ -817,6 +824,15 @@ class Vtl_faker extends Trongate
 
     }
 
+    /**
+     * Generates fake data for multiple rows and inserts them into the specified table via SQL.
+     *
+     * @param mixed $faker The Faker generator instance.
+     * @param mixed $selectedRows An array of selected rows containing field information.
+     * @param mixed $selectedTable The name of the table where the data will be inserted.
+     * @param mixed $numRows The number of rows to be generated and inserted.
+     * @return string Returns a success message indicating the number of rows inserted or an error message if an exception occurs.
+     */
     private function generateMultipleRowsAndInsertViaSql(mixed $faker, mixed $selectedRows, mixed $selectedTable, mixed $numRows)
     {
         if (!is_int($numRows)) {

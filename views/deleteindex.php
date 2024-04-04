@@ -10,7 +10,7 @@
 <body>
 <h2 class="text-center">Vtl Data Generator: Delete Index</h2>
 <div class="flex">
-    <?php echo anchor('vtl_gen/index', 'Back', array("class" => "button")); ?>
+    <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
 </div>
 <p>Select a table in the database from the drop down below. If there are any indexes created by this module they will be shown in the table that appears.</p>
 <p>Select those indexes that you wish to delete. </p>

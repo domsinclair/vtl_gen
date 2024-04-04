@@ -10,7 +10,7 @@
 <body>
 <h2 class="text-center">Vtl Data Generator: Create Data</h2>
 <div class="flex">
-    <?php echo anchor('vtl_gen/index', 'Back', array("class" => "button")); ?>
+    <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
 </div>
 <?php //echo '<p>' . anchor('vtl_gen/showHelp', 'Show Vtl Generator Help', array("class" => "button")) . '</p>'; ?>
 <p>Select the table in the database from the drop down below for which you wish to create some fake data.</p>

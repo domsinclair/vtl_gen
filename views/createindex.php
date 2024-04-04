@@ -10,7 +10,7 @@
 <body>
 <h2 class="text-center">Vtl Data Generator: Create Index</h2>
 <div class="flex">
-    <?php echo anchor('vtl_gen/index', 'Back', array("class" => "button")); ?>
+    <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
 </div>
 <p>Select the table in the database from the drop down below for which you wish to create an index.</p>
 <p>Select those columns that require an index to be added to them. </p>

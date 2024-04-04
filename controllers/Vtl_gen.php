@@ -35,14 +35,6 @@ class Vtl_gen extends Trongate
     public function index(): void
     {
         unset($_SESSION['selectedDataTable']);
-//        if ($this->isDaylightSavingTime()) {
-//            echo "Daylight saving time is in effect.";
-//        } else {
-//            echo "Daylight saving time is not in effect.";
-//        }
-//        $data['tables'] = $this->setupTablesForDropdown();
-//        $data['columnInfo'] = $this->getAllTablesAndTheirColumnData();
-//        $data['dropdownLabel'] = 'Tables in ' . DATABASE;
 
         // Get a list of all tables
         $data['tables'] = $this->setupTablesForDropdown();
@@ -302,49 +294,91 @@ class Vtl_gen extends Trongate
         //var_dump($postData);
         // Extract relevant data from the decoded JSON
         $selectedTables = $postData['selectedTables'];
+        $resetAutoIncrement = $postData['resetAutoIncrement'];
+
+
 
        if ($selectedTables != null && $selectedTables != "") {
            $responseText = '';
            $deletedTables = [];
            $failedTables = [];
 
-           try {
-               foreach ($selectedTables as $key => $selectedTable) {
+           if ($resetAutoIncrement) {
+               try{
+                   $sql = 'nothing';
+                   foreach ($selectedTables as $key => $selectedTable) {
+                       switch ($selectedTable) {
+                           case 'trongate_users':
+                           case 'trongate_user_levels':
+                           case 'trongate_administrators':
+                               break;
+                           default:
+                               $sql = 'TRUNCATE TABLE ' . $selectedTable;
+                               break;
+                       }
+                       try{
+                           if ($sql != 'nothing')
+                           {
+                               $this->model->query($sql, '');
 
-                   // Create our SQL statement here
-                   $sql = 'DELETE FROM ' . $selectedTable;
-                   switch ($selectedTable) {
-                       case 'trongate_users':
-                       case 'trongate_user_levels':
-                       case 'trongate_administrators':
-                           $sql .= ' Where id > 1';
-                           break;
-                       default:
-                           break;
-                   }
-                   try {
-                       // Enclose the query method in a try-catch block
-                       $this->model->query($sql, '');
+                               // If the query was successful, add the table to the list of deleted tables
+                               $deletedTables[] = $selectedTable;
+                           }
+                       }
+                       catch (Exception $e) {
+                           // Handle the exception here, you can log it, display an error message, or take any other appropriate action
+                           // In this example, we're just logging the error message
+                           echo 'Error: ' . $e->getMessage();
+                           // Add the table to the list of failed tables
+                           $failedTables[] = $selectedTable;
+                       }
 
-                       // If the query was successful, add the table to the list of deleted tables
-                       $deletedTables[] = $selectedTable;
-                   } catch (Exception $e) {
-                       // Handle the exception here, you can log it, display an error message, or take any other appropriate action
-                       // In this example, we're just logging the error message
-                       echo 'Error: ' . $e->getMessage();
-                       // Add the table to the list of failed tables
-                       $failedTables[] = $selectedTable;
                    }
                }
-
-               // If no exception was thrown, it means all queries were successful
-               $responseText .= 'Operation completed successfully.';
-           } catch (Exception $e) {
-               // If an exception was thrown outside of the foreach loop, handle it here
-               echo 'Error: ' . $e->getMessage();
-               $responseText .= 'Operation failed.'.$e;
+               catch (Exception $e) {
+                   // If an exception was thrown outside of the foreach loop, handle it here
+                   echo 'Error: ' . $e->getMessage();
+                   $responseText .= 'Operation failed.' . $e;
+               }
            }
+           else {
+               try {
+                   foreach ($selectedTables as $key => $selectedTable) {
 
+                       // Create our SQL statement here
+                       $sql = 'DELETE FROM ' . $selectedTable;
+                       switch ($selectedTable) {
+                           case 'trongate_users':
+                           case 'trongate_user_levels':
+                           case 'trongate_administrators':
+                               $sql .= ' Where id > 1';
+                               break;
+                           default:
+                               break;
+                       }
+                       try {
+                           // Enclose the query method in a try-catch block
+                           $this->model->query($sql, '');
+
+                           // If the query was successful, add the table to the list of deleted tables
+                           $deletedTables[] = $selectedTable;
+                       } catch (Exception $e) {
+                           // Handle the exception here, you can log it, display an error message, or take any other appropriate action
+                           // In this example, we're just logging the error message
+                           echo 'Error: ' . $e->getMessage();
+                           // Add the table to the list of failed tables
+                           $failedTables[] = $selectedTable;
+                       }
+                   }
+
+                   // If no exception was thrown, it means all queries were successful
+                   $responseText .= 'Operation completed successfully.';
+               } catch (Exception $e) {
+                   // If an exception was thrown outside of the foreach loop, handle it here
+                   echo 'Error: ' . $e->getMessage();
+                   $responseText .= 'Operation failed.' . $e;
+               }
+           }
             // Append the list of deleted tables to the response text
            $responseText .= ' Deleted tables: ' . implode(', ', $deletedTables) . '.';
             // Append the list of failed tables to the response text

@@ -10,7 +10,7 @@
 <body>
 <h2 class="text-center">Vtl Data Generator: Delete Data</h2>
 <div class="flex">
-    <?php echo anchor('vtl_gen/index', 'Back', array("class" => "button")); ?>
+    <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
 </div>
 <p>Select those tables you wish to delete data from.</p>
 
@@ -30,6 +30,12 @@
     <?php endforeach; ?>
     </tbody>
 </table>
+
+<!-- Checkbox for Reset Primary Auto Increment -->
+<div>
+    <label><input type="checkbox" id="reset-auto-increment" name="reset-auto-increment"> Reset Primary Auto Increment</label>
+</div>
+
 <div class="flex">
     <button id="clearDataBtn" class="button">Clear Data</button>
 </div>
@@ -61,9 +67,13 @@
             selectedTables.push(checkbox.value);
         });
 
+        // Check if the reset auto-increment checkbox is checked
+        var resetAutoIncrement = document.getElementById("reset-auto-increment").checked;
+
         // Prepare the data to send
         var postData = {
-            selectedTables: selectedTables
+            selectedTables: selectedTables,
+            resetAutoIncrement: resetAutoIncrement
         };
 
         // Create a new XMLHttpRequest

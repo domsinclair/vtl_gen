@@ -11,7 +11,7 @@ navigation buttons at the top of the page.
 
 #### Issues
 
-If you find an issue with the VTL Data Generator then pleas report it [here](https://github.com/domsinclair/vtl_gen/issues). Items reported on github will automatically generate an email to me and as such you're likely to get a faster response.  General questions can of course be raised on the Trongate Help Bar.
+If you find an issue with the VTL Data Generator then please report it [here](https://github.com/domsinclair/vtl_gen/issues). Items reported on github will automatically generate an email to me and as such you're likely to get a faster response.  General questions can of course be raised on the Trongate Help Bar.
 
 Please bear in mind that it's not always possible to respond immediately.
 

@@ -10,7 +10,7 @@
 <body>
 <h2 class="text-center">Vtl Data Generator: Export Database</h2>
 <div class="flex">
-    <?php echo anchor('vtl_gen/index', 'Back', array("class" => "button")); ?>
+    <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
 </div>
 <p>Select those tables to be exported and whether you want data from them exported as well.</p>
 <table>
