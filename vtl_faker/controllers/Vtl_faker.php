@@ -20,7 +20,6 @@ class Vtl_faker extends Trongate
     private string $pass = PASSWORD;
 
 
-
     /**
      * Constructor for the Vtl_faker class.
      *
@@ -40,17 +39,15 @@ class Vtl_faker extends Trongate
         $this->$faker = \Faker\Factory::create(FAKER_LOCALE);
 
 
-
         //Get a list of all modules in the application and whether they have an api.
-        $this->applicationModules = $this -> list_all_modules();
+        $this->applicationModules = $this->list_all_modules();
 
 
     }
 
 
-
     /**
-     * This function was create by Simon Field aka Dafa.
+     * This function was created by Simon Field aka Dafa.
      * I am indebted to him for it.
      *
      * Retrieves information about all modules in the application.
@@ -189,6 +186,7 @@ class Vtl_faker extends Trongate
      *
      * @return void
      */
+
     public function createFakes(): void
     {
         // Initialize Faker instance
@@ -201,6 +199,11 @@ class Vtl_faker extends Trongate
         // Decode the JSON data into an associative array
         $postData = json_decode($rawPostData, true);
 
+        // Ensure JSON decoding was successful
+        if ($postData === null) {
+            throw new Exception("Invalid JSON data");
+        }
+
         // Extract relevant data from the decoded JSON
         $selectedTable = $postData['selectedTable'];
         $selectedRows = $postData['selectedRows'];
@@ -209,31 +212,37 @@ class Vtl_faker extends Trongate
         // Check if API JSON exists for the selected table
         $apiJsonExists = $this->findApiJsonExists($selectedTable);
 
-        // Process fake data generation and insertion based on user input
-        if ($selectedRows != null && $apiJsonExists == true) {
-            if ($numRows == 1) {
-                // Generate and insert a single row of fake data
-                $newRecordId = $this->generateSingleRowAndInsertViaApi($faker, $selectedRows, $selectedTable);
-                echo 'New Record Id = ' . $newRecordId;
+
+        // Determine the method for generating and inserting fake data
+        if ($selectedRows !== null) {
+
+            if ($apiJsonExists && $numRows == 1) {
+
+                $result = $this->generateSingleRowAndInsertViaSql($faker, $selectedRows, $selectedTable);
+            } elseif ($apiJsonExists && $numRows <= 500) {
+
+                $result = $this->generateMultipleRowsAndInsertViaApi($faker, $selectedRows, $selectedTable, $numRows);
+            } elseif (!$apiJsonExists && $numRows == 1) {
+
+                $result = $this->generateSingleRowAndInsertViaSql($faker, $selectedRows, $selectedTable);
             } else {
-                // Generate and insert multiple rows of fake data
-                $count = $this->generateMultipleRowsAndInsertViaApi($faker, $selectedRows, $selectedTable, $numRows);
-                echo 'Number of records inserted =  ', $count;
-            }
-        } elseif($selectedRows != null && $apiJsonExists == false) {
 
-            if ($numRows == 1) {
-                $newRecordId = $this->generateSingleRowAndInsertViaSql($faker, $selectedRows, $selectedTable);
-                echo 'New Record Id = ' . $newRecordId;
-            }
-            else{
-
-                $count = $this->generateMultipleRowsAndInsertViaSql($faker, $selectedRows, $selectedTable, $numRows);
-                echo 'Number of records inserted =  ', $count;
+                $result = $this->generateMultipleRowsAndInsertViaSql($faker,$selectedRows, $selectedTable, $numRows);
             }
 
+            // Output the result
+            $this->outputResult($result);
+        } else {
+            throw new Exception("No data provided for processing");
         }
     }
+
+    private function outputResult($result)
+    {
+        echo 'Result: ' . $result;
+    }
+
+
 
 
     /**
@@ -250,9 +259,11 @@ class Vtl_faker extends Trongate
     {
         // Iterate over application modules to find the specified table
         foreach ($this->applicationModules as $module) {
-            if ($module['module_name'] === $selectedTable) {
+            if (isset($module['module_name']) && $module['module_name'] === $selectedTable) {
                 // Return true if API JSON exists for the specified table
                 return $module['api_json_exists'];
+            } elseif (isset($module['orphaned_tables']) && $module['orphaned_tables'] === $selectedTable) {
+                return false;
             }
         }
         // Return false if the module name is not found or no API JSON exists for the table
@@ -283,43 +294,44 @@ class Vtl_faker extends Trongate
             $values .= '"' . $originalFieldName . '":';
             // Process field name and generate fake value based on field specifications
             $field = $this->processFieldName($selectedRow['field']);
-            $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field);
+            $dbType = $selectedRow['type'];
+            list($type, $length) = $this->parseDatabaseType($dbType);
+            $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
+
             //This is where you should add code to generate custom field data
             //it needs to be in the form of:
             //  if($field === '<add your field name here') {
             //      $fieldFakerStatement = $faker -> rgbColor();
             //  }
 
-
+            //echo 'Field Faker Statement for : ' . $field. ' ='.$fieldFakerStatement;
             // If no specific Faker statement is available, generate value based on field type
             if ($fieldFakerStatement == "nothing") {
-                $typeWithBrackets = $selectedRow['type'];
-                $valueInBrackets = 0;
-                $type = $this->extractType($typeWithBrackets, $valueInBrackets);
-                $typeFakerStatement = $this->generateValueFromType($faker, $type, $valueInBrackets);
+                $typeFakerStatement = $this->generateValueFromType($faker, $type, $length);
                 $values .= $typeFakerStatement;
             } else {
                 $values .= $fieldFakerStatement;
             }
+
             // Check if the current element is the last one in the array
             if ($key === array_key_last($selectedRows)) {
                 $values .= '}';
             } else {
                 $values .= ',';
             }
+
         }
 
         // Decode the JSON object into an associative array
-        $newValuesArray = json_decode($values, true);
+        $newValuesArray = $values; //json_decode($values, true);
 
 
         // Insert the generated data into the specified table using the model's insert method
         try {
 
             return $this->model->insert($newValuesArray, $selectedTable);
-        }
-        catch (Exception $e) {
-            echo 'Failed This is the NewValuesArray  ',$newValuesArray;
+        } catch (Exception $e) {
+            echo 'Failed This is the NewValuesArray  ', $newValuesArray;
             return $e->getMessage();
         }
 
@@ -333,17 +345,21 @@ class Vtl_faker extends Trongate
      * @param string $selectedTable The name of the table where the data will be inserted.
      * @return mixed Returns the result of the database insertion or an error message if an exception occurs.
      */
-    private function generateSingleRowAndInsertViaSql($faker, $selectedRows, $selectedTable){
+    private function generateSingleRowAndInsertViaSql($faker, $selectedRows, $selectedTable): mixed
+    {
         $columns = '(';
         $values = '(';
 
         // Iterate over selected rows to generate fake data for each field
         foreach ($selectedRows as $key => $selectedRow) {
             $originalFieldName = $selectedRow['field'];
-            $columns.= $originalFieldName;
+            $columns .= $originalFieldName;
             // Process field name and generate fake value based on field specifications
             $field = $this->processFieldName($selectedRow['field']);
-            $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field);
+            $dbType = $selectedRow['type'];
+            list($type, $length) = $this->parseDatabaseType($dbType);
+            $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
+
             //This is where you should add code to generate custom field data
             //it needs to be in the form of:
             //  if($field === '<add your field name here') {
@@ -352,10 +368,7 @@ class Vtl_faker extends Trongate
 
             // If no specific Faker statement is available, generate value based on field type
             if ($fieldFakerStatement == "nothing") {
-                $typeWithBrackets = $selectedRow['type'];
-                $valueInBrackets = 0;
-                $type = $this->extractType($typeWithBrackets, $valueInBrackets);
-                $typeFakerStatement = $this->generateValueFromType($faker, $type, $valueInBrackets);
+                $typeFakerStatement = $this->generateValueFromType($faker, $type, $length);
                 $values .= $typeFakerStatement;
             } else {
                 $values .= $fieldFakerStatement;
@@ -371,14 +384,13 @@ class Vtl_faker extends Trongate
         }
 
         // now create the sql statement
-        $sql = 'INSERT INTO ' . $selectedTable . ' '.$columns . ' VALUES ' . $values. '; '.'SELECT LAST_INSERT_ID();';
+        $sql = 'INSERT INTO ' . $selectedTable . ' ' . $columns . ' VALUES ' . $values . '; ' . 'SELECT LAST_INSERT_ID();';
 
 
-        try{
-            $data=[];
-            return  $this->model->prepare_and_execute($sql,$data);
-        }
-        catch (Exception $e) {
+        try {
+            $data = [];
+            return $this->model->prepare_and_execute($sql, $data);
+        } catch (Exception $e) {
             return $e->getMessage();
         }
     }
@@ -415,63 +427,63 @@ class Vtl_faker extends Trongate
      *
      * @param \Faker\Generator $faker The Faker instance used to generate fake data.
      * @param string $fieldName The name of the field for which a value needs to be generated.
+     * @param int $length The length of certain database types ie varchar(10) length would be 10.
      * @return mixed|string|null Returns the generated value as a string, or 'nothing' if no suitable method is found.
      */
-    private function generateValueFromFieldName($faker, $fieldName)
+    private function generateValueFromFieldName($faker, $fieldName, $length)
     {
         $statement = null;
         $value = null;
-        switch ($fieldName)
-        {
+        switch ($fieldName) {
             case 'firstname':
-                $value = $faker -> firstName();
-                $statement = '"'.$value.'"';
+                $value = $faker->firstName();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'lastname':
-                $value = $faker -> lastName();
-                $statement = '"'.$value.'"';
+                $value = $faker->lastName();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'customername':
             case 'name':
-                $value = $faker -> name();
-                $statement = '"'.$value.'"';
+                $value = $faker->name();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'username':
-                $value = $faker -> userName();
-                $statement = '"'.$value.'"';
+                $value = $faker->userName();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'customeremail':
             case 'emailaddress':
             case 'email':
-                $value = $faker -> email();
-                $statement = '"'.$value.'"';
+                $value = $faker->email();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'password':
-                $value = $faker -> password();
-                $statement = '"'.$value.'"';
+                $value = $faker->password();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'age':
-                $value = $faker -> numberBetween($min = 18, $max = 99);
+                $value = $faker->numberBetween($min = 18, $max = 99);
                 $statement = $value;
                 break;
 
             case 'customeraddress':
             case 'companyaddress':
             case 'address':
-                $value = $faker -> address();
-                $statement = '"'.$value.'"';
+                $value = $faker->address();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'city':
             case 'town':
-                $value = $faker -> city();
-                $statement = '"'.$value.'"';
+                $value = $faker->city();
+                $statement = '"' . $value . '"';
                 break;
 
 
@@ -479,49 +491,49 @@ class Vtl_faker extends Trongate
             case 'addressline2':
             case 'addressline3':
             case 'streetaddress':
-                $value = $faker -> streetAddress();
-                $statement = '"'.$value.'"';
+                $value = $faker->streetAddress();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'state';
-                $value = $faker -> state();
-                $statement = '"'.$value.'"';
+                $value = $faker->state();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'county':
-                $value = $faker -> county();
-                $statement = '"'.$value.'"';
+                $value = $faker->county();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'country':
-                $value = $faker -> country();
-                $statement = '"'.$value.'"';
+                $value = $faker->country();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'zipcode':
             case 'postcode':
-                $value = $faker -> postcode();
-                $statement = '"'.$value.'"';
+                $value = $faker->postcode();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'phone':
-                $value = $faker -> phoneNumber();
-                $statement = '"'.$value.'"';
+                $value = $faker->phoneNumber();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'company':
-                $value = $faker -> company();
-                $statement = '"'.$value.'"';
+                $value = $faker->company();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'job':
-                $value = $faker -> jobTitle();
-                $statement = '"'.$value.'"';
+                $value = $faker->jobTitle();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'title':
-                $value = $faker -> title();
-                $statement = '"'.$value.'"';
+                $value = $faker->title();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'deliverydate':
@@ -532,42 +544,56 @@ class Vtl_faker extends Trongate
             case 'date':
             case 'dateofbirth':
             case 'dob':
-                $value = $faker -> date($format = 'Y-m-d', $max = 'now');
-                $statement = '"'.$value.'"';
+                $value = $faker->date($format = 'Y-m-d', $max = 'now');
+                $statement = '"' . $value . '"';
                 break;
 
             case 'gender':
-                $value = $faker -> randomElement(['Male','Female' ]);
-                $statement = '"'.$value.'"';
+                $value = $faker->randomElement(['Male', 'Female']);
+                $statement = '"' . $value . '"';
                 break;
 
             case 'website':
-                $value = $faker -> url();
-                $statement = '"'.$value.'"';
+                $value = $faker->url();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'comment':
             case 'productdescription':
             case 'description':
-                $value = $faker -> text();
-                $statement = '"'.$value.'"';
+                $value = $faker->text();
+                if ($length == -1) {
+                    $statement = '"' . $value . '"';
+                } else {
+                    if (!is_int($length)) {
+                        $length = intval($length);
+                    }
+                    $statement = '"' . substr($value, 0, $length) . '"';
+                }
                 break;
 
             case 'lastupdated':
             case 'datecreated':
-                $value = $faker -> unixTime(new dateTime('-3 days'));
+                $value = $faker->unixTime(new dateTime('-3 days'));
                 $statement = $value;
                 break;
 
             case 'active':
             case 'isactive':
-                $value = $faker -> boolean();
+                $value = $faker->boolean();
                 $statement = $value;
                 break;
 
             case 'productname':
-                $value = $faker -> productName();
-                $statement = '"'.$value.'"';
+                $value = $faker->productName();
+                if ($length == -1) {
+                    $statement = '"' . $value . '"';
+                } else {
+                    if (!is_int($length)) {
+                        $length = intval($length);
+                    }
+                    $statement = '"' . substr($value, 0, $length) . '"';
+                }
                 break;
 
             case 'picture':
@@ -576,8 +602,8 @@ class Vtl_faker extends Trongate
             case 'productimageurl':
             case 'image':
             case 'imageurl':
-                $value = $faker -> randomElement(['img1.jpg', 'img2.jpg', 'img3.jpg', 'img4.jpg', 'img5.jpg', 'img6.jpg','img7.jpg', 'img8.jpg', 'img9.jpg', 'img10.jpg', 'img11.jpg']);
-                $statement = '"'.$value.'"';
+                $value = $faker->randomElement(['img1.jpg', 'img2.jpg', 'img3.jpg', 'img4.jpg', 'img5.jpg', 'img6.jpg', 'img7.jpg', 'img8.jpg', 'img9.jpg', 'img10.jpg', 'img11.jpg']);
+                $statement = '"' . $value . '"';
                 break;
             case 'totalamount':
             case 'total':
@@ -585,48 +611,48 @@ class Vtl_faker extends Trongate
             case 'quantity':
             case 'price':
             case 'productprice':
-                $value = $faker -> numberBetween($min = 0, $max = 1000000);
+                $value = $faker->numberBetween($min = 0, $max = 1000000);
                 $statement = $value;
                 break;
 
             case 'orderstatus':
-                $value = $faker -> randomElement(['Processed', 'Out for Delivery', 'Fulfilled']);
-                $statement = '"'.$value.'"';
+                $value = $faker->randomElement(['Processed', 'Out for Delivery', 'Fulfilled']);
+                $statement = '"' . $value . '"';
                 break;
 
             case 'deliverystatus':
-                $value = $faker -> randomElement(['Delivered', 'Returned']);
-                $statement = '"'.$value.'"';
+                $value = $faker->randomElement(['Delivered', 'Returned']);
+                $statement = '"' . $value . '"';
                 break;
 
             case 'paymentmethod':
-                $value = $faker -> randomElement(['Cash', 'Credit Card', 'PayPal']);
-                $statement = '"'.$value.'"';
+                $value = $faker->randomElement(['Cash', 'Credit Card', 'PayPal']);
+                $statement = '"' . $value . '"';
                 break;
 
             case 'paymentstatus':
-                $value = $faker -> randomElement(['Paid', 'Unpaid']);
-                $statement = '"'.$value.'"';
+                $value = $faker->randomElement(['Paid', 'Unpaid']);
+                $statement = '"' . $value . '"';
                 break;
 
             case 'paymenttype':
-                $value = $faker -> randomElement(['Credit Card', 'Cash', 'PayPal']);
-                $statement = '"'.$value.'"';
+                $value = $faker->randomElement(['Credit Card', 'Cash', 'PayPal']);
+                $statement = '"' . $value . '"';
                 break;
 
             case 'transactionid':
-                $value = $faker -> uuid();
+                $value = $faker->uuid();
                 $statement = $value;
                 break;
 
             case 'discount':
             case 'discountpercentage':
-                $value = $faker -> numberBetween($min = 0, $max = 100);
+                $value = $faker->numberBetween($min = 0, $max = 100);
                 $statement = $value;
                 break;
 
             case 'taxamount':
-                $value = $faker -> randomFloat(2, 0, 50);
+                $value = $faker->randomFloat(2, 0, 50);
                 $statement = $value;
                 break;
 
@@ -634,32 +660,36 @@ class Vtl_faker extends Trongate
                 $statement = 'nothing';
         }
         //allow for the fact that a known field name may still fail to get data
-        if ($statement === null) { $statement = 'nothing'; }
+        if ($statement === null) {
+            $statement = 'nothing';
+        }
         return $statement;
     }
 
+
     /**
-     * Extracts the type from a string containing the type with optional brackets.
+     * Parses a database type definition string to extract the type and length.
      *
-     * This function extracts the type from a string containing the type with optional brackets.
-     * It returns the type without brackets if present, otherwise, it returns the original type.
-     *
-     * @param string $typeWithBrackets The type string possibly containing brackets (e.g., 'varchar(255)').
-     * @param mixed|null $valueInBrackets The value inside the brackets (if present).
-     * @return string Returns the extracted type without brackets, or the original type if no brackets are found.
+     * @param string $dbType The database type definition string.
+     * @return array An array containing the type and length extracted from the input string.
      */
-    private function extractType($typeWithBrackets, $valueInBrackets = null): string
+    private function parseDatabaseType($dbType): array
     {
-        // Strip parentheses and get the value inside them
-        if (preg_match('/^([a-z]+)(?:\(([^)]+)\))?$/i', $typeWithBrackets, $matches)) {
-            // $matches[1] will contain the type without brackets
-            // $matches[2] will contain the value inside brackets (if present)
-            $valueInBrackets = isset($matches[2]) ? $matches[2] : null;
-            return $matches[1];
+        // Split the type definition by "(" and ")"
+        $parts = explode('(', $dbType);
+
+        // Extract the type
+        $type = $parts[0];
+
+        // Check if the split was successful
+        if (count($parts) < 2) {
+            // If not, return type with a default length value
+            return array($type, -1);
         }
 
-        // Default to the original type if the pattern doesn't match
-        return $typeWithBrackets;
+        // Extract the length
+        $length = rtrim($parts[1], ')');
+        return array($type, $length);
     }
 
     /**
@@ -672,21 +702,20 @@ class Vtl_faker extends Trongate
      * @param mixed $valueInBrackets The value inside the brackets associated with the type (if present).
      * @return string The generated value as a string.
      */
-    private function generateValueFromType($faker, $type, $valueInBrackets)
+    private function generateValueFromType($faker, $type, $length)
     {
         $statement = null;
         $value = null;
-        switch ($type)
-        {
+        switch ($type) {
 
             case 'int':
             case 'bigint':
-                $value = $faker -> randomNumber();
-                $statement =$value;
+                $value = $faker->randomNumber();
+                $statement = $value;
                 break;
 
             case 'smallint':
-                $value = $faker -> numberBetween(1, 32767);
+                $value = $faker->numberBetween(1, 32767);
                 $statement = $value;
                 break;
 
@@ -694,67 +723,76 @@ class Vtl_faker extends Trongate
             case 'varchar':
             case 'blob':
             case 'text':
-                $value = $faker -> text();
-                if ($valueInBrackets == 0) {
+
+                $value = $faker->text();
+                if ($length == -1) {
                     $statement = '"' . $value . '"';
-                }else
-                {$statement = '"' . substr($value, 0, $valueInBrackets) . '"';}
+                } else {
+                    if (!is_int($length)) {
+                        $length = intval($length);
+                    }
+                    $statement = '"' . substr($value, 0, $length) . '"';
+                }
                 break;
 
             case 'char':
             case 'binary':
             case 'varbinary':
-                $value = $faker -> word();
-                if ($valueInBrackets == 0) {
+                $value = $faker->word();
+                if ($length == -1) {
                     $statement = '"' . $value . '"';
-                }else
-                {$statement = '"' . substr($value, 0, $valueInBrackets) . '"';}
+                } else {
+                    if (!is_int($length)) {
+                        $length = intval($length);
+                    }
+                    $statement = '"' . substr($value, 0, $length) . '"';
+                }
                 break;
 
             case 'float':
             case 'double':
-                $value = $faker -> randomFloat();
+                $value = $faker->randomFloat();
                 $statement = $value;
                 break;
 
             case 'decimal':
-                $value = $faker -> randomFloat(NULL, 0, 999999.99);
+                $value = $faker->randomFloat(NULL, 0, 999999.99);
                 $statement = $value;
                 break;
 
             case 'date':
-                $value = $faker -> date();
-                $statement = '"'.$value.'"';
+                $value = $faker->date();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'timestamp':
             case 'datetime':
-                $value = $faker -> dateTime()->format('Y-m-d H:i:s');
-                $statement = '"'.$value.'"';
+                $value = $faker->dateTime()->format('Y-m-d H:i:s');
+                $statement = '"' . $value . '"';
                 break;
 
             case 'time':
-                $value = $faker -> time();
-                $statement = '"'.$value.'"';
+                $value = $faker->time();
+                $statement = '"' . $value . '"';
                 break;
 
             case 'tinyint':
-                $value = $faker -> boolean();
+                $value = $faker->boolean();
                 $statement = $value;
                 break;
 
             case 'bit':
-                $value = $faker -> randomElement(['0', '1']);
+                $value = $faker->randomElement(['0', '1']);
                 $statement = $value;
                 break;
 
             case 'enum':
-                $value = $faker -> randomElement(['value1', 'value2', 'value3']);
+                $value = $faker->randomElement(['value1', 'value2', 'value3']);
                 $statement = $value;
                 break;
 
             case 'set':
-                $value = $faker -> randomElements(['value1', 'value2', 'value3'], 2);
+                $value = $faker->randomElements(['value1', 'value2', 'value3'], 2);
                 $statement = $value;
                 break;
 
@@ -788,7 +826,11 @@ class Vtl_faker extends Trongate
             foreach ($selectedRows as $selectedRow) {
                 $originalFieldName = $selectedRow['field'];
                 $field = $this->processFieldName($selectedRow['field']);
-                $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field);
+                $dbType = $selectedRow['type'];
+                list($type, $length) = $this->parseDatabaseType($dbType);
+                $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
+
+
                 //This is where you should add code to generate custom field data
                 //it needs to be in the form of:
                 //  if($field === '<add your field name here') {
@@ -796,10 +838,8 @@ class Vtl_faker extends Trongate
                 //  }
 
                 if ($fieldFakerStatement == "nothing") {
-                    $typeWithBrackets = $selectedRow['type'];
-                    $valueInBrackets = 0;
-                    $type = $this->extractType($typeWithBrackets, $valueInBrackets);
-                    $typeFakerStatement = $this->generateValueFromType($faker, $type, $valueInBrackets);
+
+                    $typeFakerStatement = $this->generateValueFromType($faker, $type, $length);
                     $record[$originalFieldName] = $typeFakerStatement;
                 } else {
                     $record[$originalFieldName] = $fieldFakerStatement;
@@ -817,8 +857,7 @@ class Vtl_faker extends Trongate
         }
         try {
             return $this->model->insert_batch($selectedTable, $records);
-        }
-        catch(Exception $e) {
+        } catch (Exception $e) {
             return $e->getMessage();
         }
 
@@ -835,26 +874,36 @@ class Vtl_faker extends Trongate
      */
     private function generateMultipleRowsAndInsertViaSql(mixed $faker, mixed $selectedRows, mixed $selectedTable, mixed $numRows)
     {
+
         if (!is_int($numRows)) {
             $numRows = intval($numRows);
         }
+
         $columns = '(';
+        $values = '';
 
-
+        foreach ($selectedRows as $key => $selectedRow) {
+            $originalFieldName = $selectedRow['field'];
+            $columns .= $originalFieldName;
+            if ($key < count($selectedRows) - 1) {
+                $columns .= ',';
+            } else {
+                $columns .= ')';
+            }
+        }
+        // Generate multiple sets of values for multiple rows
         for ($i = 0; $i < $numRows; $i++) {
+            $rowValues = '';
 
-            //we need to keep track of both loops to ensure that we get the sql syntax correct.
-            $isFirstOuterIteration = ($i === 0); // Check if it's the first iteration of the outer loop
-            $isLastOuterIteration = ($i === $numRows - 1); // Check if it's the last iteration of the outer loop
+            foreach ($selectedRows as $selectedRow) {
+                if ($rowValues !== '') {
+                    $rowValues .= ',';
+                }
 
-            foreach ($selectedRows as $key => $selectedRow) {
-
-                $values = '(';
-                $isLastInnerIteration = ($key === count($selectedRows) - 1); // Check if it's the last iteration of the inner loop
-
-                $originalFieldName = $selectedRow['field'];
                 $field = $this->processFieldName($selectedRow['field']);
-                $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field);
+                $dbType = $selectedRow['type'];
+                list($type, $length) = $this->parseDatabaseType($dbType);
+                $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
 
                 //This is where you should add code to generate custom field data
                 //it needs to be in the form of:
@@ -863,59 +912,31 @@ class Vtl_faker extends Trongate
                 //  }
 
                 if ($fieldFakerStatement == "nothing") {
-                    $typeWithBrackets = $selectedRow['type'];
-                    $valueInBrackets = 0;
-                    $type = $this->extractType($typeWithBrackets, $valueInBrackets);
-                    $typeFakerStatement = $this->generateValueFromType($faker, $type, $valueInBrackets);
-                    $values .= $typeFakerStatement;
+                    $typeFakerStatement = $this->generateValueFromType($faker, $type, $length);
+                    $rowValues .= $typeFakerStatement;
                 } else {
-                    $values .= $fieldFakerStatement;
+                    $rowValues .= $fieldFakerStatement;
                 }
-
-                // Check if it's the first iteration of the outer loop and last of the inner
-                // so that we can tidy up $columns
-                if ($isFirstOuterIteration && $isLastInnerIteration) {
-                    $columns .= $originalFieldName . ')';
-                } else {
-                    $columns .= $originalFieldName . ',';
-                }
-
-
-                // Check if it's the last iteration of the inner loop to tidy up
-                //the $values statement
-                if ($isLastInnerIteration) {
-                    $values .= ')';
-                }
-                else{
-                    $values .= ',';
-                }
-
-
             }
 
-            // Check if it's the last iteration of the outer loop and the inner loop
-            // this should complete the values statement part
-            if ($isLastOuterIteration ) {
-                $values .= ';';
-            }
-            else{
-                $values .= ',';
+            $values .= '(' . $rowValues . ')';
+
+            if ($i < $numRows - 1) {
+                $values .= ', ';
             }
         }
 
-        //we should now have the component parts of our sql insert statement
-        $sql = 'INSERT INTO ' . $selectedTable . ' '.$columns . ' VALUES ' . $values;
-
-        try{
-            $data=[];
-            $this->model->prepare_and_execute($sql,$data);
-            return 'The following number rows were inserted into ' . $selectedTable . ': '.$numRows;
-        }
-        catch (Exception $e) {
+        $sql = 'INSERT INTO ' . $selectedTable . ' ' . $columns . ' VALUES ' . $values . ';';
+        try {
+            $data = [];
+            $this->model->prepare_and_execute($sql, $data);
+            return 'The following number rows were inserted into ' . $selectedTable . ': ' . $numRows;
+        } catch (Exception $e) {
             return $e->getMessage();
         }
-
     }
+
+
 
 
     /**
@@ -933,64 +954,95 @@ class Vtl_faker extends Trongate
         //var_dump($postData);
         // Extract relevant data from the decoded JSON
         $selectedTables = $postData['selectedTables'];
+        $resetAutoIncrement = $postData['resetAutoIncrement'];
+
+
 
         if ($selectedTables != null && $selectedTables != "") {
             $responseText = '';
             $deletedTables = [];
             $failedTables = [];
 
-            try {
-                foreach ($selectedTables as $key => $selectedTable) {
+            if ($resetAutoIncrement) {
+                try{
+                    $sql = 'nothing';
+                    foreach ($selectedTables as $key => $selectedTable) {
+                        switch ($selectedTable) {
+                            case 'trongate_users':
+                            case 'trongate_user_levels':
+                            case 'trongate_administrators':
+                                break;
+                            default:
+                                $sql = 'TRUNCATE TABLE ' . $selectedTable;
+                                break;
+                        }
+                        try{
+                            if ($sql != 'nothing')
+                            {
+                                $this->model->query($sql, '');
 
-                    // Create our SQL statement here
-                    $sql = 'DELETE FROM ' . $selectedTable;
-                    switch ($selectedTable) {
-                        case 'trongate_users':
-                        case 'trongate_user_levels':
-                        case 'trongate_administrators':
-                            $sql .= ' Where id > 1';
-                            break;
-                        default:
-                            break;
-                    }
-                    try {
-                        // Enclose the query method in a try-catch block
-                        $this->model->query($sql, '');
+                                // If the query was successful, add the table to the list of deleted tables
+                                $deletedTables[] = $selectedTable;
+                            }
+                        }
+                        catch (Exception $e) {
+                            // Handle the exception here, you can log it, display an error message, or take any other appropriate action
+                            // In this example, we're just logging the error message
+                            echo 'Error: ' . $e->getMessage();
+                            // Add the table to the list of failed tables
+                            $failedTables[] = $selectedTable;
+                        }
 
-                        // If the query was successful, add the table to the list of deleted tables
-                        $deletedTables[] = $selectedTable;
-                    } catch (Exception $e) {
-                        // Handle the exception here, you can log it, display an error message, or take any other appropriate action
-                        // In this example, we're just logging the error message
-                        echo 'Error: ' . $e->getMessage();
-                        // Add the table to the list of failed tables
-                        $failedTables[] = $selectedTable;
                     }
                 }
-
-                // If no exception was thrown, it means all queries were successful
-                $responseText .= 'Operation completed successfully.';
-            } catch (Exception $e) {
-                // If an exception was thrown outside of the foreach loop, handle it here
-                echo 'Error: ' . $e->getMessage();
-                $responseText .= 'Operation failed.'.$e;
+                catch (Exception $e) {
+                    // If an exception was thrown outside of the foreach loop, handle it here
+                    echo 'Error: ' . $e->getMessage();
+                    $responseText .= 'Operation failed.' . $e;
+                }
             }
+            else {
+                try {
+                    foreach ($selectedTables as $key => $selectedTable) {
 
+                        // Create our SQL statement here
+                        $sql = 'DELETE FROM ' . $selectedTable;
+                        switch ($selectedTable) {
+                            case 'trongate_users':
+                            case 'trongate_user_levels':
+                            case 'trongate_administrators':
+                                $sql .= ' Where id > 1';
+                                break;
+                            default:
+                                break;
+                        }
+                        try {
+                            // Enclose the query method in a try-catch block
+                            $this->model->query($sql, '');
+
+                            // If the query was successful, add the table to the list of deleted tables
+                            $deletedTables[] = $selectedTable;
+                        } catch (Exception $e) {
+                            // Handle the exception here, you can log it, display an error message, or take any other appropriate action
+                            // In this example, we're just logging the error message
+                            echo 'Error: ' . $e->getMessage();
+                            // Add the table to the list of failed tables
+                            $failedTables[] = $selectedTable;
+                        }
+                    }
+
+                    // If no exception was thrown, it means all queries were successful
+                    $responseText .= 'Operation completed successfully.';
+                } catch (Exception $e) {
+                    // If an exception was thrown outside of the foreach loop, handle it here
+                    echo 'Error: ' . $e->getMessage();
+                    $responseText .= 'Operation failed.' . $e;
+                }
+            }
             // Append the list of deleted tables to the response text
-            if (!empty($deletedTables)) {
-                $responseText .= "Deleted Tables:\n";
-                foreach ($deletedTables as $table) {
-                    $responseText .= "- $table\n";
-                }
-            }
-
+            $responseText .= ' Deleted tables: ' . implode(', ', $deletedTables) . '.';
             // Append the list of failed tables to the response text
-            if (!empty($failedTables)) {
-                $responseText .= "Failed Tables:\n";
-                foreach ($failedTables as $failedTable) {
-                    $responseText .= "- $failedTable\n";
-                }
-            }
+            $responseText .= ' Failed tables: ' . implode(', ', $failedTables) . '.';
 
             // Now $responseText contains the report for the whole operation
             echo $responseText;
@@ -998,6 +1050,7 @@ class Vtl_faker extends Trongate
         else{ echo 'No Tables were selected';}
 
     }
+
 
     /**
      * Function to create indexes for selected rows in a specified table.
@@ -1043,8 +1096,8 @@ class Vtl_faker extends Trongate
                                 break;
                         }
 
-                            $this->model->query($sql);
-                            $indexesCreated[] = $indexName;
+                        $this->model->query($sql);
+                        $indexesCreated[] = $indexName;
                     }
                     catch (Exception $ex){
                         echo 'Error: ' . $ex->getMessage();
@@ -1152,31 +1205,31 @@ class Vtl_faker extends Trongate
      *
      * @return void
      */
-        public function exportDatabase(): void
-        {
-            $rawPostData = file_get_contents('php://input');
-            $postData = json_decode($rawPostData, true);
-            // Extract tables to export from post data
-            $tablesToExport = $postData['tablesToExport'];
+    public function exportDatabase(): void
+    {
+        $rawPostData = file_get_contents('php://input');
+        $postData = json_decode($rawPostData, true);
+        // Extract tables to export from post data
+        $tablesToExport = $postData['tablesToExport'];
 
-            // Extract tables with data to export from post data
-            $tablesWithDataToExport = $postData['tablesWithDataToExport'];
+        // Extract tables with data to export from post data
+        $tablesWithDataToExport = $postData['tablesWithDataToExport'];
 
-            // Array to store tables that should not have data exported
-            $tablesToSkipDataExport = [];
+        // Array to store tables that should not have data exported
+        $tablesToSkipDataExport = [];
 
-            // Loop through tables to export
-            foreach ($tablesToExport as $table) {
-                // If the table is in tables with data to export, skip it
-                if (in_array($table, $tablesWithDataToExport)) {
-                    continue;
-                }
-                // Otherwise, add it to the tables to skip data export
-                $tablesToSkipDataExport[] = $table;
-
+        // Loop through tables to export
+        foreach ($tablesToExport as $table) {
+            // If the table is in tables with data to export, skip it
+            if (in_array($table, $tablesWithDataToExport)) {
+                continue;
             }
+            // Otherwise, add it to the tables to skip data export
+            $tablesToSkipDataExport[] = $table;
 
-            //if no dump settings are defined below the the following defaults will end up being applied
+        }
+
+        //if no dump settings are defined below the the following defaults will end up being applied
 
 //            $dumpSettingsDefault = array(
 //                'include-tables' => array(),
@@ -1215,51 +1268,51 @@ class Vtl_faker extends Trongate
 //                'disable-foreign-keys-check' => true
 //            );
 
-            // Now $tablesToSkipDataExport contains tables whose data should not be exported
-            // and can be added to the dump settings.
-            $dumpSettings = array(
-                'include-tables' => $tablesToExport,
-                'no-data' => $tablesToSkipDataExport,
-                'add-drop-database' => true,
-                'no-create-db' => false,
-                'add-drop-table' => true,
-                'single-transaction' => true,
-                'reset-auto-increment' => true
-            );
-            $pdoSettings = array(
-                PDO::ATTR_PERSISTENT => true,
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
-            );
+        // Now $tablesToSkipDataExport contains tables whose data should not be exported
+        // and can be added to the dump settings.
+        $dumpSettings = array(
+            'include-tables' => $tablesToExport,
+            'no-data' => $tablesToSkipDataExport,
+            'add-drop-database' => true,
+            'no-create-db' => false,
+            'add-drop-table' => true,
+            'single-transaction' => true,
+            'reset-auto-increment' => true
+        );
+        $pdoSettings = array(
+            PDO::ATTR_PERSISTENT => true,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+        );
 
 
-            try {
-                //run a check to see if there is a backups directory in the assets folder
-                $folderPath =  __DIR__ . '/../assets/backups';
-                if (is_dir($folderPath)) {
-                        // we have a folder
+        try {
+            //run a check to see if there is a backups directory in the assets folder
+            $folderPath =  __DIR__ . '/../assets/backups';
+            if (is_dir($folderPath)) {
+                // we have a folder
+            } else {
+                if (mkdir($folderPath, 0777, true)) {
+                    // Creates the directory recursively if it doesn't exist
                 } else {
-                    if (mkdir($folderPath, 0777, true)) {
-                        // Creates the directory recursively if it doesn't exist
-                    } else {
-                        echo "Failed to create folder!";
-                    }
+                    echo "Failed to create folder!";
                 }
-                $dump = new IMysqldump\Mysqldump('mysql:host='.$this->host.';dbname='.$this->dbname, $this->user, $this->pass, $dumpSettings, $pdoSettings);
-                $dateSuffix = date('Ymd_His'); // Current date and time format: YYYYMMDD_HHmmss
-                $backupFilename = $folderPath.'/backup_' . $dateSuffix . '.sql';
-                $dump->start($backupFilename);
-                echo 'Success, your database script ( backup'.$dateSuffix.'.sql )is in the folder modules/vtl_gen/vtl_faker/assets/backups';
-            } catch (\Exception $e) {
-                echo 'mysqldump-php error: ' . $e->getMessage();
             }
+            $dump = new IMysqldump\Mysqldump('mysql:host='.$this->host.';dbname='.$this->dbname, $this->user, $this->pass, $dumpSettings, $pdoSettings);
+            $dateSuffix = date('Ymd_His'); // Current date and time format: YYYYMMDD_HHmmss
+            $backupFilename = $folderPath.'/backup_' . $dateSuffix . '.sql';
+            $dump->start($backupFilename);
+            echo 'Success, your database script ( backup'.$dateSuffix.'.sql )is in the folder modules/vtl_gen/vtl_faker/assets/backups';
+        } catch (\Exception $e) {
+            echo 'mysqldump-php error: ' . $e->getMessage();
         }
+    }
 
 
-        function __destruct()
-        {
-            $this->parent_module = '';
-            $this->child_module = '';
-        }
+    function __destruct()
+    {
+        $this->parent_module = '';
+        $this->child_module = '';
+    }
 
 
 

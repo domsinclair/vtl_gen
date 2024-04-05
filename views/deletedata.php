@@ -80,7 +80,7 @@
         var xhr = new XMLHttpRequest();
 
         // Specify the PHP file or endpoint to handle the data
-        var targetUrl = '<?= BASE_URL ?>vtl_gen/clearData';  // Adjust the URL accordingly
+        var targetUrl = '<?= BASE_URL ?>vtl_gen-vtl_faker/clearData';  // Adjust the URL accordingly
         console.log(targetUrl);
         // Open a POST request to the specified URL
         xhr.open('POST', targetUrl, true);
