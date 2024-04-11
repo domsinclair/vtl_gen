@@ -2,7 +2,10 @@
 
 require_once __DIR__ . '/../assets/vendor/autoload.php';
 require_once __DIR__ . '/../assets/vtl_faker_config.php';
+
 include_once(__DIR__ . '/../assets/vendor/ifsnop/mysqldump-php/src/Ifsnop/Mysqldump/Mysqldump.php');
+
+
 
 use Ifsnop\Mysqldump as IMysqldump;
 class Vtl_faker extends Trongate
@@ -761,13 +764,13 @@ class Vtl_faker extends Trongate
                 break;
 
             case 'date':
-                $value = $faker->date();
+                $value = $faker->date(FAKER_DATE_FORMAT,$max = 'now');
                 $statement = '"' . $value . '"';
                 break;
 
             case 'timestamp':
             case 'datetime':
-                $value = $faker->dateTime()->format('Y-m-d H:i:s');
+                $value = $faker->dateTime()->format(FAKER_DATETIME_FORMAT);
                 $statement = '"' . $value . '"';
                 break;
 
@@ -829,7 +832,6 @@ class Vtl_faker extends Trongate
                 $dbType = $selectedRow['type'];
                 list($type, $length) = $this->parseDatabaseType($dbType);
                 $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
-
 
                 //This is where you should add code to generate custom field data
                 //it needs to be in the form of:

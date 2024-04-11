@@ -50,6 +50,8 @@ class Vtl_gen extends Trongate
         // Initialize Parsedown
         $parsedown = new Parsedown();
 
+
+
         // Open markdown files
         $fileIntro = fopen($filepathIntro, 'r');
         $fileCreateData = fopen($filepathCreateData, 'r');

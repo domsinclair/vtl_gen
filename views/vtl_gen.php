@@ -1,3 +1,6 @@
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,6 +17,7 @@
         }
     </style>
 </head>
+
 <body>
 <h1 class="text-center">Vtl Data Generator</h1>
 
