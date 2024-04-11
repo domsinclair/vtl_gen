@@ -42,6 +42,7 @@ class Vtl_faker extends Trongate
         $this->$faker = \Faker\Factory::create(FAKER_LOCALE);
 
 
+
         //Get a list of all modules in the application and whether they have an api.
         $this->applicationModules = $this->list_all_modules();
 
@@ -195,6 +196,9 @@ class Vtl_faker extends Trongate
         // Initialize Faker instance
         $faker = null;
         $faker = $this->$faker;
+        // Seed the faker.  This will ensure that the same data gets recreated
+        // which can be useful for testing purposes.
+        $faker -> seed(FAKER_SEED);
 
         // Retrieve raw POST data from the request body
         $rawPostData = file_get_contents('php://input');
