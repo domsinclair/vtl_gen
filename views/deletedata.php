@@ -119,3 +119,8 @@
         };
     });
 </script>
+
+<style>
+    input[type="checkbox"]
+    {margin: 5px;}
+</style>
