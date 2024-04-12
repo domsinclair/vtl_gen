@@ -15,6 +15,7 @@
             align-items: center; /* Center items vertically */
             gap: 4px;
         }
+
     </style>
 </head>
 
@@ -194,5 +195,16 @@
         font-size: large;
         font-weight: bold;
     }
-
+    pre {
+        white-space: nowrap;
+        max-width: 100%;
+        overflow: auto;
+        background-color: #393838 !important;
+        border-color: #6b6b6b !important;
+        border-radius: 6px;
+        color: #f1e4e4 !important;
+        text-shadow: 0 1px 0 #444444 !important;
+        white-space: pre-wrap;
+        padding: 1em 1em;
+    }
 </style>
