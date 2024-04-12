@@ -60,12 +60,12 @@
 <section>
     <h4 class="text-center">Create Data Gallery</h4>
     <div class = "container flex">
-        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[0]?>" >
-        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[1]?>" >
+        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[0]?>" >
+        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[1]?>" >
     </div>
     <div class = "container flex">
-        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[2]?>" >
-        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[3]?>" >
+        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[2]?>" >
+        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[3]?>" >
     </div>
     <hr style="height:2px;border-width:0;color:gray;background-color:gray">
 </section>
@@ -84,7 +84,7 @@
 <section>
     <h4 class="text-center">Delete Data Gallery</h4>
     <div class = "container flex">
-        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[7]?>" >
+        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[7]?>" >
     </div>
     <hr style="height:2px;border-width:0;color:gray;background-color:gray">
 </section>
@@ -97,11 +97,11 @@
 <section>
     <h4 class="text-center">Create Index Gallery</h4>
     <div class = "container flex">
-        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[4]?>" >
-        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[5]?>" >
+        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[4]?>" >
+        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[5]?>" >
     </div>
     <div class = "container flex">
-        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[6]?>" >
+        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[6]?>" >
     </div>
     <hr style="height:2px;border-width:0;color:gray;background-color:gray">
 </section>
@@ -115,12 +115,12 @@
 <section>
     <h4 class="text-center">Delete Index Gallery</h4>
     <div class = "container flex">
-        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[8]?>" >
-        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[9]?>" >
+        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[8]?>" >
+        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[9]?>" >
     </div>
     <div class = "container flex">
-        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[10]?>" >
-        <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[11]?>" >
+        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[10]?>" >
+        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[11]?>" >
     </div>
     <hr style="height:2px;border-width:0;color:gray;background-color:gray">
 </section>
@@ -133,8 +133,8 @@
 <section>
     <h4 class="text-center">Export Database Gallery</h4>
     <div class = "container flex">
-    <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[12]?>" >
-    <img height = "400px" width = "400px" src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[13]?>" >
+    <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[12]?>" >
+    <img height = "400px" width = "400px" alt=[]7685 src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[13]?>" >
     </div>
 </section>
 </body>
