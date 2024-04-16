@@ -161,7 +161,9 @@
     .flex{
         gap: 20px
     }
-
+    body{
+        background-color: #f4eeee;
+    }
     .grid-container {
         display: grid;
         grid-template-columns: repeat(6, 1fr);

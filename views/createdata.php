@@ -1,3 +1,4 @@
+<?php $picDirectoryExists = false; ?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -36,17 +37,73 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
         </p>
     </div>
 </div>
+<div>
+    <input type="hidden" id="picDirectoryExists" value="<?php echo $picDirectoryExists ? 'true' : 'false'; ?>">
+</div>
 <script src="<?= BASE_URL ?>js/app.js"></script>
 </body>
 </html>
 <script>
 
-    function selectedTable() {
+    async function setPictureDirectoryExistsForeSelectedTableModule(selectedTable) {
+        <?php $picDirectoryExists = false;?>
+        var postData = {
+            selectedTable: selectedTable
+        };
+
+        try {
+            // Create a new XMLHttpRequest
+            var xhr = new XMLHttpRequest();
+
+            // Specify the PHP file or endpoint to handle the data
+            var targetUrl = '<?= BASE_URL ?>vtl_gen-vtl_faker/getPictureFolderExists';
+
+            // Open a POST request to the specified URL
+            xhr.open('POST', targetUrl, true);
+
+            // Set the content type to JSON
+            xhr.setRequestHeader('Content-type', 'application/json');
+
+            // Convert the data object to a JSON string
+            var jsonData = JSON.stringify(postData);
+
+            // Send the request with the JSON data
+            xhr.send(jsonData);
+
+            // Define a callback function to handle the response
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    // Handle the response here
+                    var response = xhr.responseText;
+                    // Parse the response as needed
+                    var responseObject = JSON.parse(response);
+                    var picDirectoryExists = responseObject.picDirectoryExists;
+                    // Now you can use the picDirectoryExists variable
+
+
+                    // Update the content of the hidden input field
+                    var picDirectoryExistsInput = document.getElementById('picDirectoryExists');
+                    picDirectoryExistsInput.value = picDirectoryExists ? 'true' : 'false';
+
+
+                } else {
+                    // Handle error responses here
+                    console.error('Error:', xhr.status);
+                }
+            };
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    }
+
+    async function selectedTable() {
         // Get the dropdown element
         var dropdown = document.getElementById('tableChoiceDropdown');
 
         // Get the selected value
         var selectedTable = dropdown.options[dropdown.selectedIndex].text;
+
+        await setPictureDirectoryExistsForeSelectedTableModule(selectedTable);
 
         // Find the columnInfo for the selected table
         var columnInfo = <?php echo json_encode($columnInfo); ?>;
@@ -89,9 +146,12 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
         document.getElementById('columnInfoTableContainer').insertAdjacentHTML('beforeend', containerHtml);
 
         // Add a button beneath the table (initially hidden)
-        var buttonHtml = '<button id="submitBtn" onclick="submitForm()" style="display: none;">Generate Fake Data</button>';
+        var buttonHtml = '<button id="submitBtn" onclick="submitForm()" style="display: none !important;">Generate Fake Data</button>';
         document.getElementById('columnInfoTableContainer').insertAdjacentHTML('beforeend', buttonHtml);
 
+        // Add a button beneath the table (initially hidden)
+        var buttonHtml = '<button id="movePicsBtn" onclick="movePictures()" style="display: none;">Transfer Images</button>';
+        document.getElementById('columnInfoTableContainer').insertAdjacentHTML('beforeend', buttonHtml);
 
         var checkboxes = document.querySelectorAll('.checkbox');
         var numRowsInput = document.getElementById('numRows');
@@ -133,8 +193,73 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
         }
     }
 
+    function movePictures(){
+        // Get the selected table name from the dropdown
+        var dropdown = document.getElementById('tableChoiceDropdown');
+        var selectedTable = dropdown.options[dropdown.selectedIndex].text;
+
+        // Prepare the data to send
+        var postData = {
+            selectedTable: selectedTable
+        };
+
+        try {
+            // Create a new XMLHttpRequest
+            var xhr = new XMLHttpRequest();
+
+            // Specify the PHP file or endpoint to handle the data
+            var targetUrl = '<?= BASE_URL ?>vtl_gen-vtl_faker/setImageFoldersAndTransferImages';
+
+            // Open a POST request to the specified URL
+            xhr.open('POST', targetUrl, true);
+
+            // Set the content type to JSON
+            xhr.setRequestHeader('Content-type', 'application/json');
+
+            // Convert the data object to a JSON string
+            var jsonData = JSON.stringify(postData);
+
+            // Send the request with the JSON data
+            xhr.send(jsonData);
+
+            // Define a callback function to handle the response
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    // Handle the response here
+                    var response = xhr.responseText;
+                    openModal('response-modal');
+                    const targetEl = document.getElementById('the-response');
+                    targetEl.innerHTML = xhr.responseText;
+
+
+                } else {
+                    // Handle error responses here
+                    openModal('response-modal');
+                    const targetEl = document.getElementById('the-response');
+                    targetEl.innerHTML = xhr.responseText;
+                }
+            };
+        } catch (error) {
+            openModal('response-modal');
+            const targetEl = document.getElementById('the-response');
+            targetEl.innerHTML = xhr.responseText;
+        }
+    }
 
     function submitForm() {
+
+        // Get the value of picDirectoryExists
+        var picDirectoryExists = document.getElementById('picDirectoryExists').value === 'true';
+
+        // Check if picDirectoryExists is true
+        if (picDirectoryExists) {
+
+            // Hide the "Generate Fake Data" button
+            document.getElementById('submitBtn').style.display = 'none';
+            // Show the "Transfer Images" button
+            document.getElementById('movePicsBtn').style.display = 'block';
+        }
+
 
         // Get the selected table name from the dropdown
         var dropdown = document.getElementById('tableChoiceDropdown');
@@ -224,4 +349,7 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
 <style>
     input[type="checkbox"]
     {margin: 5px;}
+    body{
+        background-color: #f4eeee;
+    }
 </style>

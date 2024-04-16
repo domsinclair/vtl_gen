@@ -109,6 +109,11 @@ class Vtl_faker extends Trongate
                         $api_json_exists = false;
                     }
 
+                    // Construct a check to see if there is a module_pics and module_pics_thumbnails folder
+                    // in the assets folder.  That would indicate that there's a single picture uploader in the module.
+                    $picsDir = $assets_dir .'/'.$module_name.'_pics';
+                    $pic_directory_exists = is_dir($picsDir) ? true : false;
+                    $pic_directory =  $picsDir;
                     // Initialize an array to store information about submodules
                     $submodules = [];
 
@@ -138,13 +143,17 @@ class Vtl_faker extends Trongate
                             // Check if the assets directory exists within the submodule and if an api.json file exists
                             $submodule_api_json_exists = is_dir($submodule_assets_dir) && file_exists($submodule_assets_dir . '/api.json');
 
+                            // check if there's a pics directory
+                            $submodule_pic_directory_exists = is_dir($submodule_assets_dir .'/'.$module_name .'_pics');
+
                             // If controllers exist within the submodule, add submodule information to the submodules array
                             if ($controllers_exist) {
                                 $submodules[] = [
                                     'module_name' => $submodule_name,
                                     'is_child_module_of' => $module_name,
                                     'has_table' => $child_has_table,
-                                    'api_json_exists' => $submodule_api_json_exists
+                                    'api_json_exists' => $submodule_api_json_exists,
+                                    'pic_directory_exists' => $submodule_pic_directory_exists
                                 ];
                             }
                         }
@@ -156,6 +165,8 @@ class Vtl_faker extends Trongate
                             'module_name' => $module_name,
                             'has_table' => $parent_has_table,
                             'api_json_exists' => $api_json_exists,
+                            'pic_directory_exists' => $pic_directory_exists,
+                            'pic_directory' => $pic_directory,
                             'submodules' => $submodules
                         ];
                     } else {
@@ -163,7 +174,9 @@ class Vtl_faker extends Trongate
                         $module_info[] = [
                             'module_name' => $module_name,
                             'has_table' => $parent_has_table,
-                            'api_json_exists' => $api_json_exists
+                            'api_json_exists' => $api_json_exists,
+                            'pic_directory_exists' => $pic_directory_exists,
+                            'pic_directory' => $pic_directory
                         ];
                     }
                 }
@@ -180,6 +193,136 @@ class Vtl_faker extends Trongate
         // Return the module_info array containing information about all modules in the application
         return $module_info;
     }
+
+    /**
+     * Function: setImageFoldersAndTransferImages
+     * Description: This function retrieves raw POST data from the request body, decodes JSON data into an associative array,
+     * fetches records from the specified table in the database, copies images from a source directory to the picture directories
+     * corresponding to each record, and also copies thumbnail images. It ensures the existence of directories and handles
+     * exceptions appropriately.
+     * @return void
+     */
+    public function setImageFoldersAndTransferImages() :void
+    {
+        try {
+            // Retrieve raw POST data from the request body
+            $rawPostData = file_get_contents('php://input');
+
+            // Decode the JSON data into an associative array
+            $postData = json_decode($rawPostData, true);
+
+            // Ensure JSON decoding was successful
+            if ($postData === null) {
+                throw new Exception("Invalid JSON data");
+            }
+
+            $selectedTable = $postData['selectedTable'];
+            $sql = 'SELECT id, picture FROM '.$selectedTable;
+            $this->module('trongate_security');
+            $this->trongate_security->_make_sure_allowed();
+            $rows = $this->model->query($sql, 'object');
+            if (count($rows) > 0) {
+                //now we need to get the module picture directory location
+                $picDirectoryPath = $this->getPicDirectory($selectedTable);
+                foreach ($rows as $row) {
+                    $id = $row->id;  // Accessing the id property of each row object
+                    $picture = $row->picture;  // Accessing the picture property of each row object
+                    $basedir = APPPATH . 'modules/vtl_gen/vtl_faker/assets/images/';
+
+                    if (file_exists($basedir . $picture)) {
+
+                        if (is_dir($picDirectoryPath.'/'.$id)) {
+                            //check if file exists and if not copy it
+                            if (!file_exists($picDirectoryPath.'/'.$id.'/'.$picture)) {
+                                if (copy($basedir.$picture, $picDirectoryPath.'/'.$id.'/'.$picture)) {
+
+                                } else {
+                                    throw new Exception("Failed to copy image file to pics directory.");
+                                }
+                            }
+
+                        } else {
+                            //the directory does not exist so create it and copy the image
+                            if (mkdir($picDirectoryPath.'/'.$id, 0777, true)) {
+                                if (copy($basedir.$picture, $picDirectoryPath.'/'.$id.'/'.$picture)) {
+
+                                } else {
+                                    throw new Exception("Failed to copy image file to pics directory.");
+                                }
+                            }
+                        }
+                    } else {
+                        throw new Exception("Source image file does not exist.");
+                    }
+
+                    // Now we need to repeat the same for thumbnail images
+
+                    $baseDirThumbs = APPPATH . 'modules/vtl_gen/vtl_faker/assets/images/thumbnails/';
+                    if (file_exists($baseDirThumbs . $picture)) {
+                        if (is_dir($picDirectoryPath.'_thumbnails/'.$id)) {
+                            //check if file exists and if not copy it
+                            if (!file_exists($picDirectoryPath.'_thumbnails/'.$id.'/'.$picture)) {
+                                if (copy($baseDirThumbs.$picture, $picDirectoryPath.'_thumbnails/'.$id.'/'.$picture)) {
+
+                                } else {
+                                    throw new Exception("Failed to copy image file to pics thumbnails  directory.");
+                                }
+                            }
+                        } else {
+                            //the directory does not exist so create it and copy the image
+                            if (mkdir($picDirectoryPath.'_thumbnails/'.$id, 0777, true)) {
+                                if (copy($baseDirThumbs.$picture, $picDirectoryPath.'_thumbnails/'.$id.'/'.$picture)) {
+
+                                } else {
+                                    throw new Exception("Failed to copy image file to pics thumbnails directory.");
+                                }
+                            }
+                        }
+                    } else {
+                        throw new Exception("Source thumbnail image file does not exist.");
+                    }
+                }
+                // Success response if all images copied successfully
+                echo "Images copied successfully.";
+            }
+        } catch (Exception $e) {
+            // Error response if any exception occurred
+            echo $e->getMessage();
+        }
+
+
+    }
+
+    /**
+     * Function: getPictureFolderExists
+     * Description: This function retrieves raw POST data from the request body, decodes JSON data into an associative array,
+     * and checks if a picture directory exists based on the provided table name. It then outputs the result as JSON.
+     * @return void
+     */
+    public function getPictureFolderExists() : void
+    {
+        // Retrieve raw POST data from the request body
+        $rawPostData = file_get_contents('php://input');
+
+        // Decode the JSON data into an associative array
+        $postData = json_decode($rawPostData, true);
+
+        // Ensure JSON decoding was successful
+        if ($postData === null) {
+            throw new Exception("Invalid JSON data");
+        }
+
+        $picDirectoryExists = false;
+        // Find out if a picture directory exists
+        if ($this->findPicDirectoryExists($postData['selectedTable']) == 1) {
+            $picDirectoryExists = true;
+        }
+
+        // Output the result as JSON
+        header('Content-Type: application/json');
+        echo json_encode(array('picDirectoryExists' => $picDirectoryExists));
+    }
+
 
 
     /**
@@ -219,6 +362,10 @@ class Vtl_faker extends Trongate
         // Check if API JSON exists for the selected table
         $apiJsonExists = $this->findApiJsonExists($selectedTable);
 
+        $picDirectoryExists = $this -> findPicDirectoryExists($selectedTable);
+        if ($picDirectoryExists) {
+            $picDirectory = $this -> getPicDirectory($selectedTable);
+        }
 
         // Determine the method for generating and inserting fake data
         if ($selectedRows !== null) {
@@ -275,6 +422,53 @@ class Vtl_faker extends Trongate
         }
         // Return false if the module name is not found or no API JSON exists for the table
         return false;
+    }
+
+    /**
+     * Function: findPicDirectoryExists
+     * Description: This function iterates over application modules to find the specified table. It returns true if API JSON exists
+     * for the specified table, otherwise false. It also handles the case of orphaned tables by returning false.
+     * @param string $selectedTable The name of the table to search for.
+     * @return bool Returns true if the API JSON exists for the specified table, otherwise false.
+     */
+    public function findPicDirectoryExists($selectedTable): bool
+    {
+        // Iterate over application modules to find the specified table
+        foreach ($this->applicationModules as $module) {
+            if (isset($module['module_name']) && $module['module_name'] === $selectedTable) {
+                // Return true if picture directory exists for the specified module
+                return $module['pic_directory_exists'];
+
+            } elseif (isset($module['orphaned_tables']) && $module['orphaned_tables'] === $selectedTable) {
+                return false;
+            }
+        }
+        // Return false if the module name is not found or no API JSON exists for the table
+        return  false;
+
+    }
+
+    /**
+     * Function: getPicDirectory
+     * Description: This function iterates over application modules to find the specified table. It returns the picture directory
+     * path if it exists for the specified table, otherwise an empty string. It handles the case of orphaned tables by returning
+     * an empty string.
+     * @param string $selectedTable The name of the table to search for.
+     * @return mixed Returns the picture directory path if it exists for the specified table, otherwise an empty string.
+     */
+    public function getPicDirectory($selectedTable): mixed
+    {
+        // Iterate over application modules to find the specified table
+        foreach ($this->applicationModules as $module) {
+            if (isset($module['module_name']) && $module['module_name'] === $selectedTable) {
+                // Return true if API JSON exists for the specified table
+                return $module['pic_directory'];
+            } elseif (isset($module['orphaned_tables']) && $module['orphaned_tables'] === $selectedTable) {
+                return '';
+            }
+        }
+        // Return false if the module name is not found or no API JSON exists for the table
+        return '';
     }
 
 
@@ -973,6 +1167,7 @@ class Vtl_faker extends Trongate
                 try{
                     $sql = 'nothing';
                     foreach ($selectedTables as $key => $selectedTable) {
+
                         switch ($selectedTable) {
                             case 'trongate_users':
                             case 'trongate_user_levels':
@@ -989,6 +1184,17 @@ class Vtl_faker extends Trongate
 
                                 // If the query was successful, add the table to the list of deleted tables
                                 $deletedTables[] = $selectedTable;
+                                //now delete any picture folders if they exist
+
+                                //first we need to know that they exist
+                                if ($this -> findPicDirectoryExists($selectedTable ))
+                                {
+                                    $picDirectory = $this ->getPicDirectory($selectedTable);
+                                    $this -> deleteSubDirectories($picDirectory);
+
+                                    $thumbsDir = $picDirectory . '_thumbnails';
+                                    $this -> deleteSubDirectories($thumbsDir);
+                                }
                             }
                         }
                         catch (Exception $e) {
@@ -1028,6 +1234,17 @@ class Vtl_faker extends Trongate
 
                             // If the query was successful, add the table to the list of deleted tables
                             $deletedTables[] = $selectedTable;
+                            //now delete any picture folders if they exist
+
+                            //first we need to know that they exist
+                            if ($this -> findPicDirectoryExists($selectedTable ))
+                            {
+                                $picDirectory = $this ->getPicDirectory($selectedTable);
+                                $this -> deleteSubDirectories($picDirectory);
+
+                                $thumbsDir = $picDirectory . '_thumbnails';
+                                $this -> deleteSubDirectories($thumbsDir);
+                            }
                         } catch (Exception $e) {
                             // Handle the exception here, you can log it, display an error message, or take any other appropriate action
                             // In this example, we're just logging the error message
@@ -1035,7 +1252,11 @@ class Vtl_faker extends Trongate
                             // Add the table to the list of failed tables
                             $failedTables[] = $selectedTable;
                         }
+
+
                     }
+
+
 
                     // If no exception was thrown, it means all queries were successful
                     $responseText .= 'Operation completed successfully.';
@@ -1312,6 +1533,34 @@ class Vtl_faker extends Trongate
             echo 'mysqldump-php error: ' . $e->getMessage();
         }
     }
+    /**
+     * Function: deleteSubDirectories
+     * Description: This private function recursively deletes all subdirectories and files within the specified directory.
+     * @param string $dir The directory path to delete its subdirectories and files.
+     * @return bool Returns true if the subdirectories and files were successfully deleted, otherwise false.
+     */
+    function deleteSubDirectories($dir) {
+        if (!is_dir($dir)) {
+            return false;
+        }
+
+        $subDirectories = array_diff(scandir($dir), array('.', '..'));
+
+        foreach ($subDirectories as $subDir) {
+            $path = $dir . '/' . $subDir;
+            if (is_dir($path)) {
+                // Recursively delete subdirectories and their contents
+                $this -> deleteSubDirectories($path);
+                // Remove the empty subdirectory
+                rmdir($path);
+            } else {
+                // Delete files directly within the directory
+                unlink($path);
+            }
+        }
+
+        return true;
+    }
 
 
     function __destruct()
@@ -1319,6 +1568,7 @@ class Vtl_faker extends Trongate
         $this->parent_module = '';
         $this->child_module = '';
     }
+
 
 
 

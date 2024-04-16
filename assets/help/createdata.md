@@ -193,10 +193,16 @@ There are some important caveats to this.  The first is that , currently at leas
 
 > <b> Remember that when working with field names the generator will convert everything to lowercase and strip out all spaces and underscores.</b>
 
-The assumption behind doing it this way is that you will likely use Trongate's BASE_URL to generate links back to the actual image location.
+The Vtl Data Generator is now capable of transferring images to the directories that are created when you use the desktop app to add a single image uploader to a module.  By definition when you do that two directories are created in the assets folder of your module <moduleName>_pis and <moduleName>_pics_thumbnails.  The Generator will add additional folders to those (named after the id of each record) and copy the correct image to it from those supplied in the vtl_faker module.  
+
+To invoke this, once you have added data to a table that has a picture field added by the single image uploader you will then see another button with the text 'Transfer Images' on it.  Clicking that will invoke the transfer.
+Both standard sized and thumbnail images are provided.
 
 In the case of the Vtl Data Generator the provided images can be found at this location  vtl_gen/vtl_faker/assets/images
 
+> <b> This will not as yet work with single image uploaders tou create yourself unless you happen to add image repositories in the assets folder of the module in question that follow the same naming convention as the desktop app follows.</b>
+
+<br/>
 
 #### Current Limitations
 

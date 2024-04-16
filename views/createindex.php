@@ -208,4 +208,7 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
 <style>
     input[type="checkbox"]
     {margin: 5px;}
+    body{
+        background-color: #f4eeee;
+    }
 </style>

@@ -56,3 +56,8 @@ if (!empty($rows)) {
 
 </body>
 </html>
+<style>
+    body{
+        background-color: #f4eeee;
+    }
+</style>

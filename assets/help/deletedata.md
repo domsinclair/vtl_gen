@@ -16,3 +16,6 @@ You can also opt to delete data from a table and reset the auto increment.  To t
 - trongate_administrators
 - trongate_users
 - trongate_user_levels
+
+
+Images that have been added to folders that follow the naming conventions employed by the desktop app when adding a single image uploader will also be deleted along with the folders that contained them.  The main repository folders will not be deleted.
