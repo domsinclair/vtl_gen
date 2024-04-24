@@ -1,11 +1,9 @@
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Vtl_Generator</title>
     <style>
@@ -27,7 +25,9 @@
     <div class="grid-item index-heading" colspan="2">Indexes</div>
     <div class="grid-item database-heading">Script</div>
     <div class="grid-item"><?php echo anchor('vtl_gen/createData', 'Create', array("class" => "button")); ?></div>
-    <div class="grid-item" id="showButton"><button class="button" onclick="toggleDropdown()">Show</button></div>
+    <div class="grid-item" id="showButton">
+        <button class="button" onclick="toggleDropdown()">Show</button>
+    </div>
     <div class="grid-item"><?php echo anchor('vtl_gen/deleteData', 'Delete', array("class" => "button")); ?></div>
     <div class="grid-item"><?php echo anchor('vtl_gen/createIndex', 'Create', array("class" => "button")); ?></div>
     <div class="grid-item"><?php echo anchor('vtl_gen/deleteIndex', 'Delete', array("class" => "button")); ?></div>
@@ -59,13 +59,13 @@
 </section>
 <section>
     <h4 class="text-center">Create Data Gallery</h4>
-    <div class = "container flex">
-        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[0]?>" >
-        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[1]?>" >
+    <div class="container flex">
+        <img height="400px" width="400px" alt=[] src="<?= BASE_URL . 'vtl_gen_module/help/images/' . $images[0] ?>">
+        <img height="400px" width="400px" alt=[] src="<?= BASE_URL . 'vtl_gen_module/help/images/' . $images[1] ?>">
     </div>
-    <div class = "container flex">
-        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[2]?>" >
-        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[3]?>" >
+    <div class="container flex">
+        <img height="400px" width="400px" alt=[] src="<?= BASE_URL . 'vtl_gen_module/help/images/' . $images[2] ?>">
+        <img height="400px" width="400px" alt=[] src="<?= BASE_URL . 'vtl_gen_module/help/images/' . $images[3] ?>">
     </div>
     <hr style="height:2px;border-width:0;color:gray;background-color:gray">
 </section>
@@ -83,8 +83,8 @@
 </section>
 <section>
     <h4 class="text-center">Delete Data Gallery</h4>
-    <div class = "container flex">
-        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[7]?>" >
+    <div class="container flex">
+        <img height="400px" width="400px" alt=[] src="<?= BASE_URL . 'vtl_gen_module/help/images/' . $images[7] ?>">
     </div>
     <hr style="height:2px;border-width:0;color:gray;background-color:gray">
 </section>
@@ -96,12 +96,12 @@
 </section>
 <section>
     <h4 class="text-center">Create Index Gallery</h4>
-    <div class = "container flex">
-        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[4]?>" >
-        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[5]?>" >
+    <div class="container flex">
+        <img height="400px" width="400px" alt=[] src="<?= BASE_URL . 'vtl_gen_module/help/images/' . $images[4] ?>">
+        <img height="400px" width="400px" alt=[] src="<?= BASE_URL . 'vtl_gen_module/help/images/' . $images[5] ?>">
     </div>
-    <div class = "container flex">
-        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[6]?>" >
+    <div class="container flex">
+        <img height="400px" width="400px" alt=[] src="<?= BASE_URL . 'vtl_gen_module/help/images/' . $images[6] ?>">
     </div>
     <hr style="height:2px;border-width:0;color:gray;background-color:gray">
 </section>
@@ -114,13 +114,13 @@
 </section>
 <section>
     <h4 class="text-center">Delete Index Gallery</h4>
-    <div class = "container flex">
-        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[8]?>" >
-        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[9]?>" >
+    <div class="container flex">
+        <img height="400px" width="400px" alt=[] src="<?= BASE_URL . 'vtl_gen_module/help/images/' . $images[8] ?>">
+        <img height="400px" width="400px" alt=[] src="<?= BASE_URL . 'vtl_gen_module/help/images/' . $images[9] ?>">
     </div>
-    <div class = "container flex">
-        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[10]?>" >
-        <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[11]?>" >
+    <div class="container flex">
+        <img height="400px" width="400px" alt=[] src="<?= BASE_URL . 'vtl_gen_module/help/images/' . $images[10] ?>">
+        <img height="400px" width="400px" alt=[] src="<?= BASE_URL . 'vtl_gen_module/help/images/' . $images[11] ?>">
     </div>
     <hr style="height:2px;border-width:0;color:gray;background-color:gray">
 </section>
@@ -132,9 +132,10 @@
 
 <section>
     <h4 class="text-center">Export Database Gallery</h4>
-    <div class = "container flex">
-    <img height = "400px" width = "400px" alt=[] src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[12]?>" >
-    <img height = "400px" width = "400px" alt=[]7685 src="<?= BASE_URL.'vtl_gen_module/help/images/'.$images[13]?>" >
+    <div class="container flex">
+        <img height="400px" width="400px" alt=[] src="<?= BASE_URL . 'vtl_gen_module/help/images/' . $images[12] ?>">
+        <img height="400px" width="400px" alt=[]7685
+             src="<?= BASE_URL . 'vtl_gen_module/help/images/' . $images[13] ?>">
     </div>
 </section>
 </body>
@@ -158,12 +159,14 @@
     }
 </script>
 <style>
-    .flex{
+    .flex {
         gap: 20px
     }
-    body{
+
+    body {
         background-color: #f4eeee;
     }
+
     .grid-container {
         display: grid;
         grid-template-columns: repeat(6, 1fr);
@@ -197,6 +200,7 @@
         font-size: large;
         font-weight: bold;
     }
+
     pre {
         white-space: nowrap;
         max-width: 100%;

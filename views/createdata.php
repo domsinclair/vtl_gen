@@ -15,7 +15,8 @@
 </div>
 <?php //echo '<p>' . anchor('vtl_gen/showHelp', 'Show Vtl Generator Help', array("class" => "button")) . '</p>'; ?>
 <p>Select the table in the database from the drop down below for which you wish to create some fake data.</p>
-<p>Select those columns into which you want to add data, or just check the checkbox in the header if you want to select all the rows. </p>
+<p>Select those columns into which you want to add data, or just check the checkbox in the header if you want to select
+    all the rows. </p>
 <p><b>Do not select fields that are set to auto increment.</b></p>
 <?php
 //echo form_label($dropdownLabel);
@@ -25,8 +26,10 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
 
 ?>
 
-
-
+<!-- HTML element for a progress bar -->
+<!--<div class="progress-bar">-->
+<!--    <div class="progress" id="progress" style=" width = 250px; background-color: #3b0a49;"></div>-->
+<!--</div>-->
 <div id="columnInfoTableContainer" class="container"></div>
 <div class="modal" id="response-modal" style="display: none">
     <div class="modal-heading">Generated Rows</div>
@@ -37,15 +40,29 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
         </p>
     </div>
 </div>
+<div class="modal" id="image-transfer-response-modal" style="display: none">
+    <div class="modal-heading">Transferred Images</div>
+    <div class="modal-body">
+        <p id="the-response"></p>
+        <p class="text-center">
+            <button onclick="closeModal()" class="alt">Close</button>
+        </p>
+    </div>
+</div>
 <div>
     <input type="hidden" id="picDirectoryExists" value="<?php echo $picDirectoryExists ? 'true' : 'false'; ?>">
 </div>
+
 <script src="<?= BASE_URL ?>js/app.js"></script>
 </body>
 </html>
 <script>
+    // const progressBar = document.getElementById("progress");
+    // // Global variable to store folder progress
+    // let folderProgress = 0;
 
-    async function setPictureDirectoryExistsForeSelectedTableModule(selectedTable) {
+
+    async function setPictureDirectoryExistsForSelectedTableModule(selectedTable) {
         <?php $picDirectoryExists = false;?>
         var postData = {
             selectedTable: selectedTable
@@ -103,7 +120,7 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
         // Get the selected value
         var selectedTable = dropdown.options[dropdown.selectedIndex].text;
 
-        await setPictureDirectoryExistsForeSelectedTableModule(selectedTable);
+        await setPictureDirectoryExistsForSelectedTableModule(selectedTable);
 
         // Find the columnInfo for the selected table
         var columnInfo = <?php echo json_encode($columnInfo); ?>;
@@ -145,13 +162,27 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
         containerHtml += '</div>';
         document.getElementById('columnInfoTableContainer').insertAdjacentHTML('beforeend', containerHtml);
 
-        // Add a button beneath the table (initially hidden)
-        var buttonHtml = '<button id="submitBtn" onclick="submitForm()" style="display: none !important;">Generate Fake Data</button>';
-        document.getElementById('columnInfoTableContainer').insertAdjacentHTML('beforeend', buttonHtml);
 
-        // Add a button beneath the table (initially hidden)
-        var buttonHtml = '<button id="movePicsBtn" onclick="movePictures()" style="display: none;">Transfer Images</button>';
-        document.getElementById('columnInfoTableContainer').insertAdjacentHTML('beforeend', buttonHtml);
+        // Create a flex container for the buttons, progress bar, and iframe
+        var flexContainerHtml = '<div class="flex-container">';
+        document.getElementById('columnInfoTableContainer').insertAdjacentHTML('beforeend', flexContainerHtml);
+
+// Add the button beneath the table (initially hidden)
+        var submitBtnHtml = '<button id="submitBtn" onclick="submitForm()" style="display: none !important;margin-bottom: 15px;">Generate Fake Data</button>';
+        document.querySelector('.flex-container').insertAdjacentHTML('beforeend', submitBtnHtml);
+
+// Add the button beneath the table (initially hidden)
+        var movePicsBtnHtml = '<button id="movePicsBtn" onclick="movePictures()" style="display: none; margin-bottom: 15px;">Transfer Images</button>';
+        document.querySelector('.flex-container').insertAdjacentHTML('beforeend', movePicsBtnHtml);
+
+// Add a progress bar
+        var progressHtml = '<div class="progress-bar" id="progress-bar"><div class="progress" id="progress"></div></div>';
+        document.querySelector('.flex-container').insertAdjacentHTML('beforeend', progressHtml);
+
+
+// Close the flex container
+        document.getElementById('columnInfoTableContainer').insertAdjacentHTML('beforeend', '</div>');
+
 
         var checkboxes = document.querySelectorAll('.checkbox');
         var numRowsInput = document.getElementById('numRows');
@@ -164,12 +195,13 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
             });
         });
         // Add an event listener for the "Select All" checkbox
-        document.addEventListener('change', function(event) {
+        document.addEventListener('change', function (event) {
             var target = event.target;
             if (target && target.id === 'selectAllCheckbox') {
                 toggleAllCheckboxes(target);
             }
         });
+
         function checkboxesChecked() {
             for (var i = 0; i < checkboxes.length; i++) {
                 if (checkboxes[i].checked) {
@@ -185,7 +217,7 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
             var checkboxes = table.querySelectorAll('.checkbox');
 
             // Toggle each checkbox based on the state of the "Select All" checkbox
-            checkboxes.forEach(function(checkbox) {
+            checkboxes.forEach(function (checkbox) {
                 checkbox.checked = source.checked;
                 // Trigger change event on the checkbox
                 checkbox.dispatchEvent(new Event('change'));
@@ -193,7 +225,80 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
         }
     }
 
-    function movePictures(){
+
+    async function processRecords(totalRows) {
+        // Get the selected table name from the dropdown
+        var dropdown = document.getElementById('tableChoiceDropdown');
+        var selectedTable = dropdown.options[dropdown.selectedIndex].text;
+
+        var progressBar = document.getElementById('progress');
+        var progress = 0;
+
+        // Define a function to handle each record asynchronously
+        async function processRecord(recordId) {
+            return new Promise((resolve, reject) => {
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', '<?= BASE_URL ?>vtl_gen-vtl_faker/copyImageForRecord', true);
+                xhr.setRequestHeader('Content-type', 'application/json');
+
+                // Prepare the data to send
+                var data = {
+                    recordId: recordId,
+                    selectedTable: selectedTable
+                };
+
+                // Convert the data object to a JSON string
+                var jsonData = JSON.stringify(data);
+
+                // Define a callback function to handle the response
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        // Update progress bar
+                        progress++;
+                        var percent = Math.round((progress / totalRows) * 100);
+                        progressBar.style.width = percent + '%';
+                        progressBar.textContent = percent + '%';
+
+                        // Resolve the Promise
+                        resolve();
+                    } else {
+                        // Reject the Promise on error
+                        reject('Request from process images failed with status ' + xhr.responseText);
+                    }
+                };
+
+                xhr.onerror = function () {
+                    // Reject the Promise on connection error
+                    reject('Request failed');
+                };
+
+                // Send the request with the JSON data
+                xhr.send(jsonData);
+            });
+        }
+
+        // Loop through records and process them asynchronously
+        for (var i = 1; i <= totalRows; i++) {
+            try {
+                await processRecord(i);
+            } catch (error) {
+                // Handle errors here if needed
+                console.error(error);
+                openModal('image-transfer-response-modal');
+                const targetEl = document.getElementById('the-response');
+                targetEl.innerHTML = error;
+                return; // Stop processing further records on error
+            }
+        }
+
+        // If all records processed, display success message
+        openModal('image-transfer-response-modal');
+        const targetEl = document.getElementById('the-response');
+        targetEl.innerHTML = 'Images copied successfully.';
+    }
+
+
+    function movePictures() {
         // Get the selected table name from the dropdown
         var dropdown = document.getElementById('tableChoiceDropdown');
         var selectedTable = dropdown.options[dropdown.selectedIndex].text;
@@ -226,23 +331,38 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
             xhr.onload = function () {
                 if (xhr.status === 200) {
                     // Handle the response here
-                    var response = xhr.responseText;
-                    openModal('response-modal');
-                    const targetEl = document.getElementById('the-response');
-                    targetEl.innerHTML = xhr.responseText;
-
-
+                    var response = JSON.parse(xhr.responseText);
+                    if (response.error) {
+                        // Handle error responses here
+                        openModal('response-modal');
+                        const targetEl = document.getElementById('the-response');
+                        targetEl.innerHTML = response.error;
+                    } else {
+                        // Start processing records
+                        processRecords(response.totalRows);
+                    }
                 } else {
                     // Handle error responses here
                     openModal('response-modal');
                     const targetEl = document.getElementById('the-response');
-                    targetEl.innerHTML = xhr.responseText;
+                    targetEl.innerHTML = 'Request failed with status ' + xhr.status;
                 }
             };
         } catch (error) {
             openModal('response-modal');
             const targetEl = document.getElementById('the-response');
-            targetEl.innerHTML = xhr.responseText;
+            targetEl.innerHTML = error;
+        }
+    }
+
+
+    // Function to check if a string is valid JSON
+    function isValidJson(str) {
+        try {
+            JSON.parse(str);
+            return true;
+        } catch (error) {
+            return false;
         }
     }
 
@@ -347,9 +467,40 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
 </script>
 
 <style>
-    input[type="checkbox"]
-    {margin: 5px;}
-    body{
+    :root {
+        --max-progress-width: 500px;
+        --progress-height: 30px;
+        --border-radius: 50px;
+    }
+
+    .progress-bar {
+        max-width: var(--max-progress-width);
+        height: var(--progress-height);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        position: relative;
+        display: block;
+    }
+
+    .progress {
+        background-color: #007bff;
+        /*transition: width 0.1s ease-in-out;*/
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 16px;
+        position: absolute;
+        width: 0;
+
+    }
+
+    input[type="checkbox"] {
+        margin: 5px;
+    }
+
+    body {
         background-color: #f4eeee;
     }
 </style>

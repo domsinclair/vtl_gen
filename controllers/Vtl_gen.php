@@ -2,16 +2,34 @@
 // Include Parsedown library
 require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
 
+/**
+ *
+ */
 class Vtl_gen extends Trongate
 {
 
     //used for pagination
 
+    /**
+     * @var
+     */
     private $showSelectedDataTable;
+    /**
+     * @var int
+     */
     private $default_limit = 20;
+    /**
+     * @var int[]
+     */
     private $per_page_options = array(10, 20, 50, 100);
 // Function to check if daylight saving time is in effect
-    function isDaylightSavingTime() {
+
+    /**
+     * @return bool
+     * @throws Exception
+     */
+    function isDaylightSavingTime()
+    {
         $currentTime = time();
         $timezone = new DateTimeZone(date_default_timezone_get());
         $transition = $timezone->getTransitions($currentTime, $currentTime);
@@ -24,7 +42,6 @@ class Vtl_gen extends Trongate
 
         return false;
     }
-
 
 
     /**
@@ -49,7 +66,6 @@ class Vtl_gen extends Trongate
 
         // Initialize Parsedown
         $parsedown = new Parsedown();
-
 
 
         // Open markdown files
@@ -89,7 +105,7 @@ class Vtl_gen extends Trongate
         $data['markdownExport'] = $markdownExport;
 
         // Get images for display
-        $data['images']= $this -> getImagesForDisplay();
+        $data['images'] = $this->getImagesForDisplay();
 
 
         $data['view_module'] = 'vtl_gen';
@@ -97,33 +113,10 @@ class Vtl_gen extends Trongate
         $this->template('public', $data);
     }
     // Function to get images for display
-    private function getImagesForDisplay(): array {
-        $basedir = APPPATH . 'modules/vtl_gen/assets/help/images/';
-        $arrFilename = array();
-        if ($handle = opendir($basedir)){
-            while (false !== ($filename = readdir($handle))){
-                if ($filename != "." && $filename != ".."){
-                    array_push($arrFilename, $filename);
-                }
-            }
-            closedir($handle);
-        }
-        return $arrFilename;
-    }
 
-    // Function to render delete index page
-    public function deleteIndex(): void
-    {
-        $data['tables'] = $this->setupTablesForDropdown();
-        $data['indexInfo'] = $this->getAllTablesAndTheirIndexes();
-        $data['view_module'] = 'vtl_gen';
-        $data['view_file'] = 'deleteindex';
-        $this->template('public', $data);
-    }
-
-
-
-    // Function to setup tables for dropdown
+    /**
+     * @return array
+     */
     private function setupTablesForDropdown(): array
     {
         $tables = $this->getAllTables();
@@ -132,6 +125,11 @@ class Vtl_gen extends Trongate
         return $tables;
     }
 
+    // Function to render delete index page
+
+    /**
+     * @return array
+     */
     private function getAllTables(): array
     {
         $tables = [];
@@ -147,6 +145,44 @@ class Vtl_gen extends Trongate
         return $tables;
     }
 
+
+
+    // Function to setup tables for dropdown
+
+    /**
+     * @return array
+     */
+    private function getImagesForDisplay(): array
+    {
+        $basedir = APPPATH . 'modules/vtl_gen/assets/help/images/';
+        $arrFilename = array();
+        if ($handle = opendir($basedir)) {
+            while (false !== ($filename = readdir($handle))) {
+                if ($filename != "." && $filename != "..") {
+                    array_push($arrFilename, $filename);
+                }
+            }
+            closedir($handle);
+        }
+        return $arrFilename;
+    }
+
+    /**
+     * @return void
+     * @throws Exception
+     */
+    public function deleteIndex(): void
+    {
+        $data['tables'] = $this->setupTablesForDropdown();
+        $data['indexInfo'] = $this->getAllTablesAndTheirIndexes();
+        $data['view_module'] = 'vtl_gen';
+        $data['view_file'] = 'deleteindex';
+        $this->template('public', $data);
+    }
+
+    /**
+     * @return array
+     */
     private function getAllTablesAndTheirIndexes(): array
     {
         $tablesAndIndexes = [];
@@ -167,6 +203,10 @@ class Vtl_gen extends Trongate
         return $tablesAndIndexes;
     }
 
+    /**
+     * @return void
+     * @throws Exception
+     */
     public function createData(): void
     {
         $data['tables'] = $this->setupTablesForDropdown();
@@ -177,6 +217,9 @@ class Vtl_gen extends Trongate
         $this->template('public', $data);
     }
 
+    /**
+     * @return array
+     */
     private function getAllTablesAndTheirColumnData(): array
     {
         $tablesAndColumns = [];
@@ -197,6 +240,10 @@ class Vtl_gen extends Trongate
         return $tablesAndColumns;
     }
 
+    /**
+     * @return void
+     * @throws Exception
+     */
     public function createIndex(): void
     {
         $data['tables'] = $this->setupTablesForDropdown();
@@ -207,6 +254,10 @@ class Vtl_gen extends Trongate
         $this->template('public', $data);
     }
 
+    /**
+     * @return void
+     * @throws Exception
+     */
     public function deleteData(): void
     {
         $data['tables'] = $this->setupTablesForDatabaseAdmin();
@@ -215,6 +266,20 @@ class Vtl_gen extends Trongate
         $this->template('public', $data);
     }
 
+    /**
+     * @return array
+     */
+    private function setupTablesForDatabaseAdmin(): array
+    {
+        $tables = $this->getAllTables();
+        $tables = array_merge($tables);
+        return $tables;
+    }
+
+    /**
+     * @return void
+     * @throws Exception
+     */
     public function export(): void
     {
         $data['tables'] = $this->setupTablesForDatabaseAdmin();
@@ -222,6 +287,134 @@ class Vtl_gen extends Trongate
         $data['view_file'] = 'export';
         $this->template('public', $data);
     }
+
+    /**
+     * @return void
+     * @throws ReflectionException
+     */
+    public function showData(): void
+    {
+
+        // Extract the selected table from the query parameters
+
+        //show table from Get request and set session variable on other pages
+        if (isset($_GET['selectedTable'])) {
+            $selectedDataTable = $_GET['selectedTable'];
+            $_SESSION['selectedDataTable'] = $selectedDataTable;
+        } else {
+            $selectedDataTable = $_SESSION['selectedDataTable'];
+        }
+
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+        $rows = $this->model->get(target_tbl: $selectedDataTable);
+
+
+        $pagination_data['total_rows'] = count($rows);
+        $pagination_data['page_num_segment'] = 3;
+        $pagination_data['limit'] = $this->_get_limit();
+        $pagination_data['pagination_root'] = 'vtl_gen/showData';
+        $pagination_data['record_name_plural'] = $selectedDataTable;
+        $pagination_data['include_showing_statement'] = true;
+
+
+        $data['rows'] = $this->_reduce_rows($rows);
+        $data['pagination_data'] = $pagination_data;
+        $data['selected_per_page'] = $this->_get_selected_per_page();
+        $data['per_page_options'] = $this->per_page_options;
+
+        //finally pass this to a view.
+        $data['view_module'] = 'vtl_gen';
+        $data['view_file'] = 'showdata';
+        $this->template('public', $data);
+    }
+
+    /**
+     * Get the limit for pagination.
+     *
+     * @return int Limit for pagination.
+     */
+    function _get_limit(): int
+    {
+        if (isset($_SESSION['selected_per_page'])) {
+            $limit = $this->per_page_options[$_SESSION['selected_per_page']];
+        } else {
+            $limit = $this->default_limit;
+        }
+
+        return $limit;
+    }
+
+    /**
+     * @param array $all_rows
+     * @return array
+     */
+    function _reduce_rows(array $all_rows): array
+    {
+        $rows = [];
+        $start_index = $this->_get_offset();
+        $limit = $this->_get_limit();
+        $end_index = $start_index + $limit;
+
+        $count = -1;
+        foreach ($all_rows as $row) {
+            $count++;
+            if (($count >= $start_index) && ($count < $end_index)) {
+                $rows[] = $row;
+            }
+        }
+
+        return $rows;
+    }
+
+    /**
+     * Get the offset for pagination.
+     *
+     * @return int Offset for pagination.
+     */
+    function _get_offset(): int
+    {
+        $page_num = (int)segment(3);
+
+        if ($page_num > 1) {
+            $offset = ($page_num - 1) * $this->_get_limit();
+        } else {
+            $offset = 0;
+        }
+
+        return $offset;
+    }
+
+    /**
+     * @return int|mixed
+     */
+    function _get_selected_per_page()
+    {
+        if (!isset($_SESSION['selected_per_page'])) {
+            $selected_per_page = $this->per_page_options[1];
+        } else {
+            $selected_per_page = $_SESSION['selected_per_page'];
+        }
+
+        return $selected_per_page;
+    }
+
+    /**
+     * @param $type
+     * @return string
+     */
+    protected function extractBaseType($type): string
+    {
+        // Use a regular expression to match the base type
+        if (preg_match('/^(\w+)(?:\(\d+\))?/', $type, $matches)) {
+            return $matches[1];
+        }
+        return $type; // Return the original type if no match
+    }
+
+    /**
+     * @return array
+     */
     private function createExportScript(): array
     {
         ini_set('display_errors', 1);
@@ -241,62 +434,12 @@ class Vtl_gen extends Trongate
         return $output;
     }
 
-    private function setupTablesForDatabaseAdmin(): array
-    {
-        $tables = $this->getAllTables();
-        $tables = array_merge( $tables);
-        return $tables;
-    }
-    public function showData(): void
-    {
-
-        // Extract the selected table from the query parameters
-
-        //show table from Get request and set session variable on other pages
-        if (isset($_GET['selectedTable'])) {
-            $selectedDataTable = $_GET['selectedTable'];
-            $_SESSION['selectedDataTable'] = $selectedDataTable;
-        } else {
-            $selectedDataTable = $_SESSION['selectedDataTable'];
-        }
-
-        $this->module('trongate_security');
-        $this->trongate_security->_make_sure_allowed();
-        $rows = $this->model->get(target_tbl:  $selectedDataTable);
-
-
-        $pagination_data['total_rows'] = count($rows);
-        $pagination_data['page_num_segment'] = 3;
-        $pagination_data['limit'] = $this->_get_limit();
-        $pagination_data['pagination_root'] = 'vtl_gen/showData';
-        $pagination_data['record_name_plural'] =  $selectedDataTable;
-        $pagination_data['include_showing_statement'] = true;
-
-
-
-        $data['rows'] = $this -> _reduce_rows($rows);
-        $data['pagination_data'] = $pagination_data;
-        $data['selected_per_page'] =  $this->_get_selected_per_page();
-        $data['per_page_options'] = $this->per_page_options;
-
-        //finally pass this to a view.
-        $data['view_module'] = 'vtl_gen';
-        $data['view_file'] = 'showdata';
-        $this->template('public', $data);
-    }
-
-
-
-
-    protected function extractBaseType($type): string
-    {
-        // Use a regular expression to match the base type
-        if (preg_match('/^(\w+)(?:\(\d+\))?/', $type, $matches)) {
-            return $matches[1];
-        }
-        return $type; // Return the original type if no match
-    }
-
+    /**
+     * @param $section
+     * @param $key
+     * @return mixed
+     * @throws Exception
+     */
     private function getValueForKey($section, $key)
     {
         // Check if the section exists
@@ -314,65 +457,6 @@ class Vtl_gen extends Trongate
 
         // If the key was not found in the specified section
         throw new Exception("Key not found: $key");
-    }
-
-    function _reduce_rows(array $all_rows): array {
-        $rows = [];
-        $start_index = $this->_get_offset();
-        $limit = $this->_get_limit();
-        $end_index = $start_index + $limit;
-
-        $count = -1;
-        foreach ($all_rows as $row) {
-            $count++;
-            if (($count>=$start_index) && ($count<$end_index)) {
-                $rows[] = $row;
-            }
-        }
-
-        return $rows;
-    }
-
-    /**
-     * Get the limit for pagination.
-     *
-     * @return int Limit for pagination.
-     */
-    function _get_limit(): int {
-        if (isset($_SESSION['selected_per_page'])) {
-            $limit = $this->per_page_options[$_SESSION['selected_per_page']];
-        } else {
-            $limit = $this->default_limit;
-        }
-
-        return $limit;
-    }
-
-    /**
-     * Get the offset for pagination.
-     *
-     * @return int Offset for pagination.
-     */
-    function _get_offset(): int {
-        $page_num = (int) segment(3);
-
-        if ($page_num>1) {
-            $offset = ($page_num-1)*$this->_get_limit();
-        } else {
-            $offset = 0;
-        }
-
-        return $offset;
-    }
-
-    function _get_selected_per_page() {
-        if (!isset($_SESSION['selected_per_page'])) {
-            $selected_per_page = $this->per_page_options[1];
-        } else {
-            $selected_per_page = $_SESSION['selected_per_page'];
-        }
-
-        return $selected_per_page;
     }
 
 }

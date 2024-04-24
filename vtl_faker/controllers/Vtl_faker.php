@@ -1,4 +1,4 @@
-<?php
+<?php /** @noinspection ALL */
 
 require_once __DIR__ . '/../assets/vendor/autoload.php';
 require_once __DIR__ . '/../assets/vtl_faker_config.php';
@@ -6,8 +6,8 @@ require_once __DIR__ . '/../assets/vtl_faker_config.php';
 include_once(__DIR__ . '/../assets/vendor/ifsnop/mysqldump-php/src/Ifsnop/Mysqldump/Mysqldump.php');
 
 
-
 use Ifsnop\Mysqldump as IMysqldump;
+
 class Vtl_faker extends Trongate
 {
     //protected mixed $settings;
@@ -21,6 +21,8 @@ class Vtl_faker extends Trongate
     private string $user = USER;
 
     private string $pass = PASSWORD;
+
+    private int $folderProgress = 0;
 
 
     /**
@@ -40,7 +42,6 @@ class Vtl_faker extends Trongate
         // Initialize the Faker instance
         $faker = null;
         $this->$faker = \Faker\Factory::create(FAKER_LOCALE);
-
 
 
         //Get a list of all modules in the application and whether they have an api.
@@ -111,9 +112,9 @@ class Vtl_faker extends Trongate
 
                     // Construct a check to see if there is a module_pics and module_pics_thumbnails folder
                     // in the assets folder.  That would indicate that there's a single picture uploader in the module.
-                    $picsDir = $assets_dir .'/'.$module_name.'_pics';
+                    $picsDir = $assets_dir . '/' . $module_name . '_pics';
                     $pic_directory_exists = is_dir($picsDir) ? true : false;
-                    $pic_directory =  $picsDir;
+                    $pic_directory = $picsDir;
                     // Initialize an array to store information about submodules
                     $submodules = [];
 
@@ -144,7 +145,7 @@ class Vtl_faker extends Trongate
                             $submodule_api_json_exists = is_dir($submodule_assets_dir) && file_exists($submodule_assets_dir . '/api.json');
 
                             // check if there's a pics directory
-                            $submodule_pic_directory_exists = is_dir($submodule_assets_dir .'/'.$module_name .'_pics');
+                            $submodule_pic_directory_exists = is_dir($submodule_assets_dir . '/' . $module_name . '_pics');
 
                             // If controllers exist within the submodule, add submodule information to the submodules array
                             if ($controllers_exist) {
@@ -195,111 +196,166 @@ class Vtl_faker extends Trongate
     }
 
     /**
-     * Function: setImageFoldersAndTransferImages
-     * Description: This function retrieves raw POST data from the request body, decodes JSON data into an associative array,
-     * fetches records from the specified table in the database, copies images from a source directory to the picture directories
-     * corresponding to each record, and also copies thumbnail images. It ensures the existence of directories and handles
-     * exceptions appropriately.
-     * @return void
+     * Copy an image associated with a record to the appropriate directory.
+     * This function handles POST data to fetch the image associated with the record ID,
+     * copies it to the target directory, and sends appropriate responses.
      */
-    public function setImageFoldersAndTransferImages() :void
+    public function copyImageForRecord()
     {
-        try {
-            // Retrieve raw POST data from the request body
-            $rawPostData = file_get_contents('php://input');
+        // Get the raw POST data
+        $rawPostData = file_get_contents('php://input');
+        $postData = json_decode($rawPostData, true);
 
-            // Decode the JSON data into an associative array
-            $postData = json_decode($rawPostData, true);
-
-            // Ensure JSON decoding was successful
-            if ($postData === null) {
-                throw new Exception("Invalid JSON data");
-            }
-
-            $selectedTable = $postData['selectedTable'];
-            $sql = 'SELECT id, picture FROM '.$selectedTable;
-            $this->module('trongate_security');
-            $this->trongate_security->_make_sure_allowed();
-            $rows = $this->model->query($sql, 'object');
-            if (count($rows) > 0) {
-                //now we need to get the module picture directory location
-                $picDirectoryPath = $this->getPicDirectory($selectedTable);
-                foreach ($rows as $row) {
-                    $id = $row->id;  // Accessing the id property of each row object
-                    $picture = $row->picture;  // Accessing the picture property of each row object
-                    $basedir = APPPATH . 'modules/vtl_gen/vtl_faker/assets/images/';
-
-                    if (file_exists($basedir . $picture)) {
-
-                        if (is_dir($picDirectoryPath.'/'.$id)) {
-                            //check if file exists and if not copy it
-                            if (!file_exists($picDirectoryPath.'/'.$id.'/'.$picture)) {
-                                if (copy($basedir.$picture, $picDirectoryPath.'/'.$id.'/'.$picture)) {
-
-                                } else {
-                                    throw new Exception("Failed to copy image file to pics directory.");
-                                }
-                            }
-
-                        } else {
-                            //the directory does not exist so create it and copy the image
-                            if (mkdir($picDirectoryPath.'/'.$id, 0777, true)) {
-                                if (copy($basedir.$picture, $picDirectoryPath.'/'.$id.'/'.$picture)) {
-
-                                } else {
-                                    throw new Exception("Failed to copy image file to pics directory.");
-                                }
-                            }
-                        }
-                    } else {
-                        throw new Exception("Source image file does not exist.");
-                    }
-
-                    // Now we need to repeat the same for thumbnail images
-
-                    $baseDirThumbs = APPPATH . 'modules/vtl_gen/vtl_faker/assets/images/thumbnails/';
-                    if (file_exists($baseDirThumbs . $picture)) {
-                        if (is_dir($picDirectoryPath.'_thumbnails/'.$id)) {
-                            //check if file exists and if not copy it
-                            if (!file_exists($picDirectoryPath.'_thumbnails/'.$id.'/'.$picture)) {
-                                if (copy($baseDirThumbs.$picture, $picDirectoryPath.'_thumbnails/'.$id.'/'.$picture)) {
-
-                                } else {
-                                    throw new Exception("Failed to copy image file to pics thumbnails  directory.");
-                                }
-                            }
-                        } else {
-                            //the directory does not exist so create it and copy the image
-                            if (mkdir($picDirectoryPath.'_thumbnails/'.$id, 0777, true)) {
-                                if (copy($baseDirThumbs.$picture, $picDirectoryPath.'_thumbnails/'.$id.'/'.$picture)) {
-
-                                } else {
-                                    throw new Exception("Failed to copy image file to pics thumbnails directory.");
-                                }
-                            }
-                        }
-                    } else {
-                        throw new Exception("Source thumbnail image file does not exist.");
-                    }
-                }
-                // Success response if all images copied successfully
-                echo "Images copied successfully.";
-            }
-        } catch (Exception $e) {
-            // Error response if any exception occurred
-            echo $e->getMessage();
+        // Check if the POST data is valid
+        if ($postData === null || !isset($postData['recordId'])) {
+            // Invalid POST data, send an error response
+            http_response_code(400); // Bad request
+            echo json_encode(array('message' => 'Invalid request data'));
+            return;
         }
 
+        // Extract the record ID from the POST data
+        $id = $postData['recordId'];
+        $selectedTable = $postData['selectedTable'];
+        $sql = 'SELECT  picture FROM ' . $selectedTable . ' WHERE id = ' . $id;
 
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+        $pictureData = $this->model->query($sql, 'object');
+
+        // Check if there is at least one element in the array
+        if (!empty($pictureData) && isset($pictureData[0]->picture)) {
+            $picture = $pictureData[0]->picture;
+            echo $picture;
+        } else {
+            // Handle the case where there is no "picture" property in the response
+            echo "No picture found";
+        }
+
+        $basedir = APPPATH . 'modules/vtl_gen/vtl_faker/assets/images/';
+        $picDirectoryPath = $this->getPicDirectory($selectedTable);
+        $this->copyImageFile($basedir, $picDirectoryPath, $id, $picture);
+        $this->copyImageFile($basedir . 'thumbnails/', $picDirectoryPath . '_thumbnails/', $id, $picture);
+        // Send a success response
+        http_response_code(200); // OK
+        // echo json_encode(array('message' => 'Image copied successfully for record ' . $Id));
     }
 
     /**
-     * Function: getPictureFolderExists
-     * Description: This function retrieves raw POST data from the request body, decodes JSON data into an associative array,
-     * and checks if a picture directory exists based on the provided table name. It then outputs the result as JSON.
+     * Function: getPicDirectory
+     * Description: This function iterates over application modules to find the specified table. It returns the picture
+     * directory path if it exists for the specified table, otherwise an empty string. It handles the case of orphaned
+     * tables by returning an empty string.
+     * @param string $selectedTable The name of the table to search for.
+     * @return mixed Returns the picture directory path if it exists for the specified table, otherwise an empty
+     *                              string.
+     */
+    public function getPicDirectory($selectedTable): mixed
+    {
+        // Iterate over application modules to find the specified table
+        foreach ($this->applicationModules as $module) {
+            if (isset($module['module_name']) && $module['module_name'] === $selectedTable) {
+                // Return true if API JSON exists for the specified table
+                return $module['pic_directory'];
+            } elseif (isset($module['orphaned_tables']) && $module['orphaned_tables'] === $selectedTable) {
+                return '';
+            }
+        }
+        // Return false if the module name is not found or no API JSON exists for the table
+        return '';
+    }
+
+    /**
+     * Copy an image file from the source directory to the target directory.
+     *
+     * @param string $sourceDir   The source directory path.
+     * @param string $targetDir   The target directory path.
+     * @param int    $id          The ID used for creating subdirectories in the target directory (if not a thumbnail).
+     * @param string $fileName    The name of the file to be copied.
+     * @param bool   $isThumbnail Indicates whether the file is a thumbnail (default is false).
+     *
+     * @throws Exception If the source file does not exist or if the copy operation fails.
+     */
+    private function copyImageFile(string $sourceDir, string $targetDir, int $id, string $fileName, bool $isThumbnail = false): void
+    {
+        $sourceFile = $sourceDir . ($isThumbnail ? 'thumbnails/' : '') . $fileName;
+        $targetSubDir = rtrim($targetDir, '/') . ($isThumbnail ? '_thumbnails/' : '/') . ($isThumbnail ? '' : $id . '/');
+        $targetFile = $targetSubDir . $fileName;
+
+        if (!file_exists($sourceFile)) {
+            throw new Exception("Source " . ($isThumbnail ? "thumbnail " : "") . "image file '$sourceFile' does not exist.");
+        }
+
+        if (!file_exists($targetSubDir)) {
+            mkdir($targetSubDir, 0777, true);
+        }
+
+        if (!copy($sourceFile, $targetFile)) {
+            throw new Exception("Failed to copy " . ($isThumbnail ? "thumbnail " : "") . "image file '$sourceFile' to '$targetFile'.");
+        }
+    }
+
+
+    /**
+     * Function: setImageFoldersAndTransferImages
+     * Description: This function retrieves raw POST data from the request body, decodes JSON data into an associative
+     * array, fetches records from the specified table in the database, copies images from a source directory to the
+     * picture directories corresponding to each record, and also copies thumbnail images. It ensures the existence of
+     * directories and handles exceptions appropriately.
      * @return void
      */
-    public function getPictureFolderExists() : void
+    public function setImageFoldersAndTransferImages(): void
+    {
+        try {
+            $rawPostData = file_get_contents('php://input');
+            $postData = json_decode($rawPostData, true);
+
+            if ($postData === null || !isset($postData['selectedTable'])) {
+                throw new Exception("Invalid JSON data or missing 'selectedTable' parameter.");
+            }
+
+            $selectedTable = $postData['selectedTable'];
+            $sql = 'SELECT id, picture FROM ' . $selectedTable;
+            $this->module('trongate_security');
+            $this->trongate_security->_make_sure_allowed();
+            $rows = $this->model->query($sql, 'object');
+
+            if (empty($rows)) {
+                throw new Exception("No records found for the selected table.");
+            }
+
+            // Return the total number of records to process
+            $totalRows = count($rows);
+            echo json_encode(['totalRows' => $totalRows]);
+
+        } catch (Exception $e) {
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+    }
+
+//    public function updateProgress($progress): void
+//    {
+//        $this->folderProgress = $progress;
+//        $this->getFolderProgress(); // Send progress to frontend
+//    }
+//
+//    public function getFolderProgress()
+//    {
+//        $folderProgress = $this->folderProgress;
+//        $response = array('folderProgress' => $folderProgress);
+//        header('Content-Type: application/json');
+//        echo json_encode($response);
+//
+//    }
+
+    /**
+     * Function: getPictureFolderExists
+     * Description: This function retrieves raw POST data from the request body, decodes JSON data into an associative
+     * array, and checks if a picture directory exists based on the provided table name. It then outputs the result as
+     * JSON.
+     * @return void
+     */
+    public function getPictureFolderExists(): void
     {
         // Retrieve raw POST data from the request body
         $rawPostData = file_get_contents('php://input');
@@ -316,6 +372,13 @@ class Vtl_faker extends Trongate
         // Find out if a picture directory exists
         if ($this->findPicDirectoryExists($postData['selectedTable']) == 1) {
             $picDirectoryExists = true;
+        } else {
+            // it is just possible that some is creating fake data before doing anything else
+            // so just to be certain let's also check for the existence of a picture field
+            // in the table.
+            if ($this->checkForExistenceOfPictureFieldAndCreatePicsDirecetories($postData['selectedTable']) == 1) {
+                $picDirectoryExists = true;
+            }
         }
 
         // Output the result as JSON
@@ -323,7 +386,68 @@ class Vtl_faker extends Trongate
         echo json_encode(array('picDirectoryExists' => $picDirectoryExists));
     }
 
+    /**
+     * Function: findPicDirectoryExists
+     * Description: This function iterates over application modules to find the specified table. It returns true if API
+     * JSON exists for the specified table, otherwise false. It also handles the case of orphaned tables by returning
+     * false.
+     * @param string $selectedTable The name of the table to search for.
+     * @return bool Returns true if the API JSON exists for the specified table, otherwise false.
+     */
+    public function findPicDirectoryExists($selectedTable): bool
+    {
+        // Iterate over application modules to find the specified table
+        foreach ($this->applicationModules as $module) {
+            if (isset($module['module_name']) && $module['module_name'] === $selectedTable) {
+                // Return true if picture directory exists for the specified module
+                return $module['pic_directory_exists'];
 
+            } elseif (isset($module['orphaned_tables']) && $module['orphaned_tables'] === $selectedTable) {
+                return false;
+            }
+        }
+        // Return false if the module name is not found or no API JSON exists for the table
+        return false;
+
+    }
+
+    /**
+     * Check for the existence of a 'picture' field in the specified table and create directories for storing pictures.
+     *
+     * @param string $selectedTable The name of the table to check and create directories for.
+     *
+     * @return bool Returns true if the 'picture' field exists and directories are created successfully, otherwise
+     *              false.
+     */
+    public function checkForExistenceOfPictureFieldAndCreatePicsDirecetories($selectedTable): bool
+    {
+
+        $result = 0;
+        $pictureFieldExists = false;
+        $sql = 'SHOW COLUMNS FROM ' . $selectedTable;
+
+        $colInfo = $this->model->query($sql, 'array');
+        foreach ($colInfo as $column) {
+            if ($column['Field'] === 'picture' && $column['Type'] === 'varchar(255)') {
+                $pictureFieldExists = true;
+                break;
+            }
+        }
+
+        if ($pictureFieldExists) {
+            //mkdir($target_dir, 0777, true);
+            $picsPath = APPPATH . 'modules/' . $selectedTable . '/assets/' . $selectedTable . '_pics';
+
+            $thumbsPath = APPPATH . 'modules/' . $selectedTable . '/assets/' . $selectedTable . '_pics_thumbnails';
+
+            mkdir($picsPath, 0777, true);
+            mkdir($thumbsPath, 0777, true);
+            if (is_dir($picsPath) && is_dir($thumbsPath)) {
+                $result = 1;
+            }
+        }
+        return $result;
+    }
 
     /**
      * Generates fake data based on user input and inserts it into the database via API.
@@ -341,7 +465,7 @@ class Vtl_faker extends Trongate
         $faker = $this->$faker;
         // Seed the faker.  This will ensure that the same data gets recreated
         // which can be useful for testing purposes.
-        $faker -> seed(FAKER_SEED);
+        $faker->seed(FAKER_SEED);
 
         // Retrieve raw POST data from the request body
         $rawPostData = file_get_contents('php://input');
@@ -362,9 +486,9 @@ class Vtl_faker extends Trongate
         // Check if API JSON exists for the selected table
         $apiJsonExists = $this->findApiJsonExists($selectedTable);
 
-        $picDirectoryExists = $this -> findPicDirectoryExists($selectedTable);
+        $picDirectoryExists = $this->findPicDirectoryExists($selectedTable);
         if ($picDirectoryExists) {
-            $picDirectory = $this -> getPicDirectory($selectedTable);
+            $picDirectory = $this->getPicDirectory($selectedTable);
         }
 
         // Determine the method for generating and inserting fake data
@@ -381,7 +505,7 @@ class Vtl_faker extends Trongate
                 $result = $this->generateSingleRowAndInsertViaSql($faker, $selectedRows, $selectedTable);
             } else {
 
-                $result = $this->generateMultipleRowsAndInsertViaSql($faker,$selectedRows, $selectedTable, $numRows);
+                $result = $this->generateMultipleRowsAndInsertViaSql($faker, $selectedRows, $selectedTable, $numRows);
             }
 
             // Output the result
@@ -390,14 +514,6 @@ class Vtl_faker extends Trongate
             throw new Exception("No data provided for processing");
         }
     }
-
-    private function outputResult($result)
-    {
-        echo 'Result: ' . $result;
-    }
-
-
-
 
     /**
      * Checks if API JSON configuration exists for the specified table.
@@ -425,128 +541,14 @@ class Vtl_faker extends Trongate
     }
 
     /**
-     * Function: findPicDirectoryExists
-     * Description: This function iterates over application modules to find the specified table. It returns true if API JSON exists
-     * for the specified table, otherwise false. It also handles the case of orphaned tables by returning false.
-     * @param string $selectedTable The name of the table to search for.
-     * @return bool Returns true if the API JSON exists for the specified table, otherwise false.
-     */
-    public function findPicDirectoryExists($selectedTable): bool
-    {
-        // Iterate over application modules to find the specified table
-        foreach ($this->applicationModules as $module) {
-            if (isset($module['module_name']) && $module['module_name'] === $selectedTable) {
-                // Return true if picture directory exists for the specified module
-                return $module['pic_directory_exists'];
-
-            } elseif (isset($module['orphaned_tables']) && $module['orphaned_tables'] === $selectedTable) {
-                return false;
-            }
-        }
-        // Return false if the module name is not found or no API JSON exists for the table
-        return  false;
-
-    }
-
-    /**
-     * Function: getPicDirectory
-     * Description: This function iterates over application modules to find the specified table. It returns the picture directory
-     * path if it exists for the specified table, otherwise an empty string. It handles the case of orphaned tables by returning
-     * an empty string.
-     * @param string $selectedTable The name of the table to search for.
-     * @return mixed Returns the picture directory path if it exists for the specified table, otherwise an empty string.
-     */
-    public function getPicDirectory($selectedTable): mixed
-    {
-        // Iterate over application modules to find the specified table
-        foreach ($this->applicationModules as $module) {
-            if (isset($module['module_name']) && $module['module_name'] === $selectedTable) {
-                // Return true if API JSON exists for the specified table
-                return $module['pic_directory'];
-            } elseif (isset($module['orphaned_tables']) && $module['orphaned_tables'] === $selectedTable) {
-                return '';
-            }
-        }
-        // Return false if the module name is not found or no API JSON exists for the table
-        return '';
-    }
-
-
-    /**
-     * Generates fake data for a single row and inserts it into the specified table via API.
-     *
-     * This function constructs a JSON object containing fake data for the selected rows,
-     * based on the provided Faker instance and field specifications. It then decodes the JSON
-     * object into an associative array and inserts the data into the specified table using
-     * the model's insert method.
-     *
-     * @param Faker\Generator $faker The Faker instance used to generate fake data.
-     * @param array $selectedRows An array of selected rows (fields) for which fake data is generated.
-     * @param string $selectedTable The name of the table into which the fake data will be inserted.
-     * @return bool|string Returns the ID of the newly inserted record if successful, or false if insertion fails.
-     */
-    private function generateSingleRowAndInsertViaApi($faker, $selectedRows, $selectedTable): bool|string
-    {
-        // Initialize an empty string to store the values as a JSON object
-        $values = '{';
-        // Iterate over selected rows to generate fake data for each field
-        foreach ($selectedRows as $key => $selectedRow) {
-            $originalFieldName = $selectedRow['field'];
-            $values .= '"' . $originalFieldName . '":';
-            // Process field name and generate fake value based on field specifications
-            $field = $this->processFieldName($selectedRow['field']);
-            $dbType = $selectedRow['type'];
-            list($type, $length) = $this->parseDatabaseType($dbType);
-            $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
-
-            //This is where you should add code to generate custom field data
-            //it needs to be in the form of:
-            //  if($field === '<add your field name here') {
-            //      $fieldFakerStatement = $faker -> rgbColor();
-            //  }
-
-            //echo 'Field Faker Statement for : ' . $field. ' ='.$fieldFakerStatement;
-            // If no specific Faker statement is available, generate value based on field type
-            if ($fieldFakerStatement == "nothing") {
-                $typeFakerStatement = $this->generateValueFromType($faker, $type, $length);
-                $values .= $typeFakerStatement;
-            } else {
-                $values .= $fieldFakerStatement;
-            }
-
-            // Check if the current element is the last one in the array
-            if ($key === array_key_last($selectedRows)) {
-                $values .= '}';
-            } else {
-                $values .= ',';
-            }
-
-        }
-
-        // Decode the JSON object into an associative array
-        $newValuesArray = $values; //json_decode($values, true);
-
-
-        // Insert the generated data into the specified table using the model's insert method
-        try {
-
-            return $this->model->insert($newValuesArray, $selectedTable);
-        } catch (Exception $e) {
-            echo 'Failed This is the NewValuesArray  ', $newValuesArray;
-            return $e->getMessage();
-        }
-
-    }
-
-    /**
      * Generates fake data for a single row and inserts it into the specified table via SQL.
      *
-     * @param Faker\Generator $faker The Faker generator instance.
-     * @param array $selectedRows An array of selected rows containing field information.
-     * @param string $selectedTable The name of the table where the data will be inserted.
+     * @param Faker\Generator $faker         The Faker generator instance.
+     * @param array           $selectedRows  An array of selected rows containing field information.
+     * @param string          $selectedTable The name of the table where the data will be inserted.
      * @return mixed Returns the result of the database insertion or an error message if an exception occurs.
      */
-    private function generateSingleRowAndInsertViaSql($faker, $selectedRows, $selectedTable): mixed
+    private function generateSingleRowAndInsertViaSql(\Faker\Generator $faker, array $selectedRows, string $selectedTable): mixed
     {
         $columns = '(';
         $values = '(';
@@ -596,7 +598,6 @@ class Vtl_faker extends Trongate
         }
     }
 
-
     /**
      * Processes the input string to prepare it as a field name.
      *
@@ -621,17 +622,42 @@ class Vtl_faker extends Trongate
     }
 
     /**
+     * Parses a database type definition string to extract the type and length.
+     *
+     * @param string $dbType The database type definition string.
+     * @return array An array containing the type and length extracted from the input string.
+     */
+    private function parseDatabaseType($dbType): array
+    {
+        // Split the type definition by "(" and ")"
+        $parts = explode('(', $dbType);
+
+        // Extract the type
+        $type = $parts[0];
+
+        // Check if the split was successful
+        if (count($parts) < 2) {
+            // If not, return type with a default length value
+            return array($type, -1);
+        }
+
+        // Extract the length
+        $length = rtrim($parts[1], ')');
+        return array($type, $length);
+    }
+
+    /**
      * Generates a value based on the given field name using Faker.
      *
      * This function generates a value based on the provided field name using the Faker library.
      * It maps field names to Faker methods to generate appropriate fake data.
      *
-     * @param \Faker\Generator $faker The Faker instance used to generate fake data.
-     * @param string $fieldName The name of the field for which a value needs to be generated.
-     * @param int $length The length of certain database types ie varchar(10) length would be 10.
+     * @param \Faker\Generator $faker     The Faker instance used to generate fake data.
+     * @param string           $fieldName The name of the field for which a value needs to be generated.
+     * @param int              $length    The length of certain database types ie varchar(10) length would be 10.
      * @return mixed|string|null Returns the generated value as a string, or 'nothing' if no suitable method is found.
      */
-    private function generateValueFromFieldName($faker, $fieldName, $length)
+    private function generateValueFromFieldName(\Faker\Generator $faker, string $fieldName, int $length): mixed
     {
         $statement = null;
         $value = null;
@@ -867,40 +893,14 @@ class Vtl_faker extends Trongate
         return $statement;
     }
 
-
-    /**
-     * Parses a database type definition string to extract the type and length.
-     *
-     * @param string $dbType The database type definition string.
-     * @return array An array containing the type and length extracted from the input string.
-     */
-    private function parseDatabaseType($dbType): array
-    {
-        // Split the type definition by "(" and ")"
-        $parts = explode('(', $dbType);
-
-        // Extract the type
-        $type = $parts[0];
-
-        // Check if the split was successful
-        if (count($parts) < 2) {
-            // If not, return type with a default length value
-            return array($type, -1);
-        }
-
-        // Extract the length
-        $length = rtrim($parts[1], ')');
-        return array($type, $length);
-    }
-
     /**
      * Generates a value based on the given database field type.
      *
      * This function generates a value based on the provided database field type and returns it as a string.
      *
-     * @param \Faker\Generator $faker The Faker generator instance.
-     * @param string $type The database field type.
-     * @param mixed $valueInBrackets The value inside the brackets associated with the type (if present).
+     * @param \Faker\Generator $faker           The Faker generator instance.
+     * @param string           $type            The database field type.
+     * @param mixed            $valueInBrackets The value inside the brackets associated with the type (if present).
      * @return string The generated value as a string.
      */
     private function generateValueFromType($faker, $type, $length)
@@ -962,7 +962,7 @@ class Vtl_faker extends Trongate
                 break;
 
             case 'date':
-                $value = $faker->date(FAKER_DATE_FORMAT,$max = 'now');
+                $value = $faker->date(FAKER_DATE_FORMAT, $max = 'now');
                 $statement = '"' . $value . '"';
                 break;
 
@@ -1009,10 +1009,10 @@ class Vtl_faker extends Trongate
      * This function generates multiple rows of fake data based on the selected fields and their types,
      * and then inserts these rows into the specified table using the model's insert_batch method.
      *
-     * @param \Faker\Generator $faker The Faker generator instance.
-     * @param array $selectedRows An array containing the selected fields and their types.
-     * @param string $selectedTable The name of the table where the data will be inserted.
-     * @param int|string $numRows The number of rows to generate and insert.
+     * @param \Faker\Generator $faker         The Faker generator instance.
+     * @param array            $selectedRows  An array containing the selected fields and their types.
+     * @param string           $selectedTable The name of the table where the data will be inserted.
+     * @param int|string       $numRows       The number of rows to generate and insert.
      * @return int The number of records successfully inserted into the database.
      */
     private function generateMultipleRowsAndInsertViaApi($faker, $selectedRows, $selectedTable, $numRows)
@@ -1066,11 +1066,12 @@ class Vtl_faker extends Trongate
     /**
      * Generates fake data for multiple rows and inserts them into the specified table via SQL.
      *
-     * @param mixed $faker The Faker generator instance.
-     * @param mixed $selectedRows An array of selected rows containing field information.
+     * @param mixed $faker         The Faker generator instance.
+     * @param mixed $selectedRows  An array of selected rows containing field information.
      * @param mixed $selectedTable The name of the table where the data will be inserted.
-     * @param mixed $numRows The number of rows to be generated and inserted.
-     * @return string Returns a success message indicating the number of rows inserted or an error message if an exception occurs.
+     * @param mixed $numRows       The number of rows to be generated and inserted.
+     * @return string Returns a success message indicating the number of rows inserted or an error message if an
+     *                             exception occurs.
      */
     private function generateMultipleRowsAndInsertViaSql(mixed $faker, mixed $selectedRows, mixed $selectedTable, mixed $numRows)
     {
@@ -1136,8 +1137,10 @@ class Vtl_faker extends Trongate
         }
     }
 
-
-
+    private function outputResult($result)
+    {
+        echo 'Result: ' . $result;
+    }
 
     /**
      * Clears data from selected tables.
@@ -1157,14 +1160,13 @@ class Vtl_faker extends Trongate
         $resetAutoIncrement = $postData['resetAutoIncrement'];
 
 
-
         if ($selectedTables != null && $selectedTables != "") {
             $responseText = '';
             $deletedTables = [];
             $failedTables = [];
 
             if ($resetAutoIncrement) {
-                try{
+                try {
                     $sql = 'nothing';
                     foreach ($selectedTables as $key => $selectedTable) {
 
@@ -1177,9 +1179,8 @@ class Vtl_faker extends Trongate
                                 $sql = 'TRUNCATE TABLE ' . $selectedTable;
                                 break;
                         }
-                        try{
-                            if ($sql != 'nothing')
-                            {
+                        try {
+                            if ($sql != 'nothing') {
                                 $this->model->query($sql, '');
 
                                 // If the query was successful, add the table to the list of deleted tables
@@ -1187,17 +1188,15 @@ class Vtl_faker extends Trongate
                                 //now delete any picture folders if they exist
 
                                 //first we need to know that they exist
-                                if ($this -> findPicDirectoryExists($selectedTable ))
-                                {
-                                    $picDirectory = $this ->getPicDirectory($selectedTable);
-                                    $this -> deleteSubDirectories($picDirectory);
+                                if ($this->findPicDirectoryExists($selectedTable)) {
+                                    $picDirectory = $this->getPicDirectory($selectedTable);
+                                    $this->deleteSubDirectories($picDirectory);
 
                                     $thumbsDir = $picDirectory . '_thumbnails';
-                                    $this -> deleteSubDirectories($thumbsDir);
+                                    $this->deleteSubDirectories($thumbsDir);
                                 }
                             }
-                        }
-                        catch (Exception $e) {
+                        } catch (Exception $e) {
                             // Handle the exception here, you can log it, display an error message, or take any other appropriate action
                             // In this example, we're just logging the error message
                             echo 'Error: ' . $e->getMessage();
@@ -1206,14 +1205,12 @@ class Vtl_faker extends Trongate
                         }
 
                     }
-                }
-                catch (Exception $e) {
+                } catch (Exception $e) {
                     // If an exception was thrown outside of the foreach loop, handle it here
                     echo 'Error: ' . $e->getMessage();
                     $responseText .= 'Operation failed.' . $e;
                 }
-            }
-            else {
+            } else {
                 try {
                     foreach ($selectedTables as $key => $selectedTable) {
 
@@ -1237,13 +1234,12 @@ class Vtl_faker extends Trongate
                             //now delete any picture folders if they exist
 
                             //first we need to know that they exist
-                            if ($this -> findPicDirectoryExists($selectedTable ))
-                            {
-                                $picDirectory = $this ->getPicDirectory($selectedTable);
-                                $this -> deleteSubDirectories($picDirectory);
+                            if ($this->findPicDirectoryExists($selectedTable)) {
+                                $picDirectory = $this->getPicDirectory($selectedTable);
+                                $this->deleteSubDirectories($picDirectory);
 
                                 $thumbsDir = $picDirectory . '_thumbnails';
-                                $this -> deleteSubDirectories($thumbsDir);
+                                $this->deleteSubDirectories($thumbsDir);
                             }
                         } catch (Exception $e) {
                             // Handle the exception here, you can log it, display an error message, or take any other appropriate action
@@ -1255,7 +1251,6 @@ class Vtl_faker extends Trongate
 
 
                     }
-
 
 
                     // If no exception was thrown, it means all queries were successful
@@ -1273,11 +1268,42 @@ class Vtl_faker extends Trongate
 
             // Now $responseText contains the report for the whole operation
             echo $responseText;
+        } else {
+            echo 'No Tables were selected';
         }
-        else{ echo 'No Tables were selected';}
 
     }
 
+    /**
+     * Function: deleteSubDirectories
+     * Description: This private function recursively deletes all subdirectories and files within the specified
+     * directory.
+     * @param string $dir The directory path to delete its subdirectories and files.
+     * @return bool Returns true if the subdirectories and files were successfully deleted, otherwise false.
+     */
+    function deleteSubDirectories($dir)
+    {
+        if (!is_dir($dir)) {
+            return false;
+        }
+
+        $subDirectories = array_diff(scandir($dir), array('.', '..'));
+
+        foreach ($subDirectories as $subDir) {
+            $path = $dir . '/' . $subDir;
+            if (is_dir($path)) {
+                // Recursively delete subdirectories and their contents
+                $this->deleteSubDirectories($path);
+                // Remove the empty subdirectory
+                rmdir($path);
+            } else {
+                // Delete files directly within the directory
+                unlink($path);
+            }
+        }
+
+        return true;
+    }
 
     /**
      * Function to create indexes for selected rows in a specified table.
@@ -1295,14 +1321,14 @@ class Vtl_faker extends Trongate
         $selectedTable = $postData['selectedTable'];
         $selectedRows = $postData['selectedRows'];
         $indexType = $postData['indexType'];
-        if ($selectedRows != null ) {
+        if ($selectedRows != null) {
             $responseText = '';
             $indexesCreated = [];
             $failedIndexes = [];
             try {
-                foreach ($selectedRows as  $selectedRow) {
-                    $indexName = 'idx_'.$selectedTable.'_'.$selectedRow['field'];
-                    try{
+                foreach ($selectedRows as $selectedRow) {
+                    $indexName = 'idx_' . $selectedTable . '_' . $selectedRow['field'];
+                    try {
 
                         // Check if index already exists
                         $existingIndexQuery = "SHOW INDEX FROM $selectedTable WHERE Key_name = '$indexName';";
@@ -1312,12 +1338,12 @@ class Vtl_faker extends Trongate
                             continue; // Skip creating index if it already exists
                         }
                         $sql = '';
-                        switch($indexType){
+                        switch ($indexType) {
                             case 'Standard':
-                                $sql = 'CREATE INDEX '.$indexName.' ON '.$selectedTable. ' ('.$selectedRow['field'].');';
+                                $sql = 'CREATE INDEX ' . $indexName . ' ON ' . $selectedTable . ' (' . $selectedRow['field'] . ');';
                                 break;
                             case 'Unique':
-                                $sql = 'CREATE UNIQUE INDEX '.$indexName.' ON '.$selectedTable. ' ('.$selectedRow['field'].');';
+                                $sql = 'CREATE UNIQUE INDEX ' . $indexName . ' ON ' . $selectedTable . ' (' . $selectedRow['field'] . ');';
                                 break;
                             default:
                                 break;
@@ -1325,18 +1351,16 @@ class Vtl_faker extends Trongate
 
                         $this->model->query($sql);
                         $indexesCreated[] = $indexName;
-                    }
-                    catch (Exception $ex){
+                    } catch (Exception $ex) {
                         echo 'Error: ' . $ex->getMessage();
                         // Add the table to the list of failed tables
                         $failedIndexes[] = $indexName;
                     }
                 }
-            }
-            catch (Exception $e) {
+            } catch (Exception $e) {
                 // If an exception was thrown outside of the foreach loop, handle it here
                 echo 'Error: ' . $e->getMessage();
-                $responseText .= 'Operation failed.'.$e;
+                $responseText .= 'Operation failed.' . $e;
             }
 
             // Append the list of created indexes to the response text
@@ -1358,8 +1382,7 @@ class Vtl_faker extends Trongate
 
             // Now $responseText contains the report for the whole operation
             echo $responseText;
-        }
-        else{
+        } else {
             echo 'No Rows were selected';
         }
 
@@ -1416,8 +1439,7 @@ class Vtl_faker extends Trongate
 
             // Now $responseText contains the report for the whole operation
             echo $responseText;
-        }
-        else{
+        } else {
             echo 'No Rows were selected';
         }
     }
@@ -1514,7 +1536,7 @@ class Vtl_faker extends Trongate
 
         try {
             //run a check to see if there is a backups directory in the assets folder
-            $folderPath =  __DIR__ . '/../assets/backups';
+            $folderPath = __DIR__ . '/../assets/backups';
             if (is_dir($folderPath)) {
                 // we have a folder
             } else {
@@ -1524,44 +1546,15 @@ class Vtl_faker extends Trongate
                     echo "Failed to create folder!";
                 }
             }
-            $dump = new IMysqldump\Mysqldump('mysql:host='.$this->host.';dbname='.$this->dbname, $this->user, $this->pass, $dumpSettings, $pdoSettings);
+            $dump = new IMysqldump\Mysqldump('mysql:host=' . $this->host . ';dbname=' . $this->dbname, $this->user, $this->pass, $dumpSettings, $pdoSettings);
             $dateSuffix = date('Ymd_His'); // Current date and time format: YYYYMMDD_HHmmss
-            $backupFilename = $folderPath.'/backup_' . $dateSuffix . '.sql';
+            $backupFilename = $folderPath . '/backup_' . $dateSuffix . '.sql';
             $dump->start($backupFilename);
-            echo 'Success, your database script ( backup'.$dateSuffix.'.sql )is in the folder modules/vtl_gen/vtl_faker/assets/backups';
+            echo 'Success, your database script ( backup' . $dateSuffix . '.sql )is in the folder modules/vtl_gen/vtl_faker/assets/backups';
         } catch (\Exception $e) {
             echo 'mysqldump-php error: ' . $e->getMessage();
         }
     }
-    /**
-     * Function: deleteSubDirectories
-     * Description: This private function recursively deletes all subdirectories and files within the specified directory.
-     * @param string $dir The directory path to delete its subdirectories and files.
-     * @return bool Returns true if the subdirectories and files were successfully deleted, otherwise false.
-     */
-    function deleteSubDirectories($dir) {
-        if (!is_dir($dir)) {
-            return false;
-        }
-
-        $subDirectories = array_diff(scandir($dir), array('.', '..'));
-
-        foreach ($subDirectories as $subDir) {
-            $path = $dir . '/' . $subDir;
-            if (is_dir($path)) {
-                // Recursively delete subdirectories and their contents
-                $this -> deleteSubDirectories($path);
-                // Remove the empty subdirectory
-                rmdir($path);
-            } else {
-                // Delete files directly within the directory
-                unlink($path);
-            }
-        }
-
-        return true;
-    }
-
 
     function __destruct()
     {
@@ -1569,7 +1562,77 @@ class Vtl_faker extends Trongate
         $this->child_module = '';
     }
 
+//    private function setFolderProgress(int $progress): void
+//    {
+//        $this->folderProgress = $progress;
+//        //echo 'Folder Progress: ', $this->folderProgress;
+//    }
 
+    /**
+     * Generates fake data for a single row and inserts it into the specified table via API.
+     *
+     * This function constructs a JSON object containing fake data for the selected rows,
+     * based on the provided Faker instance and field specifications. It then decodes the JSON
+     * object into an associative array and inserts the data into the specified table using
+     * the model's insert method.
+     *
+     * @param Faker\Generator $faker         The Faker instance used to generate fake data.
+     * @param array           $selectedRows  An array of selected rows (fields) for which fake data is generated.
+     * @param string          $selectedTable The name of the table into which the fake data will be inserted.
+     * @return bool|string Returns the ID of the newly inserted record if successful, or false if insertion fails.
+     */
+    private function generateSingleRowAndInsertViaApi($faker, $selectedRows, $selectedTable): bool|string
+    {
+        // Initialize an empty string to store the values as a JSON object
+        $values = '{';
+        // Iterate over selected rows to generate fake data for each field
+        foreach ($selectedRows as $key => $selectedRow) {
+            $originalFieldName = $selectedRow['field'];
+            $values .= '"' . $originalFieldName . '":';
+            // Process field name and generate fake value based on field specifications
+            $field = $this->processFieldName($selectedRow['field']);
+            $dbType = $selectedRow['type'];
+            list($type, $length) = $this->parseDatabaseType($dbType);
+            $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
+
+            //This is where you should add code to generate custom field data
+            //it needs to be in the form of:
+            //  if($field === '<add your field name here') {
+            //      $fieldFakerStatement = $faker -> rgbColor();
+            //  }
+
+            //echo 'Field Faker Statement for : ' . $field. ' ='.$fieldFakerStatement;
+            // If no specific Faker statement is available, generate value based on field type
+            if ($fieldFakerStatement == "nothing") {
+                $typeFakerStatement = $this->generateValueFromType($faker, $type, $length);
+                $values .= $typeFakerStatement;
+            } else {
+                $values .= $fieldFakerStatement;
+            }
+
+            // Check if the current element is the last one in the array
+            if ($key === array_key_last($selectedRows)) {
+                $values .= '}';
+            } else {
+                $values .= ',';
+            }
+
+        }
+
+        // Decode the JSON object into an associative array
+        $newValuesArray = $values; //json_decode($values, true);
+
+
+        // Insert the generated data into the specified table using the model's insert method
+        try {
+
+            return $this->model->insert($newValuesArray, $selectedTable);
+        } catch (Exception $e) {
+            echo 'Failed This is the NewValuesArray  ', $newValuesArray;
+            return $e->getMessage();
+        }
+
+    }
 
 
 }
