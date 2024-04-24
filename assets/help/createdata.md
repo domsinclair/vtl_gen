@@ -21,9 +21,11 @@ The more complicated answer is that it depends upon what you want to achieve and
 If the only thing that you want to do is stress test the site to see how it handles large record sets then there is
 arguably little reason to change the generated data.
 
-The first thing that you can do is ensure that you have set the FAKER_LOCALE constant to your own region. 
-The next thing is to ensure that you have set the FAKER_DATE_FORMAT and FAKER_DATETIME_FORMAT to the date and datetime formats that you prefer.
-These constants can be found in the vtl_faker_config.php file which can be found in the assets folder of the vtl_faker module.
+The first thing that you can do is ensure that you have set the FAKER_LOCALE constant to your own region.
+The next thing is to ensure that you have set the FAKER_DATE_FORMAT and FAKER_DATETIME_FORMAT to the date and datetime
+formats that you prefer.
+These constants can be found in the vtl_faker_config.php file which can be found in the assets folder of the vtl_faker
+module.
 
 Currently these are defined as follows;
 
@@ -34,14 +36,17 @@ define('FAKER_DATE_FORMAT', 'Y-m-d');
 define('FAKER_DATETIME_FORMAT', 'Y-m-d H:i:s');
 ```
 
-You may be wondering what the seed does, essentially it's a means of ensuring that the faker always creates the same fake values.  That can be particularly useful for running tests against your code so that you know what should appear.
-If this is not of great importance to you then simply comment out this line which is in the createFakes method in the vtl_faker.php controller.
+You may be wondering what the seed does, essentially it's a means of ensuring that the faker always creates the same
+fake values. That can be particularly useful for running tests against your code so that you know what should appear.
+If this is not of great importance to you then simply comment out this line which is in the createFakes method in the
+vtl_faker.php controller.
 
 ```php
 // Seed the faker.  This will ensure that the same data gets recreated
 // which can be useful for testing purposes.
 $faker -> seed(FAKER_SEED);
 ```
+
 However, if you want to have highly realistic data and even data that is properly related between tables then additional
 customisation will probably be required. The place where you will need to do that is in the vtl_faker controller and
 specifically in the vtl_faker.php file.
@@ -153,6 +158,7 @@ try {
     echo "Can't pick an even number in that set!";
 }
 ```
+
 <br/>
 
 
@@ -174,16 +180,21 @@ Once the operation has been completed a modal popup will inform you of the resul
 
 #### The Inserted Data is not very Realistic
 
-The first thing that you should do in this instance is to check that you have correctly set the FAKER_LOCALE to your own locale. That will greatly improve things like address and name generation.
+The first thing that you should do in this instance is to check that you have correctly set the FAKER_LOCALE to your own
+locale. That will greatly improve things like address and name generation.
 
-If the generator is able to use field names as the key to generation your end results will be better, falling back to type is not ideal, but at least it does provide some data to work with.
+If the generator is able to use field names as the key to generation your end results will be better, falling back to
+type is not ideal, but at least it does provide some data to work with.
 
-It is possible to create very realistic data but to do so involves a great deal of customisation. 
+It is possible to create very realistic data but to do so involves a great deal of customisation.
 
 #### Images
 
-The Vtl Data Generator ships with a number of images (all of one of my dogs as it happens) that will be used by the generator to add image names to your data tables.
-There are some important caveats to this.  The first is that , currently at least, only the following field names will end up with a valid image name in the database.
+The Vtl Data Generator ships with a number of images (all of one of my dogs as it happens) that will be used by the
+generator to add image names to your data tables.
+There are some important caveats to this. The first is that , currently at least, only the following field names will
+end up with a valid image name in the database.
+
 - Picture
 - Picture Url
 - Product Image
@@ -193,14 +204,19 @@ There are some important caveats to this.  The first is that , currently at leas
 
 > <b> Remember that when working with field names the generator will convert everything to lowercase and strip out all spaces and underscores.</b>
 
-The Vtl Data Generator is now capable of transferring images to the directories that are created when you use the desktop app to add a single image uploader to a module.  By definition when you do that two directories are created in the assets folder of your module <moduleName>_pis and <moduleName>_pics_thumbnails.  The Generator will add additional folders to those (named after the id of each record) and copy the correct image to it from those supplied in the vtl_faker module.  
+The Vtl Data Generator is now capable of transferring images to the directories that are created when you use the
+desktop app to add a single image uploader to a module. By definition when you do that two directories are created in
+the assets folder of your module <moduleName>_pis and <moduleName>_pics_thumbnails. The Generator will add additional
+folders to those (named after the id of each record) and copy the correct image to it from those supplied in the
+vtl_faker module.
 
-To invoke this, once you have added data to a table that has a picture field added by the single image uploader you will then see another button with the text 'Transfer Images' on it.  Clicking that will invoke the transfer.
+To invoke this, once you have added data to a table that has a picture field added by the single image uploader you will
+then see another button with the text 'Transfer Images' on it. Clicking that will invoke the transfer.
 Both standard sized and thumbnail images are provided.
 
-In the case of the Vtl Data Generator the provided images can be found at this location  vtl_gen/vtl_faker/assets/images
+In the case of the Vtl Data Generator the provided images can be found at this location vtl_gen/vtl_faker/assets/images
 
-> <b> This will not as yet work with single image uploaders tou create yourself unless you happen to add image repositories in the assets folder of the module in question that follow the same naming convention as the desktop app follows.</b>
+> <b> This will not as yet work with single image uploaders you create yourself unless you happen to add image repositories in the assets folder of the module in question that follow the same naming convention as the desktop app follows.</b>
 
 <br/>
 
