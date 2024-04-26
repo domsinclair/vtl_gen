@@ -5,6 +5,7 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/vtl.css">
     <title>Vtl_Generator</title>
     <style>
         .flex {
@@ -18,7 +19,7 @@
 </head>
 
 <body>
-<h1 class="text-center">Vtl Data Generator</h1>
+<h2 class="text-center">Vtl Data Generator: Navigation and Help</h2>
 
 <div class="grid-container">
     <div class="grid-item data-heading" colspan="3">Data</div>
@@ -163,9 +164,9 @@
         gap: 20px
     }
 
-    body {
-        background-color: #f4eeee;
-    }
+    /*body {*/
+    /*    background-color: #f4eeee;*/
+    /*}*/
 
     .grid-container {
         display: grid;
@@ -201,16 +202,16 @@
         font-weight: bold;
     }
 
-    pre {
-        white-space: nowrap;
-        max-width: 100%;
-        overflow: auto;
-        background-color: #393838 !important;
-        border-color: #6b6b6b !important;
-        border-radius: 6px;
-        color: #f1e4e4 !important;
-        text-shadow: 0 1px 0 #444444 !important;
-        white-space: pre-wrap;
-        padding: 1em 1em;
-    }
+    /*pre {*/
+    /*    white-space: nowrap;*/
+    /*    max-width: 100%;*/
+    /*    overflow: auto;*/
+    /*    background-color: #393838 !important;*/
+    /*    border-color: #6b6b6b !important;*/
+    /*    border-radius: 6px;*/
+    /*    color: #f1e4e4 !important;*/
+    /*    text-shadow: 0 1px 0 #444444 !important;*/
+    /*    white-space: pre-wrap;*/
+    /*    padding: 1em 1em;*/
+    /*}*/
 </style>

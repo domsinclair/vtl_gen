@@ -1,0 +1,80 @@
+:root {
+    --color-bg: #313131;
+    --color-fg: #eeeeee;
+    --primary: #237323; /*#9647d5;*/
+    --primary-dark: #155015; /* #8820d8;*/
+    --primary-darker: #0f390f; /*#7d07d8;*/
+
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        --color-bg: #eeeeee;
+        --color-fg: #1E1D1DFF;
+    }
+
+    pre {
+        white-space: nowrap;
+        max-width: 100%;
+        overflow: auto;
+        background-color: #393838 !important;
+        border-color: #6b6b6b !important;
+        border-radius: 6px;
+        color: #f1e4e4 !important;
+        text-shadow: 0 1px 0 #444444 !important;
+        white-space: pre-wrap;
+        padding: 1em 1em;
+    }
+
+}
+
+body {
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+}
+
+
+h1 {
+    color: var(--color-fg);
+}
+
+h2 {
+    color: var(--color-fg);
+}
+
+h3 {
+    color: var(--color-fg);
+}
+
+h4 {
+    color: var(--color-fg);
+}
+
+h {
+    color: var(--color-fg);
+}
+
+h {
+    color: var(--color-fg);
+}
+
+p {
+    color: var(--color-fg);
+}
+
+div {
+    color: var(--color-fg);
+}
+
+
+pre {
+    max-width: 100%;
+    overflow: auto;
+    background-color: #c6c4c4 !important;
+    border-color: #b1abab !important;
+    border-radius: 6px;
+    color: #292828 !important;
+    /*text-shadow: 0 1px 0 #444444 !important;*/
+    white-space: pre-wrap;
+    padding: 1em 1em;
+}
