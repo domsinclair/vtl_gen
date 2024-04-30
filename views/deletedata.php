@@ -5,6 +5,7 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/vtl.css">
     <title>Vtl_Generator_DeleteData</title>
 </head>
 <body>
@@ -33,7 +34,8 @@
 
 <!-- Checkbox for Reset Primary Auto Increment -->
 <div>
-    <label><input type="checkbox" id="reset-auto-increment" name="reset-auto-increment"> Reset Primary Auto Increment</label>
+    <label><input type="checkbox" id="reset-auto-increment" name="reset-auto-increment"> Reset Primary Auto
+        Increment</label>
 </div>
 
 <div class="flex">
@@ -53,17 +55,17 @@
 </body>
 </html>
 <script>
-    document.getElementById("select-all").addEventListener("change", function() {
+    document.getElementById("select-all").addEventListener("change", function () {
         var checkboxes = document.querySelectorAll("input[type='checkbox'][name='tables[]']");
-        checkboxes.forEach(function(checkbox) {
+        checkboxes.forEach(function (checkbox) {
             checkbox.checked = this.checked;
         }, this);
     });
 
-    document.getElementById("clearDataBtn").addEventListener("click", function() {
+    document.getElementById("clearDataBtn").addEventListener("click", function () {
         var selectedTables = [];
         var checkboxes = document.querySelectorAll("input[type='checkbox'][name='tables[]']:checked");
-        checkboxes.forEach(function(checkbox) {
+        checkboxes.forEach(function (checkbox) {
             selectedTables.push(checkbox.value);
         });
 
@@ -95,35 +97,39 @@
         xhr.send(jsonData);
         //console.log(jsonData);
         // Define a callback function to handle the response
-        xhr.onload = function() {
+        xhr.onload = function () {
             console.log(xhr.responseText);
             if (xhr.status === 200) {
                 // Handle the response here
                 var response = xhr.responseText;
                 //console.log(xhr.responseText)
-                 if (response.startsWith('Operation completed successfully.') || response.startsWith('Number of records inserted')) {
-                     openModal('response-modal');
-                     const targetEl = document.getElementById('the-response');
-                     targetEl.innerHTML = xhr.responseText;
-                 }
-                 else {
-                     openModal('response-modal');
-                     const targetEl = document.getElementById('the-response');
-                     targetEl.innerHTML = xhr.responseText;
-                 }
+                if (response.startsWith('Operation completed successfully.') || response.startsWith('Number of records inserted')) {
+                    openModal('response-modal');
+                    const targetEl = document.getElementById('the-response');
+                    targetEl.innerHTML = xhr.responseText;
+                } else {
+                    openModal('response-modal');
+                    const targetEl = document.getElementById('the-response');
+                    targetEl.innerHTML = xhr.responseText;
+                }
             } else {
-                 openModal('response-modal');
-                 const targetEl = document.getElementById('the-response');
-                 targetEl.innerHTML = xhr.status;
+                openModal('response-modal');
+                const targetEl = document.getElementById('the-response');
+                targetEl.innerHTML = xhr.status;
             }
         };
     });
 </script>
 
 <style>
-    input[type="checkbox"]
-    {margin: 5px;}
-    body{
-        background-color: #f4eeee;
+    input[type="checkbox"] {
+        margin: 6px;
+        align-self: inherit;
     }
+
+    label {
+        margin: 0;
+    }
+
+
 </style>

@@ -56,13 +56,8 @@ class Vtl_gen extends Trongate
         // Get a list of all tables
         $data['tables'] = $this->setupTablesForDropdown();
         // Construct file paths for markdown files
-        $filepathIntro = __DIR__ . '/../assets/help/intro.md';
-        $filepathCreateData = __DIR__ . '/../assets/help/createdata.md';
-        $filepathShowData = __DIR__ . '/../assets/help/showdata.md';
-        $filepathDeleteData = __DIR__ . '/../assets/help/deletedata.md';
-        $filepathCreateIndex = __DIR__ . '/../assets/help/createindex.md';
-        $filepathDeleteIndex = __DIR__ . '/../assets/help/deleteindex.md';
-        $filepathExport = __DIR__ . '/../assets/help/export.md';
+        $filepathIntro = __DIR__ . '/../assets/help/help.md';
+
 
         // Initialize Parsedown
         $parsedown = new Parsedown();
@@ -70,44 +65,18 @@ class Vtl_gen extends Trongate
 
         // Open markdown files
         $fileIntro = fopen($filepathIntro, 'r');
-        $fileCreateData = fopen($filepathCreateData, 'r');
-        $fileShowData = fopen($filepathShowData, 'r');
-        $fileDeleteData = fopen($filepathDeleteData, 'r');
-        $fileCreateIndex = fopen($filepathCreateIndex, 'r');
-        $fileDeleteIndex = fopen($filepathDeleteIndex, 'r');
-        $fileExport = fopen($filepathExport, 'r');
+
 
         // Read markdown content and parse it
         $markdownIntro = $parsedown->text(fread($fileIntro, filesize($filepathIntro)));
-        $markdownCreateData = $parsedown->text(fread($fileCreateData, filesize($filepathCreateData)));
-        $markdownShowData = $parsedown->text(fread($fileShowData, filesize($filepathShowData)));
-        $markdownDeleteData = $parsedown->text(fread($fileDeleteData, filesize($filepathDeleteData)));
-        $markdownCreateIndex = $parsedown->text(fread($fileCreateIndex, filesize($filepathCreateIndex)));
-        $markdownDeleteIndex = $parsedown->text(fread($fileDeleteIndex, filesize($filepathDeleteIndex)));
-        $markdownExport = $parsedown->text(fread($fileExport, filesize($filepathExport)));
+
 
         // Close markdown files
         fclose($fileIntro);
-        fclose($fileCreateData);
-        fclose($fileShowData);
-        fclose($fileDeleteData);
-        fclose($fileCreateIndex);
-        fclose($fileDeleteIndex);
-        fclose($fileExport);
+
 
         // Store parsed markdown content in data array
         $data['markdownIntro'] = $markdownIntro;
-        $data['markdownCreateData'] = $markdownCreateData;
-        $data['markdownShowData'] = $markdownShowData;
-        $data['markdownDeleteData'] = $markdownDeleteData;
-        $data['markdownCreateIndex'] = $markdownCreateIndex;
-        $data['markdownDeleteIndex'] = $markdownDeleteIndex;
-        $data['markdownExport'] = $markdownExport;
-
-        // Get images for display
-        $data['images'] = $this->getImagesForDisplay();
-
-
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'vtl_gen';
         $this->template('public', $data);
@@ -148,24 +117,6 @@ class Vtl_gen extends Trongate
 
 
     // Function to setup tables for dropdown
-
-    /**
-     * @return array
-     */
-    private function getImagesForDisplay(): array
-    {
-        $basedir = APPPATH . 'modules/vtl_gen/assets/help/images/';
-        $arrFilename = array();
-        if ($handle = opendir($basedir)) {
-            while (false !== ($filename = readdir($handle))) {
-                if ($filename != "." && $filename != "..") {
-                    array_push($arrFilename, $filename);
-                }
-            }
-            closedir($handle);
-        }
-        return $arrFilename;
-    }
 
     /**
      * @return void
@@ -410,6 +361,24 @@ class Vtl_gen extends Trongate
             return $matches[1];
         }
         return $type; // Return the original type if no match
+    }
+
+    /**
+     * @return array
+     */
+    private function getImagesForDisplay(): array
+    {
+        $basedir = APPPATH . 'modules/vtl_gen/assets/help/images/';
+        $arrFilename = array();
+        if ($handle = opendir($basedir)) {
+            while (false !== ($filename = readdir($handle))) {
+                if ($filename != "." && $filename != "..") {
+                    array_push($arrFilename, $filename);
+                }
+            }
+            closedir($handle);
+        }
+        return $arrFilename;
     }
 
     /**

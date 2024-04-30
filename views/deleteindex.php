@@ -5,6 +5,7 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/vtl.css">
     <title>Vtl_Generator_CreateIndex</title>
 </head>
 <body>
@@ -12,7 +13,8 @@
 <div class="flex">
     <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
 </div>
-<p>Select a table in the database from the drop down below. If there are any indexes created by this module they will be shown in the table that appears.</p>
+<p>Select a table in the database from the drop down below. If there are any indexes created by this module they will be
+    shown in the table that appears.</p>
 <p>Select those indexes that you wish to delete. </p>
 
 <?php
@@ -83,17 +85,17 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
                 var selectAllCheckbox = document.getElementById('selectAllCheckbox');
                 var rowCheckboxes = document.querySelectorAll('.rowCheckbox');
 
-                selectAllCheckbox.addEventListener('change', function() {
-                    rowCheckboxes.forEach(function(checkbox) {
+                selectAllCheckbox.addEventListener('change', function () {
+                    rowCheckboxes.forEach(function (checkbox) {
                         checkbox.checked = selectAllCheckbox.checked;
                     });
                     toggleSubmitButtonVisibility();
                 });
 
-                rowCheckboxes.forEach(function(checkbox) {
-                    checkbox.addEventListener('change', function() {
+                rowCheckboxes.forEach(function (checkbox) {
+                    checkbox.addEventListener('change', function () {
                         var allChecked = true;
-                        rowCheckboxes.forEach(function(checkbox) {
+                        rowCheckboxes.forEach(function (checkbox) {
                             if (!checkbox.checked) {
                                 allChecked = false;
                             }
@@ -106,7 +108,7 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
                 function toggleSubmitButtonVisibility() {
                     var submitBtn = document.getElementById('submitBtn');
                     var anyCheckboxChecked = false;
-                    rowCheckboxes.forEach(function(checkbox) {
+                    rowCheckboxes.forEach(function (checkbox) {
                         if (checkbox.checked) {
                             anyCheckboxChecked = true;
                         }
@@ -124,8 +126,6 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
             document.getElementById('columnInfoTableContainer').innerHTML = noIndexesMessage;
         }
     }
-
-
 
 
     function submitForm() {
@@ -173,11 +173,11 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
         xhr.onload = function () {
             if (xhr.status === 200) {
 
-                    // Handle the response here
-                    var response = xhr.responseText;
-                    openModal('response-modal');
-                    const targetEl = document.getElementById('the-response');
-                    targetEl.innerHTML = xhr.responseText;
+                // Handle the response here
+                var response = xhr.responseText;
+                openModal('response-modal');
+                const targetEl = document.getElementById('the-response');
+                targetEl.innerHTML = xhr.responseText;
 
 
             } else {
@@ -189,13 +189,11 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
     }
 
 
-
-
 </script>
 <style>
-    input[type="checkbox"]
-    {margin: 5px;}
-    body{
-        background-color: #f4eeee;
+    input[type="checkbox"] {
+        margin: 5px;
     }
+
+
 </style>

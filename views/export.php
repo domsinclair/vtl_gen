@@ -5,6 +5,7 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/vtl.css">
     <title>Vtl_Generator_Export</title>
 </head>
 <body>
@@ -18,7 +19,8 @@
     <tr>
         <th><label><input type="checkbox" id="export-all">Export Table</label></th>
         <th>Tables</th>
-        <th><label><input type="checkbox" id="export-data">Export Data</label></th> <!-- Select All checkbox for the right column -->
+        <th><label><input type="checkbox" id="export-data">Export Data</label></th>
+        <!-- Select All checkbox for the right column -->
     </tr>
     </thead>
     <tbody>
@@ -26,7 +28,8 @@
         <tr>
             <td><input type="checkbox" name="tables[]" value="<?php echo $item; ?>"></td>
             <td><?php echo $item; ?></td>
-            <td><input type="checkbox" name="rightTables[]" value="<?php echo $item; ?>" disabled></td> <!-- Right checkbox column -->
+            <td><input type="checkbox" name="rightTables[]" value="<?php echo $item; ?>" disabled></td>
+            <!-- Right checkbox column -->
         </tr>
     <?php endforeach; ?>
     </tbody>
@@ -50,9 +53,9 @@
 <script>
 
 
-    document.getElementById("export-all").addEventListener("change", function() {
+    document.getElementById("export-all").addEventListener("change", function () {
         var checkboxes = document.querySelectorAll("input[name='tables[]']");
-        checkboxes.forEach(function(checkbox) {
+        checkboxes.forEach(function (checkbox) {
             checkbox.checked = this.checked;
             updateRightCheckbox(checkbox);
         }, this);
@@ -65,26 +68,26 @@
         rightCheckbox.checked = checkbox.checked && rightCheckbox.checked;
     }
 
-    document.querySelectorAll("input[name='tables[]']").forEach(function(checkbox) {
-        checkbox.addEventListener("change", function() {
+    document.querySelectorAll("input[name='tables[]']").forEach(function (checkbox) {
+        checkbox.addEventListener("change", function () {
             updateRightCheckbox(this);
         });
     });
 
-    document.getElementById("export-data").addEventListener("change", function() {
+    document.getElementById("export-data").addEventListener("change", function () {
         var checkboxes = document.querySelectorAll("input[name='rightTables[]']");
-        checkboxes.forEach(function(checkbox) {
+        checkboxes.forEach(function (checkbox) {
             checkbox.checked = this.checked;
         }, this);
     });
 
     // Disable "Select All" checkbox for the right column if no checkboxes are checked on the right
-    document.getElementById("export-data").addEventListener("change", function() {
+    document.getElementById("export-data").addEventListener("change", function () {
         var rightCheckboxes = document.querySelectorAll("input[name='rightTables[]']");
         var selectAllRightCheckbox = document.getElementById("export-data");
         var isChecked = false;
 
-        rightCheckboxes.forEach(function(checkbox) {
+        rightCheckboxes.forEach(function (checkbox) {
             if (checkbox.checked) {
                 isChecked = true;
             }
@@ -93,19 +96,19 @@
         selectAllRightCheckbox.disabled = !isChecked;
     });
 
-    document.getElementById("exportBtn").addEventListener("click", function() {
+    document.getElementById("exportBtn").addEventListener("click", function () {
         var tablesToExport = [];
         var tablesWithDataToExport = [];
 
         // Process left checkboxes
         var checkboxes = document.querySelectorAll("input[name='tables[]']:checked");
-        checkboxes.forEach(function(checkbox) {
+        checkboxes.forEach(function (checkbox) {
             tablesToExport.push(checkbox.value);
         });
 
         // Process right checkboxes
         var rightCheckboxes = document.querySelectorAll("input[name='rightTables[]']:checked");
-        rightCheckboxes.forEach(function(checkbox) {
+        rightCheckboxes.forEach(function (checkbox) {
             tablesWithDataToExport.push(checkbox.value);
         });
 
@@ -134,7 +137,7 @@
         xhr.send(jsonData);
 
         // Define a callback function to handle the response
-        xhr.onload = function() {
+        xhr.onload = function () {
             if (xhr.status === 200) {
 
                 // Handle the response here
@@ -154,11 +157,16 @@
 </script>
 
 <style>
-    input[type="checkbox"]
-    {margin: 5px;}
-    body{
-        background-color: #f4eeee;
+    input[type="checkbox"] {
+        margin: 6px;
+        align-self: inherit;
     }
+
+    label {
+        margin: 0;
+    }
+
+
 </style>
 
 

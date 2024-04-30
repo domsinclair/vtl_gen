@@ -5,11 +5,12 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/vtl.css">
     <title>Vtl_Generator_ShowData</title>
 </head>
 <body>
 <h2 class="text-center">Vtl Data Generator: Show Data</h2>
-<div class="flex" style ="margin-bottom: 15px">
+<div class="flex" style="margin-bottom: 15px">
     <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
 </div>
 <section>
@@ -45,7 +46,7 @@ if (!empty($rows)) {
 
 
     <?php
-    if(count($rows)>9) {
+    if (count($rows) > 9) {
         unset($pagination_data['include_showing_statement']);
         echo Pagination::display($pagination_data);
     }
@@ -56,8 +57,4 @@ if (!empty($rows)) {
 
 </body>
 </html>
-<style>
-    body{
-        background-color: #f4eeee;
-    }
-</style>
+

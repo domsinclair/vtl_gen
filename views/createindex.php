@@ -5,6 +5,7 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/vtl.css">
     <title>Vtl_Generator_CreateIndex</title>
 </head>
 <body>
@@ -108,12 +109,13 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
             });
         });
         // Add an event listener for the "Select All" checkbox
-        document.addEventListener('change', function(event) {
+        document.addEventListener('change', function (event) {
             var target = event.target;
             if (target && target.id === 'selectAllCheckbox') {
                 toggleAllCheckboxes(target);
             }
         });
+
         function checkboxesChecked() {
             for (var i = 0; i < checkboxes.length; i++) {
                 if (checkboxes[i].checked) {
@@ -129,7 +131,7 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
             var checkboxes = table.querySelectorAll('.checkbox');
 
             // Toggle each checkbox based on the state of the "Select All" checkbox
-            checkboxes.forEach(function(checkbox) {
+            checkboxes.forEach(function (checkbox) {
                 checkbox.checked = source.checked;
                 // Trigger change event on the checkbox
                 checkbox.dispatchEvent(new Event('change'));
@@ -206,9 +208,9 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
 </script>
 
 <style>
-    input[type="checkbox"]
-    {margin: 5px;}
-    body{
-        background-color: #f4eeee;
+    input[type="checkbox"] {
+        margin: 5px;
     }
+
+   
 </style>

@@ -6,7 +6,8 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <!--    <link rel="stylesheet" href="--><?php //= BASE_URL ?><!--vtl_gen_module/css/vtl.css">-->
+    <!--    <meta name="color-scheme" content="dark light">-->
+    <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/vtl.css">
     <title>Vtl_Generator_CreateData</title>
 </head>
 <body>
@@ -484,7 +485,7 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
     }
 
     .progress {
-        background-color: #007bff;
+        background-color: var(--primary);
         /*transition: width 0.1s ease-in-out;*/
         height: 100%;
         display: flex;
@@ -498,7 +499,9 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
     }
 
     input[type="checkbox"] {
-        margin: 5px;
+        margin: 3px;
+        text-align: center;
+        align-self: auto;
     }
 
     /*body {*/
