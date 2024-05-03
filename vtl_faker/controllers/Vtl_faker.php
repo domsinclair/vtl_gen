@@ -463,8 +463,12 @@ class Vtl_faker extends Trongate
         // Initialize Faker instance
         $faker = null;
         $faker = $this->$faker;
+        // register any custom provider(s) with the faker
+        $faker->addProvider(new Faker\Provider\Commerce($faker));
+
         // Seed the faker.  This will ensure that the same data gets recreated
         // which can be useful for testing purposes.
+        // Comment out the line below if you don't want to use a seeded faker.
         $faker->seed(FAKER_SEED);
 
         // Retrieve raw POST data from the request body
@@ -562,12 +566,11 @@ class Vtl_faker extends Trongate
             $dbType = $selectedRow['type'];
             list($type, $length) = $this->parseDatabaseType($dbType);
             $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
+            $customFieldValue = $this->checkForCustomFieldNameGeneration($field, $faker);
+            if ($customFieldValue !== 'nothing') {
+                $fieldFakerStatement = $customFieldValue;
+            }
 
-            //This is where you should add code to generate custom field data
-            //it needs to be in the form of:
-            //  if($field === '<add your field name here') {
-            //      $fieldFakerStatement = $faker -> rgbColor();
-            //  }
 
             // If no specific Faker statement is available, generate value based on field type
             if ($fieldFakerStatement == "nothing") {
@@ -823,6 +826,41 @@ class Vtl_faker extends Trongate
                 }
                 break;
 
+            case 'category':
+                $value = $faker->category();
+                $statement = '"' . $value . '"';
+                break;
+
+            case 'sku':
+            case 'productsku':
+                $value = $faker->sku();
+                $statement = '"' . $value . '"';
+                break;
+
+            case 'pagetitle':
+                $value = $faker->words(5);
+                if (is_array($value)) {
+                    $statement = '"' . implode(' ', $value) . '"';
+                } else {
+                    $statement = '"' . $value . '"';
+                }
+                break;
+            case 'metakeywords':
+                $value = $faker->words;
+                if (is_array($value)) {
+                    $statement = '"' . implode(', ', $value) . '"';
+                } else {
+                    $statement = '"' . $value . '"';
+                }
+                break;
+            case 'metadescription':
+                $value = $faker->sentence(7);
+                $statement = '"' . $value . '"';
+                break;
+            case 'pagebody':
+                $value = $faker->realText(200, 2);
+                $statement = '"' . $value . '"';
+                break;
             case 'picture':
             case 'pictureurl':
             case 'productimage':
@@ -891,6 +929,43 @@ class Vtl_faker extends Trongate
             $statement = 'nothing';
         }
         return $statement;
+    }
+
+    /**
+     * Check for custom field name generation based on provided Faker instance.
+     * This function is intended for use when adding custom field name generators.
+     *
+     * @param string           $field The Faker generator instance.
+     * @param \Faker\Generator $faker The Faker instance.
+     * @return mixed The generated field name statement.
+     */
+    private function checkForCustomFieldNameGeneration(string $field, \Faker\Generator $faker): mixed
+    {
+        $statement = null;
+        $value = null;
+        switch ($field) {
+            // Add your custom field name generation here:
+            //This would be in the form of a case statement
+
+//            case 'productid';
+//                $value = $faker->$faker->numberBetween($min = 0, $max = 250);
+//                $statement = $value;
+//                break;
+
+
+            //  NB   if dealing with string values $statement should be set like this
+            //  $statement = '"' . $value . '"';
+
+            // DO NOT DELETE THIS PART OR THE SWITCH STATEMENT OR YOU WILL BREAK THE GENERATOR
+            default:
+                $statement = 'nothing';
+        }
+        //allow for the fact that a known field name may still fail to get data
+        if ($statement === null) {
+            $statement = 'nothing';
+        }
+        return $statement;
+
     }
 
     /**
@@ -1031,11 +1106,10 @@ class Vtl_faker extends Trongate
                 list($type, $length) = $this->parseDatabaseType($dbType);
                 $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
 
-                //This is where you should add code to generate custom field data
-                //it needs to be in the form of:
-                //  if($field === '<add your field name here') {
-                //      $fieldFakerStatement = $faker -> rgbColor();
-                //  }
+                $customFieldValue = $this->checkForCustomFieldNameGeneration($field, $faker);
+                if ($customFieldValue !== 'nothing') {
+                    $fieldFakerStatement = $customFieldValue;
+                }
 
                 if ($fieldFakerStatement == "nothing") {
 
@@ -1106,11 +1180,10 @@ class Vtl_faker extends Trongate
                 list($type, $length) = $this->parseDatabaseType($dbType);
                 $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
 
-                //This is where you should add code to generate custom field data
-                //it needs to be in the form of:
-                //  if($field === '<add your field name here') {
-                //      $fieldFakerStatement = $faker -> rgbColor();
-                //  }
+                $customFieldValue = $this->checkForCustomFieldNameGeneration($field, $faker);
+                if ($customFieldValue !== 'nothing') {
+                    $fieldFakerStatement = $customFieldValue;
+                }
 
                 if ($fieldFakerStatement == "nothing") {
                     $typeFakerStatement = $this->generateValueFromType($faker, $type, $length);
@@ -1556,17 +1629,17 @@ class Vtl_faker extends Trongate
         }
     }
 
-    function __destruct()
-    {
-        $this->parent_module = '';
-        $this->child_module = '';
-    }
-
 //    private function setFolderProgress(int $progress): void
 //    {
 //        $this->folderProgress = $progress;
 //        //echo 'Folder Progress: ', $this->folderProgress;
 //    }
+
+    function __destruct()
+    {
+        $this->parent_module = '';
+        $this->child_module = '';
+    }
 
     /**
      * Generates fake data for a single row and inserts it into the specified table via API.
@@ -1595,11 +1668,10 @@ class Vtl_faker extends Trongate
             list($type, $length) = $this->parseDatabaseType($dbType);
             $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
 
-            //This is where you should add code to generate custom field data
-            //it needs to be in the form of:
-            //  if($field === '<add your field name here') {
-            //      $fieldFakerStatement = $faker -> rgbColor();
-            //  }
+            $customFieldValue = $this->checkForCustomFieldNameGeneration($field, $faker);
+            if ($customFieldValue !== 'nothing') {
+                $fieldFakerStatement = $customFieldValue;
+            }
 
             //echo 'Field Faker Statement for : ' . $field. ' ='.$fieldFakerStatement;
             // If no specific Faker statement is available, generate value based on field type
@@ -1633,6 +1705,4 @@ class Vtl_faker extends Trongate
         }
 
     }
-
-
 }

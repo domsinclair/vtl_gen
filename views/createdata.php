@@ -368,6 +368,61 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
         }
     }
 
+    function insertDataViaTransaction(selectedTable, selectedRows, numRows) {
+
+    }
+
+    function submitForm1() {
+        // this is now going to act as little more that a redirect now
+        // less than 2000 rows can be created as before, more will cause transactions to kick in.
+
+        // we need the basic data to fire off the process
+
+        // Get the selected table name from the dropdown
+        var dropdown = document.getElementById('tableChoiceDropdown');
+        var selectedTable = dropdown.options[dropdown.selectedIndex].text;
+
+        // Get the values from the selected rows
+        var selectedRows = [];
+        var checkboxes = document.querySelectorAll('.checkbox');
+        checkboxes.forEach(function (checkbox) {
+            if (checkbox.checked) {
+                var row = {
+                    field: checkbox.parentElement.nextElementSibling.textContent,
+                    type: checkbox.parentElement.nextElementSibling.nextElementSibling.textContent
+                };
+                selectedRows.push(row);
+            }
+        });
+
+        // Get the value from the numRows input field
+        var numRows = document.getElementById('numRows').value;
+
+        function isDivisable(dividend, divisor) {
+            return dividend % divisor === 0;
+        }
+
+        // divide numRows by 2000
+        if (isDivisable(numRows, 2000)) {
+
+        }
+        if (numRows > 1000) {
+            // divide numRows by 2000
+            if (isDivisable(numRows, 2000)) {
+                // head off to do a transaction
+                insertDataViaTransaction(selectedTable, selectedRows, numRows);
+            } else {
+                //do 1000 or whatever rows
+                insertDataViaTransaction(selectedTable, selectedRows, 1000);
+                //do the rest
+                insertDataViaTransaction(selectedTable, selectedRows, numRows);
+            }
+
+        } else {
+            //head off down the old path
+        }
+    }
+
     function submitForm() {
 
         // Get the value of picDirectoryExists

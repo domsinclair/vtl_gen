@@ -114,7 +114,32 @@ class Vtl_gen extends Trongate
         return $tables;
     }
 
+    public function customiseFaker()
+    {
+        // Initialize Parsedown
+        $parsedown = new Parsedown();
 
+        // Construct file paths for markdown files
+        $filepathCustomise = __DIR__ . '/../assets/help/customise.md';
+
+        // Open markdown files
+        $fileCustomise = fopen($filepathCustomise, 'r');
+
+
+        // Read markdown content and parse it
+        $markdownCustomise = $parsedown->text(fread($fileCustomise, filesize($filepathCustomise)));
+
+
+        // Close markdown files
+        fclose($fileCustomise);
+
+
+        // Store parsed markdown content in data array
+        $data['markdownCustomise'] = $markdownCustomise;
+        $data['view_module'] = 'vtl_gen';
+        $data['view_file'] = 'customisefaker';
+        $this->template('public', $data);
+    }
 
     // Function to setup tables for dropdown
 

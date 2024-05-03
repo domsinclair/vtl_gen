@@ -6,6 +6,7 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/vtl.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/prism.css">
     <title>Vtl_Generator</title>
     <style>
         .flex {
@@ -51,7 +52,7 @@
         <hr style="height:2px;border-width:0;color:gray;background-color:gray">
     </div>
 </section>
-
+<script src="<?= BASE_URL ?>vtl_gen_module/js/prism.js"></script>
 </body>
 </html>
 <script>
