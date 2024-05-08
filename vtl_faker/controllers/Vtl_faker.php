@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../assets/vendor/autoload.php';
 require_once __DIR__ . '/../assets/vtl_faker_config.php';
 
+
 include_once(__DIR__ . '/../assets/vendor/ifsnop/mysqldump-php/src/Ifsnop/Mysqldump/Mysqldump.php');
 
 
@@ -463,13 +464,16 @@ class Vtl_faker extends Trongate
         // Initialize Faker instance
         $faker = null;
         $faker = $this->$faker;
+
         // register any custom provider(s) with the faker
         $faker->addProvider(new Faker\Provider\Commerce($faker));
+        $faker->addProvider(new Faker\Provider\Blog($faker));
 
         // Seed the faker.  This will ensure that the same data gets recreated
         // which can be useful for testing purposes.
         // Comment out the line below if you don't want to use a seeded faker.
         $faker->seed(FAKER_SEED);
+
 
         // Retrieve raw POST data from the request body
         $rawPostData = file_get_contents('php://input');
@@ -487,6 +491,195 @@ class Vtl_faker extends Trongate
         $selectedRows = $postData['selectedRows'];
         $numRows = $postData['numRows'];
 
+
+        // Now is the time to hive off highly customised data creation for particular tables
+        // like Trongate pages
+
+        switch ($selectedTable) {
+            case 'trongate_pages':
+                $this->transferImagesToTrongatePages();
+                $this->generateDataForTrongatePages($faker, $selectedRows, $numRows);
+                break;
+            default :
+                $this->processGeneralTablesThatAreNotSpecialCases($faker, $selectedTable, $selectedRows, $numRows);
+                break;
+        }
+
+
+    }
+
+    private function transferImagesToTrongatePages()
+    {
+        //check if img1.png resides in the images/uploades directory
+        $basedir = APPPATH . 'modules/vtl_gen/vtl_faker/assets/images/';
+        $sourcedir = APPPATH . 'modules/trongate_pages/assets/images/uploads';
+        if (!file_exists($sourcedir . '/img1.jpg')) {
+            // Copy files from $basedir to $sourcedir
+            $files = scandir($basedir);
+
+            foreach ($files as $file) {
+                if ($file !== '.' && $file !== '..') {
+
+                    $sourceFile = $basedir . $file;
+
+                    $destinationFile = $sourcedir . '/' . $file;
+                    // Check if the path is a regular file before copying
+                    if (is_file($sourceFile)) {
+                        copy($sourceFile, $destinationFile);
+                    }
+                }
+            }
+        }
+    }
+
+    private function generateDataForTrongatePages($faker, $selectedRows, $numRows)
+    {
+
+        // we ought to count the current tally of trongate pages as we'll use that to help
+        // generate short unique uri strings
+
+        $countSql = 'Select count(*) from trongate_pages';
+        $result = $this->model->query($countSql, 'array');
+        // Check if the result is not empty and has the 'count' key
+        if (!empty($result) && isset($result[0]['count'])) {
+            $pagesCount = (int)$result[0]['count'];
+        } else {
+            // Handle the case when no count is returned or there's an error
+            $pagesCount = 0; // or any default value you want
+        }
+
+        // now we can set to work
+        if (!is_int($numRows)) {
+            $numRows = intval($numRows);
+        }
+
+        $columns = '(';
+        $values = '';
+
+        foreach ($selectedRows as $key => $selectedRow) {
+            $originalFieldName = $selectedRow['field'];
+            $columns .= $originalFieldName;
+            if ($key < count($selectedRows) - 1) {
+                $columns .= ',';
+            } else {
+                $columns .= ')';
+            }
+        }
+
+        // That's the columns part of the eventual sql statement taken care of
+        // now to generate the values needed.
+        $pageTitle = '';
+        for ($i = 0; $i < $numRows; $i++) {
+            $rowValues = '';
+
+            foreach ($selectedRows as $selectedRow) {
+                if ($rowValues !== '') {
+                    $rowValues .= ',';
+                }
+                $value = null;
+                $field = $this->processFieldName($selectedRow['field']);
+
+                switch ($field) {
+                    case 'urlstring':
+                        if (!$pagesCount === 0) {
+                            $value = 'article' . $i + 1;
+                        } else {
+                            $value = 'article' . $i;
+                        }
+                        $value = '"' . $value . '"';
+                        break;
+                    case 'pagetitle':
+                        $pageTitle = $faker->articleTitle(); // Assign to $pageTitle instead of $value
+                        $value = '"' . $pageTitle . '"';
+                        break;
+                    case 'metakeywords':
+                        $value = $faker->metaKeywords(rand(1, 6));
+                        $value = implode(', ', $value);
+                        $value = '"' . $value . '"';
+                        break;
+                    case 'metadescription':
+                        $value = $faker->metaDescription();
+                        $value = '"' . $value . '"';
+                        break;
+                    case 'pagebody':
+                        $numParas = rand(1, 4);
+                        $numSentences = rand(1, 3);
+                        $pagebody = '<h1>' . $pageTitle . '</h1>';
+                        for ($j = 0; $j < $numParas; $j++) {
+                            $text = ''; // Reset $text for each paragraph
+                            for ($k = 0; $k < $numSentences; $k++) {
+                                $text .= $faker->sentence() . ' '; // Append sentences to $text
+                            }
+                            // Escape double quotes within HTML attributes by doubling them
+                            $text = '<div class=""text-div"">' . $text . '</div>'; // Wrap text in a div
+                            $img = $faker->randomElement(['img1.jpg', 'img2.jpg', 'img3.jpg', 'img4.jpg', 'img5.jpg', 'img6.jpg', 'img7.jpg', 'img8.jpg', 'img9.jpg', 'img10.jpg', 'img11.jpg']);
+                            $imgText = '<img src="' . BASE_URL . '/trongate_pages_module/images/uploads/' . $img . '" />';
+                            $pagebody .= $text . $imgText; // Append $text and $imgText to $pagebody
+                        }
+                        // Escape double quotes within SQL string by doubling them
+                        $pagebody = '"' . str_replace('"', '""', $pagebody) . '"';
+                        $value = $pagebody;
+                        break;
+                    case 'datecreated' :
+                        $value = $faker->unixTime(new dateTime('-3 days'));
+                        break;
+                    case 'lastupdated' :
+                        $value = $faker->unixTime(new dateTime('-1 days'));
+                        break;
+                    case 'published':
+                        $value = $faker->numberBetween(0, 1);
+                        break;
+                    case 'createdby' :
+                        $value = 1;
+                        break;
+                }
+                $rowValues .= $value;
+            }
+            $values .= '(' . $rowValues . ')';
+
+            if ($i < $numRows - 1) {
+                $values .= ', ';
+            }
+        }
+
+        $sql = 'INSERT INTO trongate_pages ' . $columns . ' VALUES ' . $values . ';';
+
+
+        try {
+            $data = [];
+            $this->model->prepare_and_execute($sql, $data);
+            echo('The following number rows were inserted into trongate_pages: ' . $numRows);
+        } catch (Exception $e) {
+            echo($e->getMessage());
+        }
+
+    }
+
+    /**
+     * Processes the input string to prepare it as a field name.
+     *
+     * This function takes an input string and performs the following operations:
+     * - Trims leading and trailing whitespace.
+     * - Removes spaces, underscores, and dashes from the string.
+     * - Converts the string to lowercase.
+     *
+     * @param string $inputString The input string to be processed.
+     * @return string Returns the processed field name string.
+     */
+    private function processFieldName($inputString): string
+    {
+        // Trim leading and trailing whitespace
+        $trimmedString = trim($inputString);
+
+        // Remove spaces, underscores, and dashes from the string
+        $filteredString = preg_replace('/[\s_\-]+/', '', $trimmedString);
+
+        // Convert the string to lowercase
+        return strtolower($filteredString);
+    }
+
+    private function processGeneralTablesThatAreNotSpecialCases($faker, $selectedTable, $selectedRows, $numRows)
+    {
         // Check if API JSON exists for the selected table
         $apiJsonExists = $this->findApiJsonExists($selectedTable);
 
@@ -599,29 +792,6 @@ class Vtl_faker extends Trongate
         } catch (Exception $e) {
             return $e->getMessage();
         }
-    }
-
-    /**
-     * Processes the input string to prepare it as a field name.
-     *
-     * This function takes an input string and performs the following operations:
-     * - Trims leading and trailing whitespace.
-     * - Removes spaces, underscores, and dashes from the string.
-     * - Converts the string to lowercase.
-     *
-     * @param string $inputString The input string to be processed.
-     * @return string Returns the processed field name string.
-     */
-    private function processFieldName($inputString): string
-    {
-        // Trim leading and trailing whitespace
-        $trimmedString = trim($inputString);
-
-        // Remove spaces, underscores, and dashes from the string
-        $filteredString = preg_replace('/[\s_\-]+/', '', $trimmedString);
-
-        // Convert the string to lowercase
-        return strtolower($filteredString);
     }
 
     /**

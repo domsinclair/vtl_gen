@@ -74,7 +74,7 @@ information is a facsimile copy of the FakerPhp docs) and there are quick links 
 
 
 <div>
- <h3>Available Formatters</h3>
+ <h3>Standard Formatters</h3>
 
         <li><a href="#barcode">Barcode</a></li>
         <li><a href="#biased">Biased</a></li>
@@ -92,9 +92,14 @@ information is a facsimile copy of the FakerPhp docs) and there are quick links 
         <li><a href="#uuid">Uuid</a></li>
         <li><a href="#version">Version</a></li>
 
+<h3>Custom Formatters Provided By The Data Generator</h3>
+
+        <li><a href="#blog">Blog</a></li>
+        <li><a href="#commerce">Commerce</a></li>
+
 </div>
 
-It is also possible to add to the custom loxale providers that come with FakerPhp. There are a whole set of customised
+It is also possible to add to the custom locale providers that come with FakerPhp. There are a whole set of customised
 locale provider files in the Faker Vendor directory that is supplied with the Vtl Data Directory and you can see an
 example of one customisation file that we added to get more realistic English text.
 
@@ -111,7 +116,7 @@ example of one customisation file that we added to get more realistic English te
 In addition to simply adding customisations of existing providers to specific locales it is also possible to create your
 custom provider from scratch. To illustrate the point the following section goes over the creation of a custom commerce
 provider that is included in the Vtl Data Generator. It should provide sufficient detail for you to be able to create
-your own cutom provider(s).
+your own custom provider(s).
 
 ### Creating a custom commerce provider
 
@@ -294,6 +299,203 @@ can see though this is not a particularly onerous task.
 
 The changes above have all been included in the Vtl Data Generator so you should find that this all just works out of
 the box.
+
+### Handling tables with special requirements (eg Trongate Pages)
+
+There will be occasions when it becomes necessary to generate highly customised data to meet certain pre requisites. The
+Trongate Pages table was a good case in point as the page body is actually an html block.
+
+This required a rethink about how the Vtl Data Generator does things but in the process has led to a far more robust
+solution.
+
+When you initially select a table for data generation your choice is handled by the createFakes() method.
+
+```php
+ public function createFakes(): void
+    {
+        // Initialize Faker instance
+        $faker = null;
+        $faker = $this->$faker;
+
+        // register any custom provider(s) with the faker
+        $faker->addProvider(new Faker\Provider\Commerce($faker));
+        $faker->addProvider(new Faker\Provider\Blog($faker));
+
+        // Seed the faker.  This will ensure that the same data gets recreated
+        // which can be useful for testing purposes.
+        // Comment out the line below if you don't want to use a seeded faker.
+        $faker->seed(FAKER_SEED);
+
+
+        // Retrieve raw POST data from the request body
+        $rawPostData = file_get_contents('php://input');
+
+        // Decode the JSON data into an associative array
+        $postData = json_decode($rawPostData, true);
+
+        // Ensure JSON decoding was successful
+        if ($postData === null) {
+            throw new Exception("Invalid JSON data");
+        }
+
+        // Extract relevant data from the decoded JSON
+        $selectedTable = $postData['selectedTable'];
+        $selectedRows = $postData['selectedRows'];
+        $numRows = $postData['numRows'];
+
+
+        // Now is the time to hive off highly customised data creation for particular tables
+        // like Trongate pages
+
+        switch ($selectedTable) {
+            case 'trongate_pages':
+                $this->transferImagesToTrongatePages();
+                $this->generateDataForTrongatePages($faker, $selectedRows, $numRows);
+                break;
+            default :
+                $this->processGeneralTablesThatAreNotSpecialCases($faker, $selectedTable, $selectedRows, $numRows);
+                break;
+        }
+
+
+    }
+```
+
+The key part of this revision is that you can now effectively create a custom generation for any table you have that
+might require special handling. You can also trigger certain preparatory tasks as well (note how a method to add images
+to the Trongate pages images folder is being called first.)
+
+You can then handle your custom generation any way you want. The method for Trongate Pages is shown below.
+
+```php
+ private function generateDataForTrongatePages($faker, $selectedRows, $numRows)
+    {
+
+        // we ought to count the current tally of trongate pages as we'll use that to help
+        // generate short unique uri strings
+
+        $countSql = 'Select count(*) from trongate_pages';
+        $result = $this->model->query($countSql, 'array');
+        // Check if the result is not empty and has the 'count' key
+        if (!empty($result) && isset($result[0]['count'])) {
+            $pagesCount = (int)$result[0]['count'];
+        } else {
+            // Handle the case when no count is returned or there's an error
+            $pagesCount = 0; // or any default value you want
+        }
+
+        // now we can set to work
+        if (!is_int($numRows)) {
+            $numRows = intval($numRows);
+        }
+
+        $columns = '(';
+        $values = '';
+
+        foreach ($selectedRows as $key => $selectedRow) {
+            $originalFieldName = $selectedRow['field'];
+            $columns .= $originalFieldName;
+            if ($key < count($selectedRows) - 1) {
+                $columns .= ',';
+            } else {
+                $columns .= ')';
+            }
+        }
+
+        // That's the columns part of the eventual sql statement taken care of
+        // now to generate the values needed.
+        $pageTitle = '';
+        for ($i = 0; $i < $numRows; $i++) {
+            $rowValues = '';
+
+            foreach ($selectedRows as $selectedRow) {
+                if ($rowValues !== '') {
+                    $rowValues .= ',';
+                }
+                $value = null;
+                $field = $this->processFieldName($selectedRow['field']);
+
+                switch ($field) {
+                    case 'urlstring':
+                        if (!$pagesCount === 0) {
+                            $value = 'article' . $i + 1;
+                        } else {
+                            $value = 'article' . $i;
+                        }
+                        $value = '"' . $value . '"';
+                        break;
+                    case 'pagetitle':
+                        $pageTitle = $faker->articleTitle(); // Assign to $pageTitle instead of $value
+                        $value = '"' . $pageTitle . '"';
+                        break;
+                    case 'metakeywords':
+                        $value = $faker->metaKeywords(rand(1, 6));
+                        $value = implode(', ', $value);
+                        $value = '"' . $value . '"';
+                        break;
+                    case 'metadescription':
+                        $value = $faker->metaDescription();
+                        $value = '"' . $value . '"';
+                        break;
+                    case 'pagebody':
+                        $numParas = rand(1, 4);
+                        $numSentences = rand(1, 3);
+                        $pagebody = '<h1>' . $pageTitle . '</h1>';
+                        for ($j = 0; $j < $numParas; $j++) {
+                            $text = ''; // Reset $text for each paragraph
+                            for ($k = 0; $k < $numSentences; $k++) {
+                                $text .= $faker->sentence() . ' '; // Append sentences to $text
+                            }
+                            // Escape double quotes within HTML attributes by doubling them
+                            $text = '<div class=""text-div"">' . $text . '</div>'; // Wrap text in a div
+                            $img = $faker->randomElement(['img1.jpg', 'img2.jpg', 'img3.jpg', 'img4.jpg', 'img5.jpg', 'img6.jpg', 'img7.jpg', 'img8.jpg', 'img9.jpg', 'img10.jpg', 'img11.jpg']);
+                            $imgText = '<img src="' . BASE_URL . '/trongate_pages_module/images/uploads/' . $img . '" />';
+                            $pagebody .= $text . $imgText; // Append $text and $imgText to $pagebody
+                        }
+                        // Escape double quotes within SQL string by doubling them
+                        $pagebody = '"' . str_replace('"', '""', $pagebody) . '"';
+                        $value = $pagebody;
+                        break;
+                    case 'datecreated' :
+                        $value = $faker->unixTime(new dateTime('-3 days'));
+                        break;
+                    case 'lastupdated' :
+                        $value = $faker->unixTime(new dateTime('-1 days'));
+                        break;
+                    case 'published':
+                        $value = $faker->numberBetween(0, 1);
+                        break;
+                    case 'createdby' :
+                        $value = 1;
+                        break;
+                }
+                $rowValues .= $value;
+            }
+            $values .= '(' . $rowValues . ')';
+
+            if ($i < $numRows - 1) {
+                $values .= ', ';
+            }
+        }
+
+        $sql = 'INSERT INTO trongate_pages ' . $columns . ' VALUES ' . $values . ';';
+
+
+        try {
+            $data = [];
+            $this->model->prepare_and_execute($sql, $data);
+            echo('The following number rows were inserted into trongate_pages: ' . $numRows);
+        } catch (Exception $e) {
+            echo($e->getMessage());
+        }
+
+    }
+```
+
+Notice how it is making use of another custom provider that has been added to make creating realist data for items like
+this much easier.
+
+Both of the new providers have been fully documented at the bottom of this page.
 
 ### Handling relationships between tables
 
@@ -492,6 +694,7 @@ $faker->optional()->passthrough(mt_rand(5, 15));
 ```
 
 <br/>
+
 
 <div id="barcode">
 <hr/>
@@ -2069,3 +2272,207 @@ echo $faker->semver(true, true);
 // 0.0.1-beta, 1.0.0-rc.1, 1.5.9+276e88b, 5.6.2-alpha.2+20180419085616
 ```
 
+<div id="blog">
+<hr/>
+<hr/>
+</div>
+
+## Blog
+
+### ArticleTitle
+
+Generates a random title for a news or blog article.
+
+Example:
+
+```php
+echo $faker -> articleTitle();
+
+// The Art of Creativity with Inspiration
+```
+
+### Comment
+
+Generates a comment.
+
+Example:
+
+```php
+echo $faker -> comment();
+
+// Great article, very informative!
+```
+
+### Sentence
+
+Generates a sentence.
+
+Example:
+
+```php
+echo $faker -> sentence();
+
+// As the sun dipped below the horizon, casting a warm glow across the landscape, they sat together on the porch swing, sipping lemonade and reminiscing about the adventures they had shared over the years.
+```
+
+### MetaKeyword
+
+Generates a meta keyword.
+
+Example:
+
+```php
+echo $faker -> metaKeyword();
+
+// health
+```
+
+### MetaKeywords
+
+Generates an array of meta keywords, taking an integer as the number of words to create.
+
+Example:
+
+```php
+echo $faker -> metaKeywords(4);
+
+// {'fitness', 'education', 'business', 'fashion'}
+```
+
+### MetaDescription
+
+Generates a meta description.
+
+Example:
+
+```php
+echo $faker -> metaDescription();
+
+// Get access to diverse perspectives and viewpoints
+```
+
+<div id="commerce">
+<hr/>
+</div>
+
+## Commerce
+
+### SKU
+
+Generates a SKU Code. These are 8 characters in length and a mixture of uppercase letters and numerals.
+
+Example:
+
+```php
+echo $faker -> sku();
+
+// Y7KH649F
+```
+
+### UPC
+
+Generates a 12 digit UPC code.
+
+Example:
+
+```php
+echo $faker -> upc();
+
+// 254686920481
+```
+
+### EAN
+
+Generates an EAN code of 13 digits.
+
+Example:
+
+```php
+echo $faker -> ean();
+
+// 2593071394710
+```
+
+### Category
+
+Generates a category.
+
+Example:
+
+```php
+echo $faker -> category();
+
+// Sports & Outdoors
+```
+
+### Department
+
+Generates a Department.
+
+Example:
+
+```php
+echo $faker -> department();
+
+// Facilities Management
+```
+
+### Product Name
+
+Generates a product Name.
+
+Example:
+
+```php
+echo $faker -> productName();
+
+// Ergonomic Aluminum Chair
+```
+
+### Product Description
+
+Generates a product description.
+
+Example:
+
+```php
+echo $faker -> productDescription();
+
+// Efficient Stainless Steel Water Bottle perfect for Hydration during Outdoor Activities
+```
+
+### PromoCoupon
+
+Generates a promo coupon.
+
+Example:
+
+```php
+echo $faker -> promoCoupon();
+
+// AmazingDeal
+```
+
+### PromoCoupon with digits
+
+Generates a promo coupon with 4 random digits appended to it.
+
+Example:
+
+```php
+echo $faker -> promoCouponWithDigits();
+
+// AmazingDeal2479
+```
+
+### PromoCoupon with discount
+
+Generates a promo coupon onto which will be appended the discount figure you pass to the generator.
+
+Example:
+
+```php
+echo $faker -> promoCouponWithDiscount(25);
+
+// AmazingDeal25
+```
