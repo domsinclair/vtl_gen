@@ -472,6 +472,7 @@ class Vtl_faker extends Trongate
         // Seed the faker.  This will ensure that the same data gets recreated
         // which can be useful for testing purposes.
         // Comment out the line below if you don't want to use a seeded faker.
+
         $faker->seed(FAKER_SEED);
 
 
@@ -540,13 +541,15 @@ class Vtl_faker extends Trongate
 
         $countSql = 'Select count(*) from trongate_pages';
         $result = $this->model->query($countSql, 'array');
+
         // Check if the result is not empty and has the 'count' key
-        if (!empty($result) && isset($result[0]['count'])) {
-            $pagesCount = (int)$result[0]['count'];
+        if (!empty($result) && isset($result[0]['count(*)'])) {
+            $pagesCount = (int)$result[0]['count(*)'];
         } else {
             // Handle the case when no count is returned or there's an error
             $pagesCount = 0; // or any default value you want
         }
+
 
         // now we can set to work
         if (!is_int($numRows)) {
@@ -581,12 +584,26 @@ class Vtl_faker extends Trongate
 
                 switch ($field) {
                     case 'urlstring':
-                        if (!$pagesCount === 0) {
-                            $value = 'article' . $i + 1;
+                        if ($pagesCount > 0) {
+                            // Fetch existing URLs from the database
+                            $existingUrls = $this->model->query('SELECT url_string FROM trongate_pages', 'array');
+
+                            do {
+                                $proposedUrl = 'article' . ($pagesCount + $i + 1);
+                                $unique = true;
+                                foreach ($existingUrls as $row) {
+                                    if ($row['url_string'] === $proposedUrl) {
+                                        $unique = false;
+                                        break;
+                                    }
+                                }
+                                $i++;
+                            } while (!$unique);
+
+                            $value = '"' . $proposedUrl . '"';
                         } else {
-                            $value = 'article' . $i;
+                            $value = '"article' . $i . '"';
                         }
-                        $value = '"' . $value . '"';
                         break;
                     case 'pagetitle':
                         $pageTitle = $faker->articleTitle(); // Assign to $pageTitle instead of $value

@@ -368,7 +368,31 @@ to the Trongate pages images folder is being called first.)
 You can then handle your custom generation any way you want. The method for Trongate Pages is shown below.
 
 ```php
- private function generateDataForTrongatePages($faker, $selectedRows, $numRows)
+  private function transferImagesToTrongatePages()
+    {
+        //check if img1.png resides in the images/uploades directory
+        $basedir = APPPATH . 'modules/vtl_gen/vtl_faker/assets/images/';
+        $sourcedir = APPPATH . 'modules/trongate_pages/assets/images/uploads';
+        if (!file_exists($sourcedir . '/img1.jpg')) {
+            // Copy files from $basedir to $sourcedir
+            $files = scandir($basedir);
+
+            foreach ($files as $file) {
+                if ($file !== '.' && $file !== '..') {
+
+                    $sourceFile = $basedir . $file;
+
+                    $destinationFile = $sourcedir . '/' . $file;
+                    // Check if the path is a regular file before copying
+                    if (is_file($sourceFile)) {
+                        copy($sourceFile, $destinationFile);
+                    }
+                }
+            }
+        }
+    }
+
+    private function generateDataForTrongatePages($faker, $selectedRows, $numRows)
     {
 
         // we ought to count the current tally of trongate pages as we'll use that to help
@@ -376,13 +400,15 @@ You can then handle your custom generation any way you want. The method for Tron
 
         $countSql = 'Select count(*) from trongate_pages';
         $result = $this->model->query($countSql, 'array');
+
         // Check if the result is not empty and has the 'count' key
-        if (!empty($result) && isset($result[0]['count'])) {
-            $pagesCount = (int)$result[0]['count'];
+        if (!empty($result) && isset($result[0]['count(*)'])) {
+            $pagesCount = (int)$result[0]['count(*)'];
         } else {
             // Handle the case when no count is returned or there's an error
             $pagesCount = 0; // or any default value you want
         }
+
 
         // now we can set to work
         if (!is_int($numRows)) {
@@ -417,12 +443,26 @@ You can then handle your custom generation any way you want. The method for Tron
 
                 switch ($field) {
                     case 'urlstring':
-                        if (!$pagesCount === 0) {
-                            $value = 'article' . $i + 1;
+                        if ($pagesCount > 0) {
+                            // Fetch existing URLs from the database
+                            $existingUrls = $this->model->query('SELECT url_string FROM trongate_pages', 'array');
+
+                            do {
+                                $proposedUrl = 'article' . ($pagesCount + $i + 1);
+                                $unique = true;
+                                foreach ($existingUrls as $row) {
+                                    if ($row['url_string'] === $proposedUrl) {
+                                        $unique = false;
+                                        break;
+                                    }
+                                }
+                                $i++;
+                            } while (!$unique);
+
+                            $value = '"' . $proposedUrl . '"';
                         } else {
-                            $value = 'article' . $i;
+                            $value = '"article' . $i . '"';
                         }
-                        $value = '"' . $value . '"';
                         break;
                     case 'pagetitle':
                         $pageTitle = $faker->articleTitle(); // Assign to $pageTitle instead of $value
