@@ -10,29 +10,34 @@
 </head>
 <body>
 <h2 class="text-center">Vtl Data Generator: Delete Index</h2>
-<div class="flex">
-    <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
-</div>
-<p>Select a table in the database from the drop down below. If there are any indexes created by this module they will be
-    shown in the table that appears.</p>
-<p>Select those indexes that you wish to delete. </p>
+<section>
+    <div class="container">
+        <div class="flex">
+            <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
+        </div>
+        <p>Select a table in the database from the drop down below. If there are any indexes created by this module they
+            will be
+            shown in the table that appears.</p>
+        <p>Select those indexes that you wish to delete. </p>
 
-<?php
-//echo form_label($dropdownLabel);
-$tableChoiceAttr['id'] = 'tableChoiceDropdown';
-$tableChoiceAttr['onchange'] = 'selectedTable()';
-echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
-?>
-<div id="columnInfoTableContainer" class="container"></div>
-<div class="modal" id="response-modal" style="display: none">
-    <div class="modal-heading">Deleted Indexes</div>
-    <div class="modal-body">
-        <p id="the-response"></p>
-        <p class="text-center">
-            <button onclick="closeModal()" class="alt">Close</button>
-        </p>
+        <?php
+        //echo form_label($dropdownLabel);
+        $tableChoiceAttr['id'] = 'tableChoiceDropdown';
+        $tableChoiceAttr['onchange'] = 'selectedTable()';
+        echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
+        ?>
+        <div id="columnInfoTableContainer" class="container"></div>
+        <div class="modal" id="response-modal" style="display: none">
+            <div class="modal-heading">Deleted Indexes</div>
+            <div class="modal-body">
+                <p id="the-response"></p>
+                <p class="text-center">
+                    <button onclick="closeModal()" class="alt">Close</button>
+                </p>
+            </div>
+        </div>
     </div>
-</div>
+</section>
 <script src="<?= BASE_URL ?>js/app.js"></script>
 </body>
 </html>

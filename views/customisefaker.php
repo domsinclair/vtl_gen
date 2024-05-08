@@ -11,13 +11,17 @@
 </head>
 <body>
 <h2 class="text-center">Vtl Data Generator: Customising Fake Data</h2>
-<div class="flex">
-    <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
-</div>
 <section>
     <div class="container">
-        <div><?php echo $markdownCustomise; ?></div>
-        <hr style="height:2px;border-width:0;color:gray;background-color:gray">
+        <div class="flex">
+            <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
+        </div>
+        <section>
+            <div class="container">
+                <div><?php echo $markdownCustomise; ?></div>
+                <hr style="height:2px;border-width:0;color:gray;background-color:gray">
+            </div>
+        </section>
     </div>
 </section>
 <script src="<?= BASE_URL ?>vtl_gen_module/js/prism.js"></script>

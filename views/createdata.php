@@ -12,48 +12,53 @@
 </head>
 <body>
 <h2 class="text-center">Vtl Data Generator: Create Data</h2>
-<div class="flex">
-    <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
-</div>
-<?php //echo '<p>' . anchor('vtl_gen/showHelp', 'Show Vtl Generator Help', array("class" => "button")) . '</p>'; ?>
-<p>Select the table in the database from the drop down below for which you wish to create some fake data.</p>
-<p>Select those columns into which you want to add data, or just check the checkbox in the header if you want to select
-    all the rows. </p>
-<p><b>Do not select fields that are set to auto increment.</b></p>
-<?php
-//echo form_label($dropdownLabel);
-$tableChoiceAttr['id'] = 'tableChoiceDropdown';
-$tableChoiceAttr['onchange'] = 'selectedTable()';
-echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
+<section>
+    <div class="container">
+        <div class="flex">
+            <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
+        </div>
+        <?php //echo '<p>' . anchor('vtl_gen/showHelp', 'Show Vtl Generator Help', array("class" => "button")) . '</p>'; ?>
+        <p>Select the table in the database from the drop down below for which you wish to create some fake data.</p>
+        <p>Select those columns into which you want to add data, or just check the checkbox in the header if you want to
+            select
+            all the rows. </p>
+        <p><b>Do not select fields that are set to auto increment.</b></p>
+        <?php
+        //echo form_label($dropdownLabel);
+        $tableChoiceAttr['id'] = 'tableChoiceDropdown';
+        $tableChoiceAttr['onchange'] = 'selectedTable()';
+        echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
 
-?>
+        ?>
 
-<!-- HTML element for a progress bar -->
-<!--<div class="progress-bar">-->
-<!--    <div class="progress" id="progress" style=" width = 250px; background-color: #3b0a49;"></div>-->
-<!--</div>-->
-<div id="columnInfoTableContainer" class="container"></div>
-<div class="modal" id="response-modal" style="display: none">
-    <div class="modal-heading">Generated Rows</div>
-    <div class="modal-body">
-        <p id="the-response"></p>
-        <p class="text-center">
-            <button onclick="closeModal()" class="alt">Close</button>
-        </p>
+        <!-- HTML element for a progress bar -->
+        <!--<div class="progress-bar">-->
+        <!--    <div class="progress" id="progress" style=" width = 250px; background-color: #3b0a49;"></div>-->
+        <!--</div>-->
+        <div id="columnInfoTableContainer" class="container"></div>
+        <div class="modal" id="response-modal" style="display: none">
+            <div class="modal-heading">Generated Rows</div>
+            <div class="modal-body">
+                <p id="the-response"></p>
+                <p class="text-center">
+                    <button onclick="closeModal()" class="alt">Close</button>
+                </p>
+            </div>
+        </div>
+        <div class="modal" id="image-transfer-response-modal" style="display: none">
+            <div class="modal-heading">Transferred Images</div>
+            <div class="modal-body">
+                <p id="the-response"></p>
+                <p class="text-center">
+                    <button onclick="closeModal()" class="alt">Close</button>
+                </p>
+            </div>
+        </div>
+        <div>
+            <input type="hidden" id="picDirectoryExists" value="<?php echo $picDirectoryExists ? 'true' : 'false'; ?>">
+        </div>
     </div>
-</div>
-<div class="modal" id="image-transfer-response-modal" style="display: none">
-    <div class="modal-heading">Transferred Images</div>
-    <div class="modal-body">
-        <p id="the-response"></p>
-        <p class="text-center">
-            <button onclick="closeModal()" class="alt">Close</button>
-        </p>
-    </div>
-</div>
-<div>
-    <input type="hidden" id="picDirectoryExists" value="<?php echo $picDirectoryExists ? 'true' : 'false'; ?>">
-</div>
+</section>
 
 <script src="<?= BASE_URL ?>js/app.js"></script>
 </body>

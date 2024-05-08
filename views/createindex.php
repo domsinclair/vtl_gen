@@ -10,28 +10,32 @@
 </head>
 <body>
 <h2 class="text-center">Vtl Data Generator: Create Index</h2>
-<div class="flex">
-    <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
-</div>
-<p>Select the table in the database from the drop down below for which you wish to create an index.</p>
-<p>Select those columns that require an index to be added to them. </p>
-<p><b>Choose to create either Standard or Unique index.</b></p>
-<?php
-//echo form_label($dropdownLabel);
-$tableChoiceAttr['id'] = 'tableChoiceDropdown';
-$tableChoiceAttr['onchange'] = 'selectedTable()';
-echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
-?>
-<div id="columnInfoTableContainer" class="container"></div>
-<div class="modal" id="response-modal" style="display: none">
-    <div class="modal-heading">Created Indexes</div>
-    <div class="modal-body">
-        <p id="the-response"></p>
-        <p class="text-center">
-            <button onclick="closeModal()" class="alt">Close</button>
-        </p>
+<section>
+    <div class="container">
+        <div class="flex">
+            <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
+        </div>
+        <p>Select the table in the database from the drop down below for which you wish to create an index.</p>
+        <p>Select those columns that require an index to be added to them. </p>
+        <p><b>Choose to create either Standard or Unique index.</b></p>
+        <?php
+        //echo form_label($dropdownLabel);
+        $tableChoiceAttr['id'] = 'tableChoiceDropdown';
+        $tableChoiceAttr['onchange'] = 'selectedTable()';
+        echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
+        ?>
+        <div id="columnInfoTableContainer" class="container"></div>
+        <div class="modal" id="response-modal" style="display: none">
+            <div class="modal-heading">Created Indexes</div>
+            <div class="modal-body">
+                <p id="the-response"></p>
+                <p class="text-center">
+                    <button onclick="closeModal()" class="alt">Close</button>
+                </p>
+            </div>
+        </div>
     </div>
-</div>
+</section>
 <script src="<?= BASE_URL ?>js/app.js"></script>
 </body>
 </html>
@@ -212,5 +216,5 @@ echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
         margin: 5px;
     }
 
-   
+
 </style>

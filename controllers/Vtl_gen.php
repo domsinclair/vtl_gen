@@ -53,6 +53,28 @@ class Vtl_gen extends Trongate
     {
         unset($_SESSION['selectedDataTable']);
 
+        // Define the list item HTML
+        $listItemHTML = '<li>' . anchor('vtl_gen', '<img src="vtl_gen_module/help/images/vtlgen.svg"> Vtl Data Generator') . '</li>';
+
+        // Path to the dynamic_nav.php file
+        $filePath = APPPATH . 'templates/views/partials/admin/dynamic_nav.php';
+
+        // Read the content of dynamic_nav.php
+        $fileContent = file_get_contents($filePath);
+
+        // Check if the list item already exists in the file
+        if (strpos($fileContent, $listItemHTML) === false) {
+            // If not, find the position to insert the new list item
+            $pos = strpos($fileContent, '</ul>');
+            if ($pos !== false) {
+                // Insert the list item before the closing </ul> tag
+                $newContent = substr_replace($fileContent, $listItemHTML, $pos, 0);
+
+                // Write the modified content back to the file
+                file_put_contents($filePath, $newContent);
+            }
+        }
+
         // Get a list of all tables
         $data['tables'] = $this->setupTablesForDropdown();
         // Construct file paths for markdown files
@@ -79,7 +101,7 @@ class Vtl_gen extends Trongate
         $data['markdownIntro'] = $markdownIntro;
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'vtl_gen';
-        $this->template('public', $data);
+        $this->template('admin', $data);
     }
     // Function to get images for display
 
@@ -138,7 +160,7 @@ class Vtl_gen extends Trongate
         $data['markdownCustomise'] = $markdownCustomise;
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'customisefaker';
-        $this->template('public', $data);
+        $this->template('admin', $data);
     }
 
     // Function to setup tables for dropdown
@@ -153,7 +175,7 @@ class Vtl_gen extends Trongate
         $data['indexInfo'] = $this->getAllTablesAndTheirIndexes();
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'deleteindex';
-        $this->template('public', $data);
+        $this->template('admin', $data);
     }
 
     /**
@@ -190,7 +212,7 @@ class Vtl_gen extends Trongate
         $data['dropdownLabel'] = 'Tables in ' . DATABASE;
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'createdata';
-        $this->template('public', $data);
+        $this->template('admin', $data);
     }
 
     /**
@@ -227,7 +249,7 @@ class Vtl_gen extends Trongate
         $data['dropdownLabel'] = 'Tables in ' . DATABASE;
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'createindex';
-        $this->template('public', $data);
+        $this->template('admin', $data);
     }
 
     /**
@@ -239,7 +261,7 @@ class Vtl_gen extends Trongate
         $data['tables'] = $this->setupTablesForDatabaseAdmin();
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'deletedata';
-        $this->template('public', $data);
+        $this->template('admin', $data);
     }
 
     /**
@@ -261,7 +283,7 @@ class Vtl_gen extends Trongate
         $data['tables'] = $this->setupTablesForDatabaseAdmin();
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'export';
-        $this->template('public', $data);
+        $this->template('admin', $data);
     }
 
     /**
@@ -302,7 +324,7 @@ class Vtl_gen extends Trongate
         //finally pass this to a view.
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'showdata';
-        $this->template('public', $data);
+        $this->template('admin', $data);
     }
 
     /**

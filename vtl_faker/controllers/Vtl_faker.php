@@ -499,7 +499,7 @@ class Vtl_faker extends Trongate
         switch ($selectedTable) {
             case 'trongate_pages':
                 $this->transferImagesToTrongatePages();
-                $this->generateDataForTrongatePages($faker, $selectedRows, $numRows);
+                $this->generateDataForTrongatePages($faker, $selectedTable, $selectedRows, $numRows);
                 break;
             default :
                 $this->processGeneralTablesThatAreNotSpecialCases($faker, $selectedTable, $selectedRows, $numRows);
@@ -509,7 +509,16 @@ class Vtl_faker extends Trongate
 
     }
 
-    private function transferImagesToTrongatePages()
+    /**
+     * Transfer Images to Trongate Pages
+     *
+     * This function checks if certain images reside in a specified directory and transfers them to another directory.
+     * If the image does not exist in the target directory, it copies images from a source directory to the target
+     * directory.
+     *
+     * @return void
+     */
+    private function transferImagesToTrongatePages(): void
     {
         //check if img1.png resides in the images/uploades directory
         $basedir = APPPATH . 'modules/vtl_gen/vtl_faker/assets/images/';
@@ -533,13 +542,25 @@ class Vtl_faker extends Trongate
         }
     }
 
-    private function generateDataForTrongatePages($faker, $selectedRows, $numRows)
+    /**
+     * Generate Data for Trongate Pages
+     *
+     * This function generates data for Trongate Pages based on provided criteria and inserts them into the specified
+     * table.
+     *
+     * @param object $faker         The Faker object for generating fake data.
+     * @param string $selectedTable The name of the table where the data will be inserted.
+     * @param array  $selectedRows  The array containing information about selected fields.
+     * @param int    $numRows       The number of rows to generate.
+     * @return void
+     */
+    private function generateDataForTrongatePages($faker, $selectedTable, $selectedRows, $numRows)
     {
 
         // we ought to count the current tally of trongate pages as we'll use that to help
         // generate short unique uri strings
 
-        $countSql = 'Select count(*) from trongate_pages';
+        $countSql = 'Select count(*) from ' . $selectedTable;
         $result = $this->model->query($countSql, 'array');
 
         // Check if the result is not empty and has the 'count' key
@@ -586,7 +607,7 @@ class Vtl_faker extends Trongate
                     case 'urlstring':
                         if ($pagesCount > 0) {
                             // Fetch existing URLs from the database
-                            $existingUrls = $this->model->query('SELECT url_string FROM trongate_pages', 'array');
+                            $existingUrls = $this->model->query('SELECT url_string FROM ' . $selectedTable, 'array');
 
                             do {
                                 $proposedUrl = 'article' . ($pagesCount + $i + 1);
@@ -659,7 +680,7 @@ class Vtl_faker extends Trongate
             }
         }
 
-        $sql = 'INSERT INTO trongate_pages ' . $columns . ' VALUES ' . $values . ';';
+        $sql = 'INSERT INTO ' . $selectedTable . ' ' . $columns . ' VALUES ' . $values . ';';
 
 
         try {
@@ -1414,7 +1435,7 @@ class Vtl_faker extends Trongate
 
         // Decode the JSON data into an associative array
         $postData = json_decode($rawPostData, true);
-        //var_dump($postData);
+
         // Extract relevant data from the decoded JSON
         $selectedTables = $postData['selectedTables'];
         $resetAutoIncrement = $postData['resetAutoIncrement'];
@@ -1454,6 +1475,25 @@ class Vtl_faker extends Trongate
 
                                     $thumbsDir = $picDirectory . '_thumbnails';
                                     $this->deleteSubDirectories($thumbsDir);
+                                }
+
+                                // Lastly if we are deleting Trongate Pages we want to strip out
+                                // the images we added to it's uploads directory.
+
+                                if ($selectedTable === 'trongate_pages') {
+                                    $sourcedir = APPPATH . 'modules/trongate_pages/assets/images/uploads';
+
+                                    // Loop through each image file
+                                    for ($i = 1; $i <= 11; $i++) {
+                                        $filename = 'img' . $i . '.jpg';
+                                        $filepath = $sourcedir . '/' . $filename;
+
+                                        // Check if the file exists
+                                        if (file_exists($filepath)) {
+                                            // Delete the file
+                                            unlink($filepath);
+                                        }
+                                    }
                                 }
                             }
                         } catch (Exception $e) {
@@ -1500,6 +1540,25 @@ class Vtl_faker extends Trongate
 
                                 $thumbsDir = $picDirectory . '_thumbnails';
                                 $this->deleteSubDirectories($thumbsDir);
+                            }
+
+                            // Lastly if we are deleting Trongate Pages we want to strip out
+                            // the images we added to it's uploads directory.
+
+                            if ($selectedTable === 'trongate_pages') {
+                                $sourcedir = APPPATH . 'modules/trongate_pages/assets/images/uploads';
+
+                                // Loop through each image file
+                                for ($i = 1; $i <= 11; $i++) {
+                                    $filename = 'img' . $i . '.jpg';
+                                    $filepath = $sourcedir . '/' . $filename;
+
+                                    // Check if the file exists
+                                    if (file_exists($filepath)) {
+                                        // Delete the file
+                                        unlink($filepath);
+                                    }
+                                }
                             }
                         } catch (Exception $e) {
                             // Handle the exception here, you can log it, display an error message, or take any other appropriate action

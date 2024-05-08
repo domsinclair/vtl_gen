@@ -392,13 +392,13 @@ You can then handle your custom generation any way you want. The method for Tron
         }
     }
 
-    private function generateDataForTrongatePages($faker, $selectedRows, $numRows)
+    private function generateDataForTrongatePages($faker, $selectedTable, $selectedRows, $numRows)
     {
 
         // we ought to count the current tally of trongate pages as we'll use that to help
         // generate short unique uri strings
 
-        $countSql = 'Select count(*) from trongate_pages';
+        $countSql = 'Select count(*) from ' . $selectedTable;
         $result = $this->model->query($countSql, 'array');
 
         // Check if the result is not empty and has the 'count' key
@@ -445,7 +445,7 @@ You can then handle your custom generation any way you want. The method for Tron
                     case 'urlstring':
                         if ($pagesCount > 0) {
                             // Fetch existing URLs from the database
-                            $existingUrls = $this->model->query('SELECT url_string FROM trongate_pages', 'array');
+                            $existingUrls = $this->model->query('SELECT url_string FROM ' . $selectedTable, 'array');
 
                             do {
                                 $proposedUrl = 'article' . ($pagesCount + $i + 1);
@@ -518,7 +518,7 @@ You can then handle your custom generation any way you want. The method for Tron
             }
         }
 
-        $sql = 'INSERT INTO trongate_pages ' . $columns . ' VALUES ' . $values . ';';
+        $sql = 'INSERT INTO ' . $selectedTable . ' ' . $columns . ' VALUES ' . $values . ';';
 
 
         try {

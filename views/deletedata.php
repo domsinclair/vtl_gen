@@ -10,37 +10,42 @@
 </head>
 <body>
 <h2 class="text-center">Vtl Data Generator: Delete Data</h2>
-<div class="flex">
-    <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
-</div>
-<p>Select those tables you wish to delete data from.</p>
+<section>
+    <div class="container">
+        <div class="flex">
+            <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
+        </div>
+        <p>Select those tables you wish to delete data from.</p>
 
-<table>
-    <thead>
-    <tr>
-        <th><label><input type="checkbox" id="select-all"> </label></th>
-        <th>Tables</th>
-    </tr>
-    </thead>
-    <tbody>
-    <?php foreach ($tables as $index => $item): ?>
-        <tr>
-            <td><input type="checkbox" name="tables[]" value="<?php echo $item; ?>"></td>
-            <td><?php echo $item; ?></td>
-        </tr>
-    <?php endforeach; ?>
-    </tbody>
-</table>
 
-<!-- Checkbox for Reset Primary Auto Increment -->
-<div>
-    <label><input type="checkbox" id="reset-auto-increment" name="reset-auto-increment"> Reset Primary Auto
-        Increment</label>
-</div>
+        <table>
+            <thead>
+            <tr>
+                <th><label><input type="checkbox" id="select-all"> </label></th>
+                <th>Tables</th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($tables as $index => $item): ?>
+                <tr>
+                    <td><input type="checkbox" name="tables[]" value="<?php echo $item; ?>"></td>
+                    <td><?php echo $item; ?></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
 
-<div class="flex">
-    <button id="clearDataBtn" class="button">Clear Data</button>
-</div>
+        <!-- Checkbox for Reset Primary Auto Increment -->
+        <div>
+            <label><input type="checkbox" id="reset-auto-increment" name="reset-auto-increment"> Reset Primary Auto
+                Increment</label>
+        </div>
+
+        <div class="flex">
+            <button id="clearDataBtn" class="button">Clear Data</button>
+        </div>
+    </div>
+</section>
 <div id="columnInfoTableContainer" class="container"></div>
 <div class="modal" id="response-modal" style="display: none">
     <div class="modal-heading">Deleted Data</div>

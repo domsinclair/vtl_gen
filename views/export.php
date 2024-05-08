@@ -10,43 +10,47 @@
 </head>
 <body>
 <h2 class="text-center">Vtl Data Generator: Export Database</h2>
-<div class="flex">
-    <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
-</div>
-<p>Select those tables to be exported and whether you want data from them exported as well.</p>
-<table>
-    <thead>
-    <tr>
-        <th><label><input type="checkbox" id="export-all">Export Table</label></th>
-        <th>Tables</th>
-        <th><label><input type="checkbox" id="export-data">Export Data</label></th>
-        <!-- Select All checkbox for the right column -->
-    </tr>
-    </thead>
-    <tbody>
-    <?php foreach ($tables as $index => $item): ?>
-        <tr>
-            <td><input type="checkbox" name="tables[]" value="<?php echo $item; ?>"></td>
-            <td><?php echo $item; ?></td>
-            <td><input type="checkbox" name="rightTables[]" value="<?php echo $item; ?>" disabled></td>
-            <!-- Right checkbox column -->
-        </tr>
-    <?php endforeach; ?>
-    </tbody>
-</table>
+<section>
+    <div class="container">
+        <div class="flex">
+            <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
+        </div>
+        <p>Select those tables to be exported and whether you want data from them exported as well.</p>
+        <table>
+            <thead>
+            <tr>
+                <th><label><input type="checkbox" id="export-all">Export Table</label></th>
+                <th>Tables</th>
+                <th><label><input type="checkbox" id="export-data">Export Data</label></th>
+                <!-- Select All checkbox for the right column -->
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($tables as $index => $item): ?>
+                <tr>
+                    <td><input type="checkbox" name="tables[]" value="<?php echo $item; ?>"></td>
+                    <td><?php echo $item; ?></td>
+                    <td><input type="checkbox" name="rightTables[]" value="<?php echo $item; ?>" disabled></td>
+                    <!-- Right checkbox column -->
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
 
-<div class="flex">
-    <button id="exportBtn" class="button">Export</button>
-</div>
-<div class="modal" id="response-modal" style="display: none">
-    <div class="modal-heading">Deleted Indexes</div>
-    <div class="modal-body">
-        <p id="the-response"></p>
-        <p class="text-center">
-            <button onclick="closeModal()" class="alt">Close</button>
-        </p>
+        <div class="flex">
+            <button id="exportBtn" class="button">Export</button>
+        </div>
+        <div class="modal" id="response-modal" style="display: none">
+            <div class="modal-heading">Deleted Indexes</div>
+            <div class="modal-body">
+                <p id="the-response"></p>
+                <p class="text-center">
+                    <button onclick="closeModal()" class="alt">Close</button>
+                </p>
+            </div>
+        </div>
     </div>
-</div>
+</section>
 <script src="<?= BASE_URL ?>js/app.js"></script>
 </body>
 </html>
