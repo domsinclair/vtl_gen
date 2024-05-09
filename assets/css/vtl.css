@@ -11,9 +11,11 @@
 
 html {
     color-scheme: dark light;
+    scroll-behavior: smooth;
 }
 
 @media (prefers-color-scheme: dark) {
+
 
     button:hover,
     .button:hover {
@@ -210,6 +212,7 @@ html {
         --color-bg: #f8f7f7;
         --color-fg: #1E1D1DFF;
     }
+
 
     button:hover,
     .button:hover {
@@ -464,6 +467,61 @@ picture {
     align-content: center;
 }
 
+.back-to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f4eeee;
+    border-radius: 10em;
+    padding: 0.5rem;
+    text-decoration: none;
+    transition: 0.2s ease-out;
+}
+
+.back-to-top span {
+    color: #fff;
+    font-size: 1em;
+    transition: 0.2s ease-out;
+}
+
+.back-to-top:hover {
+    background-color: #dadada;
+}
+
+.back-to-top:hover span {
+    transform: translateY(-4px);
+}
+
+.back-to-top {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background-color: lightgreen;
+    border-radius: 10em;
+    padding: 0.5rem;
+    text-decoration: none;
+    transition: 0.2s ease-out;
+}
+
+.back-to-top span {
+    color: #fff;
+    font-size: 1em;
+    transition: 0.2s ease-out;
+}
+
+.back-to-top:hover {
+    background-color: limegreen;
+}
+
+.back-to-top:hover span {
+    transform: translateY(-4px);
+}
 
 /*pre {*/
 /*    max-width: 100%;*/

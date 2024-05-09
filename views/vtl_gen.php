@@ -55,6 +55,9 @@
         </section>
     </div>
 </section>
+<a href="#" class="back-to-top">
+    <span><img src="vtl_gen_module/help/images/vtluparrow.svg" </span>
+</a>
 <script src="<?= BASE_URL ?>vtl_gen_module/js/prism.js"></script>
 </body>
 </html>
