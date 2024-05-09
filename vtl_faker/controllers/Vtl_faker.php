@@ -651,7 +651,7 @@ class Vtl_faker extends Trongate
                             // Escape double quotes within HTML attributes by doubling them
                             $text = '<div class=""text-div"">' . $text . '</div>'; // Wrap text in a div
                             $img = $faker->randomElement(['img1.jpg', 'img2.jpg', 'img3.jpg', 'img4.jpg', 'img5.jpg', 'img6.jpg', 'img7.jpg', 'img8.jpg', 'img9.jpg', 'img10.jpg', 'img11.jpg']);
-                            $imgText = '<img src="' . BASE_URL . '/trongate_pages_module/images/uploads/' . $img . '" />';
+                            $imgText = '<img src="' . BASE_URL . 'trongate_pages_module/images/uploads/' . $img . '" />';
                             $pagebody .= $text . $imgText; // Append $text and $imgText to $pagebody
                         }
                         // Escape double quotes within SQL string by doubling them

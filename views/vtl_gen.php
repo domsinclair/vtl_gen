@@ -5,6 +5,7 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="color-scheme" content="dark light">
     <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/vtl.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/prism.css">
     <title>Vtl_Generator</title>
