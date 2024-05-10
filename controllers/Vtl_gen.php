@@ -51,6 +51,19 @@ class Vtl_gen extends Trongate
      */
     public function index(): void
     {
+        $this->module('trongate_administrators');
+        $token = $this->trongate_administrators->_make_sure_allowed();
+
+
+        if (ENV != 'dev') {
+            redirect(BASE_URL);
+            die();
+        } else {
+            if ($token == '') {
+                redirect(BASE_URL);
+                die();
+            }
+        }
         unset($_SESSION['selectedDataTable']);
 
         // Define the list item HTML

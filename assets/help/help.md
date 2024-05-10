@@ -3,6 +3,14 @@
 Vtl Gen is a module designed to assist you with everyday database administrative tasks that should make your development
 work easier.
 
+<br>
+> <b>It is designed to be used by Administrators only and only when the ENV configuration setting (found in the
+> config.php file in the config folder of Trongate itself) is set to 'dev'. Any other setting OR a non administrative user
+> will result in a fallback to the main welcome page.</b>
+
+
+<br>
+
 It will allow you to create and delete data, create and delete indexes and generate an export script when it comes time
 to move your project into production.
 If this is the first time that you've used the Vtl Data Generator then please take some time and read through the help
