@@ -64,11 +64,11 @@ suitable for most purposes, however there will be occasions when it becomes impo
 
 ## Creating more realistic Data
 
-FakerPhp creates data with the help of formatters, below are details of the three most common formatters that will
-probably be used.
+FakerPhp creates data with the help of formatters.
 
 At the bottom of this page there is a comprehensive list of the formatters that are available with examples (this
-information is a facsimile copy of the FakerPhp docs) and there are quick links to them below.
+information is a facsimile copy of the FakerPhp docs) as well as the custom formatters provided by the VTL Data
+Generator itself. There are quick links to them below.
 
 
 
