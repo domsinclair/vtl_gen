@@ -4,6 +4,45 @@ namespace Faker\Provider;
 class Blog extends Base
 {
 
+    protected static array $task = [
+        'verbs' => [
+            'Analyze', 'Build', 'Clean', 'Design', 'Develop', 'Examine', 'Fix', 'Generate',
+            'Implement', 'Investigate', 'Maintain', 'Manage', 'Organize', 'Plan', 'Prepare',
+            'Repair', 'Research', 'Test', 'Update', 'Write', 'Audit', 'Calibrate', 'Deploy',
+            'Evaluate', 'Inspect', 'Monitor', 'Optimize', 'Schedule', 'Streamline', 'Upgrade'
+        ],
+        'nouns' => [
+            'Report', 'Code', 'Database', 'Document', 'System', 'Website', 'Application',
+            'Project', 'Server', 'Network', 'Schedule', 'Plan', 'Proposal', 'Strategy',
+            'Budget', 'File', 'Inventory', 'Protocol', 'Process', 'Data', 'Blueprint',
+            'Contract', 'Diagram', 'Guideline', 'Implementation', 'Layout', 'Manual',
+            'Policy', 'Procedure', 'Specification'
+        ],
+        'nounPhrases' => [
+            'Marketing Strategy', 'User Feedback', 'Client Requirements', 'Performance Metrics',
+            'Sales Report', 'Financial Analysis', 'Risk Assessment', 'Security Protocol',
+            'Training Manual', 'Customer Support', 'Operational Plan', 'Technical Documentation',
+            'Project Timeline', 'User Interface', 'Business Proposal', 'Market Research',
+            'Team Meeting', 'Product Launch', 'Budget Forecast', 'Maintenance Schedule',
+            'Software Update', 'Compliance Audit', 'Development Roadmap', 'Customer Survey',
+            'IT Infrastructure', 'Sales Presentation', 'Design Specification', 'Operational Review',
+            'Quality Assurance', 'Service Level Agreement'
+        ],
+        'adjectives' => [
+            'Detailed', 'New', 'Existing', 'Comprehensive', 'Quick', 'Urgent', 'Final',
+            'Preliminary', 'Full', 'Custom', 'Secure', 'Optimized', 'Flexible', 'Scalable',
+            'Robust', 'Effective', 'Advanced', 'Basic', 'Proactive', 'Reactive', 'Strategic',
+            'Systematic', 'Thorough', 'Innovative', 'Efficient', 'Integrated', 'Holistic',
+            'Targeted', 'Streamlined', 'User-friendly'
+        ],
+        'adverbs' => [
+            'Quickly', 'Efficiently', 'Thoroughly', 'Carefully', 'Effectively', 'Precisely',
+            'Expertly', 'Rapidly', 'Diligently', 'Systematically', 'Strategically', 'Meticulously',
+            'Swiftly', 'Accurately', 'Easily', 'Smoothly', 'Skillfully', 'Promptly', 'Confidently',
+            'Consistently', 'Creatively', 'Competently', 'Seamlessly', 'Reliably', 'Vigorously'
+        ]
+    ];
+
     protected static array $articleTitle = [
         'starters' => ['The Art of', 'Unleashing', 'Navigating', 'The Science of', 'Mastering', 'Unlocking', 'Finding', 'Building', 'The Impact of', 'Embracing', 'Discovering', 'Mindful', 'Emotional Intelligence', 'The Joy of', 'Self-', 'Harnessing', 'The Importance of'],
         'topics' => ['Mindful Living', 'Creativity', 'Uncertainty', 'Happiness', 'Time Management', 'Positive Thinking', 'Balance', 'Gratitude', 'Resilience', 'Connection', 'Imperfection', 'Passion', 'Communication', 'Self-Care', 'Learning', 'Compassion', 'Visualization'],
@@ -434,5 +473,21 @@ class Blog extends Base
             . ' ' . static::randomElement(static::$articleTitle['joiners'])
             . ' ' . static::randomElement(static::$articleTitle['endings']);
     }
+
+    public function task(): string
+    {
+        return static::randomElement(static::$task['verbs'])
+            . ' ' . static::randomElement(static::$task['nouns']);
+    }
+
+    public function complexTask(): string
+    {
+        return static::randomElement(static::$task['verb'])
+            . ' ' . static::randomElement(static::$task['nouns'])
+            . ' ' . static::randomElement(static::$task['nounPhrases'])
+            . ' ' . static::randomElement(static::$task['adjectives'])
+            . ' ' . static::randomElement(static::$task['adverbs']);
+    }
+
 
 }

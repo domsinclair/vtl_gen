@@ -1133,6 +1133,12 @@ class Vtl_faker extends Trongate
                 $statement = $value;
                 break;
 
+            case 'task':
+                $value = $faker->complexTask(); //This could be substituted with task()
+                $statement = '"' . $value . '"';
+                break;
+
+
             default:
                 $statement = 'nothing';
         }

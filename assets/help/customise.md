@@ -2319,6 +2319,30 @@ echo $faker->semver(true, true);
 
 ## Blog
 
+### Task
+
+Generates a random task
+
+Example:
+
+```php
+echo $faker -> task();
+
+//  Optimize Marketing Strategy
+```
+
+### ComplexTask
+
+Generates a complex task
+
+Example:
+
+```php
+echo $faker -> complexTask();
+
+//  Build Detailed Marketing Strategy Quickly
+```
+
 ### ArticleTitle
 
 Generates a random title for a news or blog article.
