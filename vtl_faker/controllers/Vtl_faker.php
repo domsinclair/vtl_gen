@@ -220,9 +220,19 @@ class Vtl_faker extends Trongate
         // Extract the record ID from the POST data
         $id = $postData['recordId'];
         $selectedTable = $postData['selectedTable'];
-        // TODO  allow for primary keyfield that is not called id
 
-        $sql = 'SELECT  picture FROM ' . $selectedTable . ' WHERE id = ' . $id;
+        // Now retrieve the column info for the table and find the primary key field
+        $sql = 'SHOW COLUMNS IN ' . $target_tbl;
+        $columns = $this->vtlQuery($sql, 'array');
+        $field = '';
+        foreach ($columns as $column) {
+            if ($column['Key'] == 'PRI') {
+                $field = $column['Field'];
+            }
+        }
+
+
+        $sql = 'SELECT  picture FROM ' . $selectedTable . ' WHERE ' . $field . ' = ' . $id;
 
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();

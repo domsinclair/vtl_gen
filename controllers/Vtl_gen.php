@@ -424,7 +424,7 @@ class Vtl_gen extends Trongate
 
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
-        // TODO  Replace with custom get
+       
         $rows = $this->vtlGet(target_tbl: $selectedDataTable);
 
 

@@ -11,6 +11,10 @@ work easier.
 
 <br>
 
+Following a breaking change in the main Trongate Model.php the VTL Data Generator is now implementing its own database
+connections and execution of queries. Whilst it was a nuisance to have to do this it has opened up the opportunity to do
+some other things which would have otherwise been difficult to do.
+
 It will allow you to create and delete data, create and delete indexes and generate an export script when it comes time
 to move your project into production.
 If this is the first time that you've used the Vtl Data Generator then please take some time and read through the help
