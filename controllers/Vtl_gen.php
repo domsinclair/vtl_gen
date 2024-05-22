@@ -7,6 +7,18 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
  */
 class Vtl_gen extends Trongate
 {
+    private string $host = HOST;
+
+    private string $dbname = DATABASE;
+
+    private string $user = USER;
+
+    private string $pass = PASSWORD;
+
+    private $port = '';
+
+    private $dbh;
+    private $stmt;
 
     //used for pagination
 
@@ -22,6 +34,34 @@ class Vtl_gen extends Trongate
      * @var int[]
      */
     private $per_page_options = array(10, 20, 50, 100);
+
+
+    public function __construct()
+    {
+        parent::__construct();
+
+        // Now we need to be able to interact with the database
+        if (DATABASE == '') {
+            return;
+        }
+
+        $this->port = (defined('PORT') ? PORT : '3306');
+        //$this->current_module = $current_module;
+
+        $dsn = 'mysql:host=' . $this->host . ';port=' . $this->port . ';dbname=' . $this->dbname;
+        $options = array(
+            PDO::ATTR_PERSISTENT => true,
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION
+        );
+
+        try {
+            $this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
+        } catch (PDOException $e) {
+            $this->error = $e->getMessage();
+            echo $this->error;
+            die();
+        }
+    }
 // Function to check if daylight saving time is in effect
 
     /**
@@ -139,7 +179,7 @@ class Vtl_gen extends Trongate
         $tables = [];
         $sql = 'SHOW TABLES';
         $column_name = 'Tables_in_' . DATABASE;
-        $rows = $this->model->query($sql, 'array');
+        $rows = $this->vtlQuery($sql, 'array');
         foreach ($rows as $row) {
 
             $tables[] = $row[$column_name];
@@ -147,6 +187,74 @@ class Vtl_gen extends Trongate
 
 
         return $tables;
+    }
+
+    public function vtlQuery(string $sql, ?string $return_type = null): mixed
+    {
+
+        $data = [];
+
+        $this->VtlPrepareAndExecute($sql, $data);
+
+        if (($return_type == 'object') || ($return_type == 'array')) {
+            if ($return_type == 'object') {
+                $query = $this->stmt->fetchAll(PDO::FETCH_OBJ);
+            } else {
+                $query = $this->stmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+
+            return $query;
+        }
+
+        // Return null for cases where no result type is expected
+        return null;
+    }
+
+    // Function to setup tables for dropdown
+
+    public function VtlPrepareAndExecute(string $sql, array $data = []): bool
+    {
+        try {
+            $this->stmt = $this->dbh->prepare($sql);
+
+            if (isset($data[0])) { // unnamed data
+                $success = $this->stmt->execute($data);
+            } else {
+                foreach ($data as $key => $value) {
+                    $type = $this->vtlGetParamType($value);
+                    $this->stmt->bindValue(":$key", $value, $type);
+                }
+                $success = $this->stmt->execute();
+            }
+
+            if (!$success) {
+                throw new Exception("Execution failed: " . implode(", ", $this->stmt->errorInfo()));
+            }
+
+            return $success;
+        } catch (Exception $e) {
+            // Log or handle the error as necessary
+            error_log($e->getMessage());
+            return false;
+        }
+    }
+
+    protected function vtlGetParamType(mixed $value): int
+    {
+        switch (true) {
+            case is_int($value):
+                return PDO::PARAM_INT;
+            case is_bool($value):
+                return PDO::PARAM_BOOL;
+            case is_null($value):
+                return PDO::PARAM_NULL;
+            case is_float($value):
+                return PDO::PARAM_STR; // PDO does not have a PARAM_FLOAT
+            case is_resource($value): // For binary data
+                return PDO::PARAM_LOB;
+            default:
+                return PDO::PARAM_STR;
+        }
     }
 
     public function customiseFaker()
@@ -176,8 +284,6 @@ class Vtl_gen extends Trongate
         $this->template('admin', $data);
     }
 
-    // Function to setup tables for dropdown
-
     /**
      * @return void
      * @throws Exception
@@ -201,7 +307,7 @@ class Vtl_gen extends Trongate
         $tables = $this->getAllTables();
         foreach ($tables as $table) {
             $sql = 'SHOW INDEX FROM ' . $table;
-            $indexes = $this->model->query($sql, 'array');
+            $indexes = $this->vtlQuery($sql, 'array');
 
             $tableIndexInfo = [
                 'table' => $table,
@@ -238,7 +344,7 @@ class Vtl_gen extends Trongate
         $tables = $this->getAllTables();
         foreach ($tables as $table) {
             $sql = 'SHOW COLUMNS IN ' . $table;
-            $columns = $this->model->query($sql, 'array');
+            $columns = $this->vtlQuery($sql, 'array');
 
             $tableInfo = [
                 'table' => $table,
@@ -318,7 +424,8 @@ class Vtl_gen extends Trongate
 
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
-        $rows = $this->model->get(target_tbl: $selectedDataTable);
+        // TODO  Replace with custom get
+        $rows = $this->vtlGet(target_tbl: $selectedDataTable);
 
 
         $pagination_data['total_rows'] = count($rows);
@@ -338,6 +445,52 @@ class Vtl_gen extends Trongate
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'showdata';
         $this->template('admin', $data);
+    }
+
+    protected function vtlGet(?string $order_by = null, ?string $target_tbl = null, ?int $limit = null, int $offset = 0): array
+    {
+
+
+        // Now retrieve the column info for the table and find the primary key field
+        $sql = 'SHOW COLUMNS IN ' . $target_tbl;
+        $columns = $this->vtlQuery($sql, 'array');
+        $field = '';
+        foreach ($columns as $column) {
+            if ($column['Key'] == 'PRI') {
+                $field = $column['Field'];
+            }
+        }
+        $order_by = $order_by ?? $field;
+
+
+        // Build the base SQL query
+        $sql = "SELECT * FROM $target_tbl ORDER BY $order_by";
+
+        // Add LIMIT and OFFSET if provided
+        if (!is_null($limit)) {
+            settype($limit, 'int');
+            settype($offset, 'int');
+            $sql = $this->addLimitOffset($sql, $limit, $offset);
+        }
+
+
+        // Prepare and execute the query
+        $stmt = $this->dbh->prepare($sql);
+        $stmt->execute();
+
+        // Fetch and return the results
+        $rows = $stmt->fetchAll(PDO::FETCH_OBJ);
+        return $rows;
+    }
+
+    private function addLimitOffset(string $sql, ?int $limit, ?int $offset): string
+    {
+        if ((is_numeric($limit)) && (is_numeric($offset))) {
+            $limit_results = true;
+            $sql .= " LIMIT $offset, $limit";
+        }
+
+        return $sql;
     }
 
     /**

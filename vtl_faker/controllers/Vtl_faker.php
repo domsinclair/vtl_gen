@@ -66,11 +66,12 @@ class Vtl_faker extends Trongate
      */
     private function list_all_modules()
     {
+        $this->module('vtl_gen');
         // Define the path to the modules directory
         $modules_dir = APPPATH . 'modules';
 
         // Query the database to retrieve a list of all tables
-        $tables = $this->model->query("SHOW TABLES", 'array');
+        $tables = $this->vtl_gen->vtlQuery("SHOW TABLES", 'array');
 
         // Extract table names from the query result
         $table_names = [];
@@ -203,6 +204,7 @@ class Vtl_faker extends Trongate
      */
     public function copyImageForRecord()
     {
+
         // Get the raw POST data
         $rawPostData = file_get_contents('php://input');
         $postData = json_decode($rawPostData, true);
@@ -218,11 +220,14 @@ class Vtl_faker extends Trongate
         // Extract the record ID from the POST data
         $id = $postData['recordId'];
         $selectedTable = $postData['selectedTable'];
+        // TODO  allow for primary keyfield that is not called id
+
         $sql = 'SELECT  picture FROM ' . $selectedTable . ' WHERE id = ' . $id;
 
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
-        $pictureData = $this->model->query($sql, 'object');
+        $this->module('vtl_gen');
+        $pictureData = $this->vtl_gen->vtlQuery($sql, 'object');
 
         // Check if there is at least one element in the array
         if (!empty($pictureData) && isset($pictureData[0]->picture)) {
@@ -319,7 +324,8 @@ class Vtl_faker extends Trongate
             $sql = 'SELECT id, picture FROM ' . $selectedTable;
             $this->module('trongate_security');
             $this->trongate_security->_make_sure_allowed();
-            $rows = $this->model->query($sql, 'object');
+            $this->module('vtl_gen');
+            $rows = $this->vtl_gen->vtlQuery($sql, 'object');
 
             if (empty($rows)) {
                 throw new Exception("No records found for the selected table.");
@@ -334,20 +340,6 @@ class Vtl_faker extends Trongate
         }
     }
 
-//    public function updateProgress($progress): void
-//    {
-//        $this->folderProgress = $progress;
-//        $this->getFolderProgress(); // Send progress to frontend
-//    }
-//
-//    public function getFolderProgress()
-//    {
-//        $folderProgress = $this->folderProgress;
-//        $response = array('folderProgress' => $folderProgress);
-//        header('Content-Type: application/json');
-//        echo json_encode($response);
-//
-//    }
 
     /**
      * Function: getPictureFolderExists
@@ -422,12 +414,12 @@ class Vtl_faker extends Trongate
      */
     public function checkForExistenceOfPictureFieldAndCreatePicsDirecetories($selectedTable): bool
     {
-
+        $this->module('vtl_gen');
         $result = 0;
         $pictureFieldExists = false;
         $sql = 'SHOW COLUMNS FROM ' . $selectedTable;
 
-        $colInfo = $this->model->query($sql, 'array');
+        $colInfo = $this->vtl_gen->vtlQuery($sql, 'array');
         foreach ($colInfo as $column) {
             if ($column['Field'] === 'picture' && $column['Type'] === 'varchar(255)') {
                 $pictureFieldExists = true;
@@ -561,7 +553,8 @@ class Vtl_faker extends Trongate
         // generate short unique uri strings
 
         $countSql = 'Select count(*) from ' . $selectedTable;
-        $result = $this->model->query($countSql, 'array');
+        $this->module('vtl_gen');
+        $result = $this->vtl_gen->vtlQuery($countSql, 'array');
 
         // Check if the result is not empty and has the 'count' key
         if (!empty($result) && isset($result[0]['count(*)'])) {
@@ -607,7 +600,7 @@ class Vtl_faker extends Trongate
                     case 'urlstring':
                         if ($pagesCount > 0) {
                             // Fetch existing URLs from the database
-                            $existingUrls = $this->model->query('SELECT url_string FROM ' . $selectedTable, 'array');
+                            $existingUrls = $this->vtl_gen->vtlQuery('SELECT url_string FROM ' . $selectedTable, 'array');
 
                             do {
                                 $proposedUrl = 'article' . ($pagesCount + $i + 1);
@@ -685,7 +678,7 @@ class Vtl_faker extends Trongate
 
         try {
             $data = [];
-            $this->model->prepare_and_execute($sql, $data);
+            $this->vtl_gen->vtlPrepareAndExecute($sql, $data);
             echo('The following number rows were inserted into trongate_pages: ' . $numRows);
         } catch (Exception $e) {
             echo($e->getMessage());
@@ -732,9 +725,9 @@ class Vtl_faker extends Trongate
             if ($apiJsonExists && $numRows == 1) {
 
                 $result = $this->generateSingleRowAndInsertViaSql($faker, $selectedRows, $selectedTable);
-            } elseif ($apiJsonExists && $numRows <= 500) {
+            } elseif ($apiJsonExists && $numRows > 1) {
 
-                $result = $this->generateMultipleRowsAndInsertViaApi($faker, $selectedRows, $selectedTable, $numRows);
+                $result = $this->generateMultipleRowsAndInsertViaSql($faker, $selectedRows, $selectedTable, $numRows);
             } elseif (!$apiJsonExists && $numRows == 1) {
 
                 $result = $this->generateSingleRowAndInsertViaSql($faker, $selectedRows, $selectedTable);
@@ -785,6 +778,7 @@ class Vtl_faker extends Trongate
      */
     private function generateSingleRowAndInsertViaSql(\Faker\Generator $faker, array $selectedRows, string $selectedTable): mixed
     {
+        $this->module('vtl_gen');
         $columns = '(';
         $values = '(';
 
@@ -826,7 +820,7 @@ class Vtl_faker extends Trongate
 
         try {
             $data = [];
-            return $this->model->prepare_and_execute($sql, $data);
+            return $this->vtl_gen->vtlPrepareAndExecute($sql, $data);
         } catch (Exception $e) {
             return $e->getMessage();
         }
@@ -1285,65 +1279,65 @@ class Vtl_faker extends Trongate
         }
         return $statement;
     }
-
-    /**
-     * Generates multiple rows of fake data and inserts them into the database via API.
-     *
-     * This function generates multiple rows of fake data based on the selected fields and their types,
-     * and then inserts these rows into the specified table using the model's insert_batch method.
-     *
-     * @param \Faker\Generator $faker         The Faker generator instance.
-     * @param array            $selectedRows  An array containing the selected fields and their types.
-     * @param string           $selectedTable The name of the table where the data will be inserted.
-     * @param int|string       $numRows       The number of rows to generate and insert.
-     * @return int The number of records successfully inserted into the database.
-     */
-    private function generateMultipleRowsAndInsertViaApi($faker, $selectedRows, $selectedTable, $numRows)
-    {
-        if (!is_int($numRows)) {
-            $numRows = intval($numRows);
-        }
-        $records = [];
-
-        for ($i = 0; $i < $numRows; $i++) {
-            $record = [];
-            foreach ($selectedRows as $selectedRow) {
-                $originalFieldName = $selectedRow['field'];
-                $field = $this->processFieldName($selectedRow['field']);
-                $dbType = $selectedRow['type'];
-                list($type, $length) = $this->parseDatabaseType($dbType);
-                $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
-
-                $customFieldValue = $this->checkForCustomFieldNameGeneration($field, $faker);
-                if ($customFieldValue !== 'nothing') {
-                    $fieldFakerStatement = $customFieldValue;
-                }
-
-                if ($fieldFakerStatement == "nothing") {
-
-                    $typeFakerStatement = $this->generateValueFromType($faker, $type, $length);
-                    $record[$originalFieldName] = $typeFakerStatement;
-                } else {
-                    $record[$originalFieldName] = $fieldFakerStatement;
-                }
-            }
-            $records[] = $record;
-        }
-        // Remove the double quotes from date values
-        foreach ($records as &$record) {
-            foreach ($record as &$value) {
-                if (is_string($value) && substr($value, 0, 1) === '"' && substr($value, -1) === '"') {
-                    $value = substr($value, 1, -1); // Remove surrounding quotes
-                }
-            }
-        }
-        try {
-            return $this->model->insert_batch($selectedTable, $records);
-        } catch (Exception $e) {
-            return $e->getMessage();
-        }
-
-    }
+//
+//    /**
+//     * Generates multiple rows of fake data and inserts them into the database via API.
+//     *
+//     * This function generates multiple rows of fake data based on the selected fields and their types,
+//     * and then inserts these rows into the specified table using the model's insert_batch method.
+//     *
+//     * @param \Faker\Generator $faker         The Faker generator instance.
+//     * @param array            $selectedRows  An array containing the selected fields and their types.
+//     * @param string           $selectedTable The name of the table where the data will be inserted.
+//     * @param int|string       $numRows       The number of rows to generate and insert.
+//     * @return int The number of records successfully inserted into the database.
+//     */
+//    private function generateMultipleRowsAndInsertViaApi($faker, $selectedRows, $selectedTable, $numRows)
+//    {
+//        if (!is_int($numRows)) {
+//            $numRows = intval($numRows);
+//        }
+//        $records = [];
+//
+//        for ($i = 0; $i < $numRows; $i++) {
+//            $record = [];
+//            foreach ($selectedRows as $selectedRow) {
+//                $originalFieldName = $selectedRow['field'];
+//                $field = $this->processFieldName($selectedRow['field']);
+//                $dbType = $selectedRow['type'];
+//                list($type, $length) = $this->parseDatabaseType($dbType);
+//                $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
+//
+//                $customFieldValue = $this->checkForCustomFieldNameGeneration($field, $faker);
+//                if ($customFieldValue !== 'nothing') {
+//                    $fieldFakerStatement = $customFieldValue;
+//                }
+//
+//                if ($fieldFakerStatement == "nothing") {
+//
+//                    $typeFakerStatement = $this->generateValueFromType($faker, $type, $length);
+//                    $record[$originalFieldName] = $typeFakerStatement;
+//                } else {
+//                    $record[$originalFieldName] = $fieldFakerStatement;
+//                }
+//            }
+//            $records[] = $record;
+//        }
+//        // Remove the double quotes from date values
+//        foreach ($records as &$record) {
+//            foreach ($record as &$value) {
+//                if (is_string($value) && substr($value, 0, 1) === '"' && substr($value, -1) === '"') {
+//                    $value = substr($value, 1, -1); // Remove surrounding quotes
+//                }
+//            }
+//        }
+//        try {
+//            return $this->model->insert_batch($selectedTable, $records);
+//        } catch (Exception $e) {
+//            return $e->getMessage();
+//        }
+//
+//    }
 
     /**
      * Generates fake data for multiple rows and inserts them into the specified table via SQL.
@@ -1357,7 +1351,7 @@ class Vtl_faker extends Trongate
      */
     private function generateMultipleRowsAndInsertViaSql(mixed $faker, mixed $selectedRows, mixed $selectedTable, mixed $numRows)
     {
-
+        $this->module('vtl_gen');
         if (!is_int($numRows)) {
             $numRows = intval($numRows);
         }
@@ -1411,7 +1405,7 @@ class Vtl_faker extends Trongate
         $sql = 'INSERT INTO ' . $selectedTable . ' ' . $columns . ' VALUES ' . $values . ';';
         try {
             $data = [];
-            $this->model->prepare_and_execute($sql, $data);
+            $this->vtl_gen->vtlPrepareAndExecute($sql, $data);
             return 'The following number rows were inserted into ' . $selectedTable . ': ' . $numRows;
         } catch (Exception $e) {
             return $e->getMessage();
@@ -1430,6 +1424,7 @@ class Vtl_faker extends Trongate
      */
     public function clearData(): void
     {
+        $this->module('vtl_gen');
         // Retrieve raw POST data from the request body
         $rawPostData = file_get_contents('php://input');
 
@@ -1462,7 +1457,7 @@ class Vtl_faker extends Trongate
                         }
                         try {
                             if ($sql != 'nothing') {
-                                $this->model->query($sql, '');
+                                $this->vtl_gen->vtlQuery($sql, '');
 
                                 // If the query was successful, add the table to the list of deleted tables
                                 $deletedTables[] = $selectedTable;
@@ -1527,7 +1522,7 @@ class Vtl_faker extends Trongate
                         }
                         try {
                             // Enclose the query method in a try-catch block
-                            $this->model->query($sql, '');
+                            $this->vtl_gen->vtlQuery($sql, '');
 
                             // If the query was successful, add the table to the list of deleted tables
                             $deletedTables[] = $selectedTable;
@@ -1633,6 +1628,7 @@ class Vtl_faker extends Trongate
      */
     public function createIndex(): void
     {
+        $this->module('vtl_gen');
         $rawPostData = file_get_contents('php://input');
         $postData = json_decode($rawPostData, true);
 
@@ -1668,7 +1664,7 @@ class Vtl_faker extends Trongate
                                 break;
                         }
 
-                        $this->model->query($sql);
+                        $this->vtl_gen->vtlQuery($sql);
                         $indexesCreated[] = $indexName;
                     } catch (Exception $ex) {
                         echo 'Error: ' . $ex->getMessage();
@@ -1712,6 +1708,7 @@ class Vtl_faker extends Trongate
      */
     public function deleteIndex(): void
     {
+        $this->module('vtl_gen');
         $rawPostData = file_get_contents('php://input');
         $postData = json_decode($rawPostData, true);
         // Extract relevant data from the decoded JSON
@@ -1726,7 +1723,7 @@ class Vtl_faker extends Trongate
                     $indexName = $selectedRow['keyName'];
                     try {
                         $sql = 'ALTER TABLE ' . $selectedTable . ' DROP INDEX ' . $indexName . ';';
-                        $this->model->query($sql);
+                        $this->vtl_gen - vtlQuery($sql);
                         $indexesDeleted[] = $indexName;
                     } catch (Exception $ex) {
                         echo 'Error: ' . $ex->getMessage();
@@ -1886,69 +1883,69 @@ class Vtl_faker extends Trongate
         $this->parent_module = '';
         $this->child_module = '';
     }
-
-    /**
-     * Generates fake data for a single row and inserts it into the specified table via API.
-     *
-     * This function constructs a JSON object containing fake data for the selected rows,
-     * based on the provided Faker instance and field specifications. It then decodes the JSON
-     * object into an associative array and inserts the data into the specified table using
-     * the model's insert method.
-     *
-     * @param Faker\Generator $faker         The Faker instance used to generate fake data.
-     * @param array           $selectedRows  An array of selected rows (fields) for which fake data is generated.
-     * @param string          $selectedTable The name of the table into which the fake data will be inserted.
-     * @return bool|string Returns the ID of the newly inserted record if successful, or false if insertion fails.
-     */
-    private function generateSingleRowAndInsertViaApi($faker, $selectedRows, $selectedTable): bool|string
-    {
-        // Initialize an empty string to store the values as a JSON object
-        $values = '{';
-        // Iterate over selected rows to generate fake data for each field
-        foreach ($selectedRows as $key => $selectedRow) {
-            $originalFieldName = $selectedRow['field'];
-            $values .= '"' . $originalFieldName . '":';
-            // Process field name and generate fake value based on field specifications
-            $field = $this->processFieldName($selectedRow['field']);
-            $dbType = $selectedRow['type'];
-            list($type, $length) = $this->parseDatabaseType($dbType);
-            $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
-
-            $customFieldValue = $this->checkForCustomFieldNameGeneration($field, $faker);
-            if ($customFieldValue !== 'nothing') {
-                $fieldFakerStatement = $customFieldValue;
-            }
-
-            //echo 'Field Faker Statement for : ' . $field. ' ='.$fieldFakerStatement;
-            // If no specific Faker statement is available, generate value based on field type
-            if ($fieldFakerStatement == "nothing") {
-                $typeFakerStatement = $this->generateValueFromType($faker, $type, $length);
-                $values .= $typeFakerStatement;
-            } else {
-                $values .= $fieldFakerStatement;
-            }
-
-            // Check if the current element is the last one in the array
-            if ($key === array_key_last($selectedRows)) {
-                $values .= '}';
-            } else {
-                $values .= ',';
-            }
-
-        }
-
-        // Decode the JSON object into an associative array
-        $newValuesArray = $values; //json_decode($values, true);
-
-
-        // Insert the generated data into the specified table using the model's insert method
-        try {
-
-            return $this->model->insert($newValuesArray, $selectedTable);
-        } catch (Exception $e) {
-            echo 'Failed This is the NewValuesArray  ', $newValuesArray;
-            return $e->getMessage();
-        }
-
-    }
+//
+//    /**
+//     * Generates fake data for a single row and inserts it into the specified table via API.
+//     *
+//     * This function constructs a JSON object containing fake data for the selected rows,
+//     * based on the provided Faker instance and field specifications. It then decodes the JSON
+//     * object into an associative array and inserts the data into the specified table using
+//     * the model's insert method.
+//     *
+//     * @param Faker\Generator $faker         The Faker instance used to generate fake data.
+//     * @param array           $selectedRows  An array of selected rows (fields) for which fake data is generated.
+//     * @param string          $selectedTable The name of the table into which the fake data will be inserted.
+//     * @return bool|string Returns the ID of the newly inserted record if successful, or false if insertion fails.
+//     */
+//    private function generateSingleRowAndInsertViaApi($faker, $selectedRows, $selectedTable): bool|string
+//    {
+//        // Initialize an empty string to store the values as a JSON object
+//        $values = '{';
+//        // Iterate over selected rows to generate fake data for each field
+//        foreach ($selectedRows as $key => $selectedRow) {
+//            $originalFieldName = $selectedRow['field'];
+//            $values .= '"' . $originalFieldName . '":';
+//            // Process field name and generate fake value based on field specifications
+//            $field = $this->processFieldName($selectedRow['field']);
+//            $dbType = $selectedRow['type'];
+//            list($type, $length) = $this->parseDatabaseType($dbType);
+//            $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
+//
+//            $customFieldValue = $this->checkForCustomFieldNameGeneration($field, $faker);
+//            if ($customFieldValue !== 'nothing') {
+//                $fieldFakerStatement = $customFieldValue;
+//            }
+//
+//            //echo 'Field Faker Statement for : ' . $field. ' ='.$fieldFakerStatement;
+//            // If no specific Faker statement is available, generate value based on field type
+//            if ($fieldFakerStatement == "nothing") {
+//                $typeFakerStatement = $this->generateValueFromType($faker, $type, $length);
+//                $values .= $typeFakerStatement;
+//            } else {
+//                $values .= $fieldFakerStatement;
+//            }
+//
+//            // Check if the current element is the last one in the array
+//            if ($key === array_key_last($selectedRows)) {
+//                $values .= '}';
+//            } else {
+//                $values .= ',';
+//            }
+//
+//        }
+//
+//        // Decode the JSON object into an associative array
+//        $newValuesArray = $values; //json_decode($values, true);
+//
+//
+//        // Insert the generated data into the specified table using the model's insert method
+//        try {
+//
+//            return $this->model->insert($newValuesArray, $selectedTable);
+//        } catch (Exception $e) {
+//            echo 'Failed This is the NewValuesArray  ', $newValuesArray;
+//            return $e->getMessage();
+//        }
+//
+//    }
 }
