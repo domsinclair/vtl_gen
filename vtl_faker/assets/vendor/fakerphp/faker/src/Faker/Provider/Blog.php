@@ -482,7 +482,7 @@ class Blog extends Base
 
     public function complexTask(): string
     {
-        return static::randomElement(static::$task['verb'])
+        return static::randomElement(static::$task['verbs'])
             . ' ' . static::randomElement(static::$task['nouns'])
             . ' ' . static::randomElement(static::$task['nounPhrases'])
             . ' ' . static::randomElement(static::$task['adjectives'])
