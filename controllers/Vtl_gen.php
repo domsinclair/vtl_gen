@@ -456,7 +456,15 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
         $this->template('admin', $data);
     }
 
-
+    /**
+     * Create foreign key setup view.
+     *
+     * This method prepares data required for setting up foreign keys and renders the
+     * corresponding view. It gathers information about the tables and their columns
+     * to populate dropdowns and other elements in the view.
+     *
+     * @return void
+     */
     public function createForeignKey(): void
     {
         $data['tables'] = $this->setupTablesForDropdown();
@@ -467,6 +475,102 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
         $this->template('admin', $data);
     }
 
+    public function showDeleteForeignKey(): void
+    {
+        $data['headline'] = 'Vtl Data Generator: Delete Foreign Key';
+        $data['rows'] = $this->getForeignKeysFromDatabase();
+        $data['view_module'] = 'vtl_gen';
+        $data['view_file'] = 'deleteforeignkey';
+        $this->template('admin', $data);
+    }
+
+    /**
+     * @return mixed|null
+     * @throws \ReflectionException
+     */
+    public function getForeignKeysFromDatabase(): mixed
+    {
+// Run the query to collect the information
+        $sql = 'SELECT 
+            CONCAT(table_name, \'.\', column_name) AS \'foreign key\', 
+            CONCAT(referenced_table_name, \'.\', referenced_column_name) AS \'references\', 
+            constraint_name AS \'constraint name\' 
+        FROM 
+            information_schema.key_column_usage 
+        WHERE 
+            referenced_table_name IS NOT NULL 
+        AND 
+            table_schema = \'' . DATABASE . '\'';
+
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+
+        $rows = $this->vtlQuery($sql, 'array');
+        return $rows;
+    }
+
+    public function deleteForeignKey(): void
+    {
+        $rawPostData = file_get_contents('php://input');
+        $postData = json_decode($rawPostData, true);
+
+        if (isset($postData['selectedRows']) && is_array($postData['selectedRows'])) {
+            $responseText = '';
+            $deletedKeys = [];
+            $failedKeys = [];
+
+            foreach ($postData['selectedRows'] as $row) {
+                if (isset($row['foreign key'], $row['constraint name'])) {
+                    $foreignKey = $row['foreign key'];
+                    $constraintName = $row['constraint name'];
+
+                    // Extract the table name from the foreign key
+                    list($tableName, $columnName) = explode('.', $foreignKey);
+
+                    // SQL to drop the foreign key constraint
+                    $sql = "ALTER TABLE $tableName DROP FOREIGN KEY $constraintName;";
+
+                    try {
+                        // Assuming vtlQuery is a method to execute your SQL queries
+                        $this->vtl_gen->vtlQuery($sql, '');
+                        $deletedKeys[] = $constraintName;
+                    } catch (Exception $ex) {
+                        echo 'Error: ' . $ex->getMessage();
+                        // Add the foreign key to the list of failed keys
+                        $failedKeys[] = $constraintName;
+                    }
+                } else {
+                    $failedKeys[] = json_encode($row); // Include row data for debugging
+                }
+            }
+
+            // Prepare response text
+            if (!empty($deletedKeys)) {
+                $responseText .= 'Deleted foreign keys: ' . implode(', ', $deletedKeys) . '. ';
+            }
+            if (!empty($failedKeys)) {
+                $responseText .= 'Failed to delete foreign keys: ' . implode(', ', $failedKeys) . '.';
+            }
+
+            // Return the response as JSON
+            echo json_encode(['status' => 'success', 'message' => $responseText]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'No rows selected']);
+        }
+    }
+
+
+    /**
+     * Set foreign key constraint.
+     *
+     * This method reads JSON-encoded data from the request body to obtain the names of
+     * the tables and fields involved in creating a foreign key constraint. It constructs
+     * and executes an SQL query to add the foreign key constraint between the specified
+     * fields of the two tables. The method then returns a JSON response indicating the
+     * success or failure of the operation.
+     *
+     * @return void
+     */
     public function setForeignKey()
     {
         $rawPostData = file_get_contents('php://input');
@@ -484,6 +588,7 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
             $result = $this->vtlQuery($query);
 
             if ($result === FALSE) {
+                $e = 'False result returned';
                 throw new Exception($e);
             }
 
@@ -861,22 +966,7 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
      */
     public function showForeignKeys(): void
     {
-        // Run the query to collect the information
-        $sql = 'SELECT 
-            CONCAT(table_name, \'.\', column_name) AS \'foreign key\', 
-            CONCAT(referenced_table_name, \'.\', referenced_column_name) AS \'references\', 
-            constraint_name AS \'constraint name\' 
-        FROM 
-            information_schema.key_column_usage 
-        WHERE 
-            referenced_table_name IS NOT NULL 
-        AND 
-            table_schema = \'' . DATABASE . '\'';
-
-        $this->module('trongate_security');
-        $this->trongate_security->_make_sure_allowed();
-
-        $rows = $this->vtlQuery($sql, 'array');
+        $rows = $this->getForeignKeysFromDatabase();
         $paginationRoot = 'vtl_gen/showForeignKeys';
         $selectedTable = 'Foreign Keys';
         $headline = 'Vtl Data Generator: Foreign Keys in Database';

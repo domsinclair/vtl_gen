@@ -1,5 +1,3 @@
-### Help
-
 Vtl Gen is a module designed to assist you with everyday database administrative tasks that should make your development
 work easier.
 

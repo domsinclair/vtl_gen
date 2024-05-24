@@ -60,7 +60,9 @@
             <div class="grid-item">
                 <?php echo anchor('vtl_gen/createForeignKey', 'Create Foreign Key', array("class" => "button")); ?>
             </div>
-
+            <div class="grid-item">
+                <?php echo anchor('vtl_gen/showDeleteForeignKey', 'Delete Fk Key', array("class" => "button")); ?>
+            </div>
 
             <!-- Group Title for Database Operations -->
 
@@ -102,6 +104,10 @@
                 ?>
             </div>
         </section>
+        <div class="container  text-center">
+            <h2>Help</h2>
+        </div>
+
         <section>
             <div class="container">
                 <div><?php echo $markdownIntro; ?></div>
@@ -171,12 +177,14 @@
         /*border: 1px solid #ccc; !* Optional: Add a border to grid items *!*/
         padding: 5px; /* Adjust the padding inside grid items as needed */
         text-align: center; /* Center the text in grid items */
+        margin-bottom: 10px;
 
     }
 
     .button {
         border-radius: 10px;
         text-transform: capitalize;
+        margin-bottom: 10px;
     }
 
     /*.data-heading {*/

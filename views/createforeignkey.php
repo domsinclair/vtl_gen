@@ -44,7 +44,7 @@
     </div>
 </section>
 <div class="modal" id="response-modal" style="display: none">
-    <div class="modal-heading">Generated Rows</div>
+    <div class="modal-heading">Generated Foreign Key</div>
     <div class="modal-body">
         <p id="the-response"></p>
         <p class="text-center">
