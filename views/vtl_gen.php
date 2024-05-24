@@ -24,19 +24,59 @@
 <h2 class="text-center">Vtl Data Generator: Navigation and Help</h2>
 <section>
     <div class="container">
+
+
         <div class="grid-container">
-            <div class="grid-item data-heading" colspan="3">Data</div>
-            <div class="grid-item index-heading" colspan="2">Indexes</div>
-            <div class="grid-item database-heading">Script</div>
-            <div class="grid-item"><?php echo anchor('vtl_gen/createData', 'Create', array("class" => "button")); ?></div>
-            <div class="grid-item" id="showButton">
-                <button class="button" onclick="toggleDropdown()">Show</button>
+            <!-- Group Title for Data -->
+            <div class="grid-item data-heading" colspan="4">Data Generation and Visualisation</div>
+
+            <!-- Data Operation Buttons -->
+            <div class="grid-item">
+                <?php echo anchor('vtl_gen/createData', 'Create Data', array("class" => "button")); ?>
             </div>
-            <div class="grid-item"><?php echo anchor('vtl_gen/deleteData', 'Delete', array("class" => "button")); ?></div>
-            <div class="grid-item"><?php echo anchor('vtl_gen/createIndex', 'Create', array("class" => "button")); ?></div>
-            <div class="grid-item"><?php echo anchor('vtl_gen/deleteIndex', 'Delete', array("class" => "button")); ?></div>
-            <div class="grid-item"><?php echo anchor('vtl_gen/export', 'Export', array("class" => "button")); ?></div>
+            <div class="grid-item">
+                <?php echo anchor('vtl_gen/deleteData', 'Delete Data', array("class" => "button")); ?>
+            </div>
+            <div class="grid-item" id="showButton">
+                <button class="button" onclick="toggleDropdown()">Show Data</button>
+            </div>
+            <div class="grid-item"></div>
+
+            <!-- Group Title for Indexes -->
+            <div class="grid-item index-heading" colspan="4">Index and Foreign Key Operations</div>
+
+            <!-- Index Operation Buttons -->
+            <div class="grid-item">
+                <?php echo anchor('vtl_gen/createIndex', 'Create Index', array("class" => "button")); ?>
+            </div>
+            <div class="grid-item">
+                <?php echo anchor('vtl_gen/deleteIndex', 'Delete Index', array("class" => "button")); ?>
+            </div>
+            <div class="grid-item">
+                <?php echo anchor('vtl_gen/showForeignKeys', 'Show Foreign Keys', array("class" => "button")); ?>
+            </div>
+            <!-- Add two more buttons if needed, or leave these empty for now -->
+            <div class="grid-item"></div>
+
+
+            <!-- Group Title for Database Operations -->
+
+            <div class="grid-item dbase-heading" colspan="4">Database Operations</div>
+
+            <!-- Database Operation Buttons -->
+            <div class="grid-item">
+                <?php echo anchor('vtl_gen/dropDatatable', 'Drop Table', array("class" => "button")); ?>
+            </div>
+            <div class="grid-item">
+                <?php echo anchor('vtl_gen/export', 'Export Script', array("class" => "button")); ?>
+            </div>
+
+            <!-- Add two more buttons if needed, or leave these empty for now -->
+            <div class="grid-item"></div>
+            <div class="grid-item"></div>
+
         </div>
+
 
         <section>
             <div class="container">
@@ -44,6 +84,17 @@
                 $tableChoiceAttr['id'] = 'tableChoiceDropdown';
                 $tableChoiceAttr['style'] = 'display: none;'; // Initially hide the dropdown
                 $tableChoiceAttr['onchange'] = 'selectedTable()';
+                echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
+                ?>
+            </div>
+        </section>
+
+        <section>
+            <div class="container">
+                <?php
+                $tableChoiceAttr['id'] = 'dropTableChoiceDropdown';
+                $tableChoiceAttr['style'] = 'display: none;'; // Initially hide the dropdown
+                $tableChoiceAttr['onchange'] = 'dropTable()';
                 echo form_dropdown('tableChoice', $tables, '', $tableChoiceAttr);
                 ?>
             </div>
@@ -63,10 +114,16 @@
 </body>
 </html>
 <script>
+    function toggleDropDatabaseDropdown() {
+        var dropdown = document.getElementById('dropTableChoiceDropdown');
+        dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    }
+
     function toggleDropdown() {
         var dropdown = document.getElementById('tableChoiceDropdown');
         dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
     }
+
 
     function selectedTable() {
         // Get the dropdown element
@@ -79,6 +136,10 @@
         // Redirect to the URL
         window.location.href = '<?= BASE_URL ?>vtl_gen/showData?selectedTable=' + encodeURIComponent(selectedTable);
     }
+
+    function dropTable() {
+
+    }
 </script>
 <style>
     .flex {
@@ -90,30 +151,51 @@
     /*}*/
 
     .grid-container {
+        /*display: grid;*/
+        /*grid-template-columns: repeat(6, 1fr);*/
+        /*grid-template-rows: auto auto;*/
+        /*!*gap: 5px;*!*/
         display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        grid-template-rows: auto auto;
-        /*gap: 5px;*/
+        grid-template-columns: repeat(4, 1fr);
+        gap: 5px; /* Adjust the gap between grid items as needed */
+        padding: 5px; /* Adjust the padding around the grid as needed */
     }
 
     .grid-item {
-        /*background-color: #f2f2f2;*/
-        /*padding: 5px;*/
-        text-align: center;
+        /*!*background-color: #f2f2f2;*!*/
+        /*!*padding: 5px;*!*/
+        /*text-align: center;*/
+        /*border: 1px solid #ccc; !* Optional: Add a border to grid items *!*/
+        padding: 5px; /* Adjust the padding inside grid items as needed */
+        text-align: center; /* Center the text in grid items */
+
     }
 
-    .data-heading {
-        grid-column: 1 / span 3;
-        margin-bottom: 2px;
-        font-size: large;
-        font-weight: bold;
+    .button {
+        border-radius: 10px;
+        text-transform: capitalize;
     }
 
-    .index-heading {
-        grid-column: 4 / span 2;
-        margin-bottom: 2px;
-        font-size: large;
-        font-weight: bold;
+    /*.data-heading {*/
+    /*    grid-column: 1 / span 3;*/
+    /*    margin-bottom: 2px;*/
+    /*    font-size: large;*/
+    /*    font-weight: bold;*/
+    /*}*/
+
+    /*.index-heading {*/
+    /*    grid-column: 4 / span 2;*/
+    /*    margin-bottom: 2px;*/
+    /*    font-size: large;*/
+    /*    font-weight: bold;*/
+    /*}*/
+
+    .data-heading, .index-heading, .dbase-heading {
+        grid-column: span 4; /* Span all 4 columns */
+        color: #f0f0f0; /* Optional: Add a background color for the headings */
+        text-align: center; /* Center the text in headings */
+        font-weight: bold; /* Make the headings bold */
+        margin-top: 10px;
     }
 
     .database-heading {

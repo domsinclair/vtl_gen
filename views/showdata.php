@@ -9,7 +9,7 @@
     <title>Vtl_Generator_ShowData</title>
 </head>
 <body>
-<h2 class="text-center">Vtl Data Generator: Show Data</h2>
+<h2 class="text-center"><?= $headline ?></h2>
 <section>
     <div class="container">
         <div class="flex" style="margin-bottom: 15px">
@@ -53,7 +53,8 @@
                 echo Pagination::display($pagination_data);
             }
         } else {
-            echo "There is no data in the table that you selected.";
+//            echo "There is no data in the table that you selected.";
+            echo $noDataMessage;
         }
         ?>
     </div>

@@ -1134,6 +1134,7 @@ class Vtl_faker extends Trongate
                 break;
 
             case 'task':
+            case 'tasktitle':
                 $value = $faker->complexTask(); //This could be substituted with task()
                 $statement = '"' . $value . '"';
                 break;
@@ -1295,65 +1296,7 @@ class Vtl_faker extends Trongate
         }
         return $statement;
     }
-//
-//    /**
-//     * Generates multiple rows of fake data and inserts them into the database via API.
-//     *
-//     * This function generates multiple rows of fake data based on the selected fields and their types,
-//     * and then inserts these rows into the specified table using the model's insert_batch method.
-//     *
-//     * @param \Faker\Generator $faker         The Faker generator instance.
-//     * @param array            $selectedRows  An array containing the selected fields and their types.
-//     * @param string           $selectedTable The name of the table where the data will be inserted.
-//     * @param int|string       $numRows       The number of rows to generate and insert.
-//     * @return int The number of records successfully inserted into the database.
-//     */
-//    private function generateMultipleRowsAndInsertViaApi($faker, $selectedRows, $selectedTable, $numRows)
-//    {
-//        if (!is_int($numRows)) {
-//            $numRows = intval($numRows);
-//        }
-//        $records = [];
-//
-//        for ($i = 0; $i < $numRows; $i++) {
-//            $record = [];
-//            foreach ($selectedRows as $selectedRow) {
-//                $originalFieldName = $selectedRow['field'];
-//                $field = $this->processFieldName($selectedRow['field']);
-//                $dbType = $selectedRow['type'];
-//                list($type, $length) = $this->parseDatabaseType($dbType);
-//                $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
-//
-//                $customFieldValue = $this->checkForCustomFieldNameGeneration($field, $faker);
-//                if ($customFieldValue !== 'nothing') {
-//                    $fieldFakerStatement = $customFieldValue;
-//                }
-//
-//                if ($fieldFakerStatement == "nothing") {
-//
-//                    $typeFakerStatement = $this->generateValueFromType($faker, $type, $length);
-//                    $record[$originalFieldName] = $typeFakerStatement;
-//                } else {
-//                    $record[$originalFieldName] = $fieldFakerStatement;
-//                }
-//            }
-//            $records[] = $record;
-//        }
-//        // Remove the double quotes from date values
-//        foreach ($records as &$record) {
-//            foreach ($record as &$value) {
-//                if (is_string($value) && substr($value, 0, 1) === '"' && substr($value, -1) === '"') {
-//                    $value = substr($value, 1, -1); // Remove surrounding quotes
-//                }
-//            }
-//        }
-//        try {
-//            return $this->model->insert_batch($selectedTable, $records);
-//        } catch (Exception $e) {
-//            return $e->getMessage();
-//        }
-//
-//    }
+
 
     /**
      * Generates fake data for multiple rows and inserts them into the specified table via SQL.
@@ -1888,80 +1831,53 @@ class Vtl_faker extends Trongate
         }
     }
 
-//    private function setFolderProgress(int $progress): void
-//    {
-//        $this->folderProgress = $progress;
-//        //echo 'Folder Progress: ', $this->folderProgress;
-//    }
+    public function dropTable()
+    {
+        // drops the selected table(s)
+        $this->module('vtl_gen');
+        $rawPostData = file_get_contents('php://input');
+        $postData = json_decode($rawPostData, true);
+        // Extract relevant data from the decoded JSON
+        $selectedTables = $postData['selectedTables'];
+        if ($selectedTables != null && $selectedTables != "") {
+            $responseText = '';
+            $deletedTables = [];
+            $failedTables = [];
+            foreach ($selectedTables as $key => $selectedTable) {
+                try {
+                    $sql = 'DROP TABLE IF EXISTS ' . $selectedTable . ';';
+                    try {
+                        $this->vtl_gen->vtlQuery($sql, '');
+                        $deletedTables[] = $selectedTable;
+                    } catch (Exception $ex) {
+                        echo 'Error: ' . $e->getMessage();
+                        // Add the table to the list of failed tables
+                        $failedTables[] = $selectedTable;
+                    }
+                    $responseText = 'Operation successful!';
+                } catch (Exception $e) {
+                    $responseText .= 'Operation failed: ' . $e->getMessage();
+                }
+
+            }
+            // Append the list of deleted tables to the response text
+
+            $responseText .= ' Deleted tables: ' . implode(', ', $deletedTables) . '.';
+            // Append the list of failed tables to the response text
+            $responseText .= ' Failed tables: ' . implode(', ', $failedTables) . '.';
+
+            // Now $responseText contains the report for the whole operation
+            echo $responseText;
+
+        } else {
+            echo 'No Tables were selected';
+        }
+    }
 
     function __destruct()
     {
         $this->parent_module = '';
         $this->child_module = '';
     }
-//
-//    /**
-//     * Generates fake data for a single row and inserts it into the specified table via API.
-//     *
-//     * This function constructs a JSON object containing fake data for the selected rows,
-//     * based on the provided Faker instance and field specifications. It then decodes the JSON
-//     * object into an associative array and inserts the data into the specified table using
-//     * the model's insert method.
-//     *
-//     * @param Faker\Generator $faker         The Faker instance used to generate fake data.
-//     * @param array           $selectedRows  An array of selected rows (fields) for which fake data is generated.
-//     * @param string          $selectedTable The name of the table into which the fake data will be inserted.
-//     * @return bool|string Returns the ID of the newly inserted record if successful, or false if insertion fails.
-//     */
-//    private function generateSingleRowAndInsertViaApi($faker, $selectedRows, $selectedTable): bool|string
-//    {
-//        // Initialize an empty string to store the values as a JSON object
-//        $values = '{';
-//        // Iterate over selected rows to generate fake data for each field
-//        foreach ($selectedRows as $key => $selectedRow) {
-//            $originalFieldName = $selectedRow['field'];
-//            $values .= '"' . $originalFieldName . '":';
-//            // Process field name and generate fake value based on field specifications
-//            $field = $this->processFieldName($selectedRow['field']);
-//            $dbType = $selectedRow['type'];
-//            list($type, $length) = $this->parseDatabaseType($dbType);
-//            $fieldFakerStatement = $this->generateValueFromFieldName($faker, $field, $length);
-//
-//            $customFieldValue = $this->checkForCustomFieldNameGeneration($field, $faker);
-//            if ($customFieldValue !== 'nothing') {
-//                $fieldFakerStatement = $customFieldValue;
-//            }
-//
-//            //echo 'Field Faker Statement for : ' . $field. ' ='.$fieldFakerStatement;
-//            // If no specific Faker statement is available, generate value based on field type
-//            if ($fieldFakerStatement == "nothing") {
-//                $typeFakerStatement = $this->generateValueFromType($faker, $type, $length);
-//                $values .= $typeFakerStatement;
-//            } else {
-//                $values .= $fieldFakerStatement;
-//            }
-//
-//            // Check if the current element is the last one in the array
-//            if ($key === array_key_last($selectedRows)) {
-//                $values .= '}';
-//            } else {
-//                $values .= ',';
-//            }
-//
-//        }
-//
-//        // Decode the JSON object into an associative array
-//        $newValuesArray = $values; //json_decode($values, true);
-//
-//
-//        // Insert the generated data into the specified table using the model's insert method
-//        try {
-//
-//            return $this->model->insert($newValuesArray, $selectedTable);
-//        } catch (Exception $e) {
-//            echo 'Failed This is the NewValuesArray  ', $newValuesArray;
-//            return $e->getMessage();
-//        }
-//
-//    }
+
 }

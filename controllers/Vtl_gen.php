@@ -156,7 +156,7 @@ class Vtl_gen extends Trongate
         $data['view_file'] = 'vtl_gen';
         $this->template('admin', $data);
     }
-    // Function to get images for display
+
 
     /**
      * @return array
@@ -169,10 +169,13 @@ class Vtl_gen extends Trongate
         return $tables;
     }
 
-    // Function to render delete index page
 
     /**
-     * @return array
+     * Get All Tables in the Database
+     *
+     * This function retrieves the names of all tables in the database.
+     *
+     * @return array An array containing the names of all tables in the database.
      */
     private function getAllTables(): array
     {
@@ -189,6 +192,19 @@ class Vtl_gen extends Trongate
         return $tables;
     }
 
+
+    /**
+     * Execute SQL Query
+     *
+     * This function executes an SQL query and returns the result according to the specified return type.
+     *
+     * @param string      $sql          The SQL query to execute.
+     * @param string|null $return_type  An optional parameter specifying the desired return type.
+     *                                  Allowed values are 'object' for returning result objects,
+     *                                  'array' for returning result arrays, or null for no result type.
+     * @return mixed|null The result of the SQL query according to the specified return type,
+     *                                  or null if no result type is specified.
+     */
     public function vtlQuery(string $sql, ?string $return_type = null): mixed
     {
 
@@ -210,8 +226,19 @@ class Vtl_gen extends Trongate
         return null;
     }
 
-    // Function to setup tables for dropdown
 
+    /**
+     * Prepare and Execute SQL Statement
+     *
+     * This function prepares and executes an SQL statement with optional data bindings.
+     *
+     * @param string $sql  The SQL statement to prepare and execute.
+     * @param array  $data An optional array of data to bind to parameters in the SQL statement.
+     *                     If named parameters are used in the SQL, $data should be an associative array
+     *                     where keys correspond to parameter names. If positional parameters are used,
+     *                     $data should be a sequential array where values correspond to parameter values.
+     * @return bool True if the statement execution was successful, false otherwise.
+     */
     public function VtlPrepareAndExecute(string $sql, array $data = []): bool
     {
         try {
@@ -285,8 +312,13 @@ class Vtl_gen extends Trongate
     }
 
     /**
+     * Delete Index
+     *
+     * This function prepares the data necessary for deleting indexes from a database table.
+     * It gathers the available tables and their index information, sets up the view data,
+     * and renders the appropriate template.
+     *
      * @return void
-     * @throws Exception
      */
     public function deleteIndex(): void
     {
@@ -298,7 +330,12 @@ class Vtl_gen extends Trongate
     }
 
     /**
-     * @return array
+     * Get All Tables and Their Indexes
+     *
+     * This function retrieves all tables in the database and their corresponding index information.
+     * It collects the index data for each table and returns it as an array.
+     *
+     * @return array An array containing tables and their index information.
      */
     private function getAllTablesAndTheirIndexes(): array
     {
@@ -358,8 +395,13 @@ class Vtl_gen extends Trongate
     }
 
     /**
+     * Create Index
+     *
+     * This function prepares the data necessary for creating an index on a database table.
+     * It gathers information about available tables and their columns, sets up the view data,
+     * and renders the appropriate template.
+     *
      * @return void
-     * @throws Exception
      */
     public function createIndex(): void
     {
@@ -372,8 +414,13 @@ class Vtl_gen extends Trongate
     }
 
     /**
+     * Delete Data
+     *
+     * This function prepares the data necessary for deleting entries from a database table.
+     * It gathers the available tables for the database admin, sets up the view data,
+     * and renders the appropriate template.
+     *
      * @return void
-     * @throws Exception
      */
     public function deleteData(): void
     {
@@ -394,8 +441,13 @@ class Vtl_gen extends Trongate
     }
 
     /**
+     * Export
+     *
+     * This function prepares the data necessary for exporting a database table.
+     * It gathers the available tables for the database admin, sets up the view data,
+     * and renders the appropriate template.
+     *
      * @return void
-     * @throws Exception
      */
     public function export(): void
     {
@@ -406,8 +458,13 @@ class Vtl_gen extends Trongate
     }
 
     /**
+     * Show Data
+     *
+     * This function retrieves and displays data from a selected table. It extracts the table name
+     * from the query parameters or session, ensures the user is authorized, retrieves the data,
+     * and then displays it with pagination.
+     *
      * @return void
-     * @throws ReflectionException
      */
     public function showData(): void
     {
@@ -424,29 +481,30 @@ class Vtl_gen extends Trongate
 
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
-       
+
         $rows = $this->vtlGet(target_tbl: $selectedDataTable);
+        $paginationRoot = 'vtl_gen/showData';
+        $selectedTable = $selectedDataTable;
+        $headline = 'Vtl Data Generator: Show Data';
+        $noDataMessage = 'There is no data to display from the table ' . $selectedDataTable;
+        $this->showRowData($rows, $paginationRoot, $selectedTable, $headline, $noDataMessage);
 
-
-        $pagination_data['total_rows'] = count($rows);
-        $pagination_data['page_num_segment'] = 3;
-        $pagination_data['limit'] = $this->_get_limit();
-        $pagination_data['pagination_root'] = 'vtl_gen/showData';
-        $pagination_data['record_name_plural'] = $selectedDataTable;
-        $pagination_data['include_showing_statement'] = true;
-
-
-        $data['rows'] = $this->_reduce_rows($rows);
-        $data['pagination_data'] = $pagination_data;
-        $data['selected_per_page'] = $this->_get_selected_per_page();
-        $data['per_page_options'] = $this->per_page_options;
-
-        //finally pass this to a view.
-        $data['view_module'] = 'vtl_gen';
-        $data['view_file'] = 'showdata';
-        $this->template('admin', $data);
     }
 
+    /**
+     * Retrieve Data from a Specified Table
+     *
+     * This function retrieves data from a specified database table with optional ordering,
+     * limiting, and offsetting. It also determines the primary key field for ordering
+     * if an order_by column is not provided.
+     *
+     * @param string|null $order_by   The column to order the results by. Defaults to the primary key if not specified.
+     * @param string|null $target_tbl The name of the table to retrieve data from.
+     * @param int|null    $limit      The maximum number of rows to retrieve. Optional.
+     * @param int         $offset     The number of rows to skip before starting to retrieve rows. Defaults to 0.
+     *
+     * @return array An array of objects representing the retrieved rows.
+     */
     protected function vtlGet(?string $order_by = null, ?string $target_tbl = null, ?int $limit = null, int $offset = 0): array
     {
 
@@ -491,6 +549,40 @@ class Vtl_gen extends Trongate
         }
 
         return $sql;
+    }
+
+    /**
+     * Display row data with pagination and various configuration options.
+     *
+     * @param array  $rows           Array of rows to be displayed.
+     * @param string $paginationRoot The root URL for pagination links.
+     * @param string $selectedTable  The name of the selected table, used for display purposes.
+     * @param string $headline       The headline text to be displayed.
+     * @param string $noDataMessage  The message to be displayed when there is no data.
+     *
+     * @return void
+     */
+    private function showRowData(array $rows, string $paginationRoot, string $selectedTable, string $headline, string $noDataMessage): void
+    {
+        $pagination_data['total_rows'] = count($rows);
+        $pagination_data['page_num_segment'] = 3;
+        $pagination_data['limit'] = $this->_get_limit();
+        $pagination_data['pagination_root'] = $paginationRoot;
+        $pagination_data['record_name_plural'] = $selectedTable;
+        $pagination_data['include_showing_statement'] = true;
+
+
+        $data['rows'] = $this->_reduce_rows($rows);
+        $data['pagination_data'] = $pagination_data;
+        $data['selected_per_page'] = $this->_get_selected_per_page();
+        $data['per_page_options'] = $this->per_page_options;
+
+        //finally pass this to a view.
+        $data['headline'] = $headline;
+        $data['noDataMessage'] = $noDataMessage;
+        $data['view_module'] = 'vtl_gen';
+        $data['view_file'] = 'showdata';
+        $this->template('admin', $data);
     }
 
     /**
@@ -561,6 +653,74 @@ class Vtl_gen extends Trongate
         }
 
         return $selected_per_page;
+    }
+
+    public function dropDatatable()
+    {
+
+        $sql = 'SELECT 
+           referenced_table_name AS \'referenced\' 
+        FROM 
+            information_schema.key_column_usage 
+        WHERE 
+            referenced_table_name IS NOT NULL 
+        AND 
+            table_schema = \'' . DATABASE . '\'';
+
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+
+        $referencedTables = $this->vtlQuery($sql, 'array');
+
+        $allTables = $this->setupTablesForDatabaseAdmin();
+
+        // Extracting only the table names from $referencedTables array
+        $referencedTableNames = array_column($referencedTables, 'referenced');
+
+        // Filtering out referenced tables from the list of all tables
+        $tablesToDrop = array_diff($allTables, $referencedTableNames);
+
+        // Now $tablesToDrop contains the list of tables that can be safely dropped
+
+        $data['tables'] = $tablesToDrop;
+        $data['view_module'] = 'vtl_gen';
+        $data['view_file'] = 'dropTable';
+        $this->template('admin', $data);
+    }
+
+    /**
+     * Show Foreign Keys
+     *
+     * This function retrieves foreign key information from the database and displays it.
+     * It runs a SQL query to gather foreign key details, checks security permissions,
+     * and then displays the results using a pagination system.
+     *
+     * @return void
+     */
+    public function showForeignKeys(): void
+    {
+        // Run the query to collect the information
+        $sql = 'SELECT 
+            CONCAT(table_name, \'.\', column_name) AS \'foreign key\', 
+            CONCAT(referenced_table_name, \'.\', referenced_column_name) AS \'references\', 
+            constraint_name AS \'constraint name\' 
+        FROM 
+            information_schema.key_column_usage 
+        WHERE 
+            referenced_table_name IS NOT NULL 
+        AND 
+            table_schema = \'' . DATABASE . '\'';
+
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+
+        $rows = $this->vtlQuery($sql, 'array');
+        $paginationRoot = 'vtl_gen/showForeignKeys';
+        $selectedTable = 'Foreign Keys';
+        $headline = 'Vtl Data Generator: Foreign Keys in Database';
+        $noDataMessage = 'There are currently no foreign keys in the database: ' . DATABASE;
+        $this->showRowData($rows, $paginationRoot, $selectedTable, $headline, $noDataMessage);
+
     }
 
     /**
