@@ -5,7 +5,7 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
 /**
  *
  */
-class Vtl_gen extends Trongate
+#[AllowDynamicProperties] class Vtl_gen extends Trongate
 {
     private string $host = HOST;
 
@@ -46,8 +46,6 @@ class Vtl_gen extends Trongate
         }
 
         $this->port = (defined('PORT') ? PORT : '3306');
-        //$this->current_module = $current_module;
-
         $dsn = 'mysql:host=' . $this->host . ';port=' . $this->port . ';dbname=' . $this->dbname;
         $options = array(
             PDO::ATTR_PERSISTENT => true,
@@ -56,9 +54,10 @@ class Vtl_gen extends Trongate
 
         try {
             $this->dbh = new PDO($dsn, $this->user, $this->pass, $options);
+
         } catch (PDOException $e) {
             $this->error = $e->getMessage();
-            echo $this->error;
+
             die();
         }
     }
@@ -457,6 +456,53 @@ class Vtl_gen extends Trongate
         $this->template('admin', $data);
     }
 
+
+    public function createForeignKey(): void
+    {
+        $data['tables'] = $this->setupTablesForDropdown();
+        $data['columnInfo'] = $this->getAllTablesAndTheirColumnData();
+        //$data['dropdownLabel'] = 'Tables in ' . DATABASE;
+        $data['view_module'] = 'vtl_gen';
+        $data['view_file'] = 'createforeignkey';
+        $this->template('admin', $data);
+    }
+
+    public function setForeignKey()
+    {
+        $rawPostData = file_get_contents('php://input');
+        $postData = json_decode($rawPostData, true);
+        $table1 = $postData['table1'];
+        $table2 = $postData['table2'];
+        $selectedField1 = $postData['selectedField1'];
+        $selectedField2 = $postData['selectedField2'];
+
+        // Define the query
+        $query = "ALTER TABLE `$table1` ADD CONSTRAINT `FK_{$table1}_{$table2}` FOREIGN KEY (`$selectedField1`) REFERENCES `$table2` (`$selectedField2`)";
+
+        // Execute the query and handle the result
+        try {
+            $result = $this->vtlQuery($query);
+
+            if ($result === FALSE) {
+                throw new Exception($e);
+            }
+
+            $response = [
+                'status' => 'success',
+                'message' => 'Foreign key constraint created successfully'
+            ];
+        } catch (Exception $e) {
+            $response = [
+                'status' => 'error',
+                'message' => 'Error creating foreign key constraint: ' . $e->getMessage()
+            ];
+        }
+
+        // Return JSON response
+        header('Content-Type: application/json');
+        echo json_encode($response);
+    }
+
     /**
      * Show Data
      *
@@ -655,7 +701,123 @@ class Vtl_gen extends Trongate
         return $selected_per_page;
     }
 
-    public function dropDatatable()
+    public function fetchLatestPkValues()
+    {
+        $rows = $this->showLatestPkValues();
+        $paginationRoot = 'vtl_gen/FetchLatestPkValues';
+        $selectedTable = 'LatestPrimary Key Values';
+        $headline = 'Vtl Data Generator: Latest Primary Key Values for Tables';
+        $noDataMessage = 'There are currently no tables in the database: ' . DATABASE . ' with any rows of data';
+        $this->showRowData($rows, $paginationRoot, $selectedTable, $headline, $noDataMessage);
+    }
+
+    protected function showLatestPkValues()
+    {
+        // Get all tables
+        $allTables = $this->setupTablesForDatabaseAdmin();
+        $tablesWithData = [];
+
+        foreach ($allTables as $table) {
+            $primaryKeyField = $this->getPrimaryKeyField($table);
+            if ($primaryKeyField && $this->tableHasRows($table)) {
+                $latestPkValue = $this->getLatestPkValue($table, $primaryKeyField);
+                $tablesWithData[] = [
+                    'table_name' => $table,
+                    'primary_key_field' => $primaryKeyField,
+                    'latest_pk_value' => $latestPkValue
+                ];
+            }
+        }
+
+        return $tablesWithData;
+
+    }
+
+    /**
+     * Get the primary key field for a table
+     *
+     * @param string $tableName
+     * @return string|null
+     */
+    private function getPrimaryKeyField($tableName)
+    {
+        $query = "SHOW KEYS FROM `$tableName` WHERE Key_name = 'PRIMARY'";
+
+        $stmt = $this->dbh->prepare($query);
+        if (!$stmt) {
+            $errorInfo = $this->dbh->errorInfo();
+            throw new Exception("Error preparing query '$query': " . $errorInfo[2]);
+        }
+
+        $success = $stmt->execute();
+        if (!$success) {
+            $errorInfo = $stmt->errorInfo();
+            throw new Exception("Error executing query '$query': " . $errorInfo[2]);
+        }
+
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$row) {
+            return null;
+        }
+
+        return $row['Column_name'];
+    }
+
+    /**
+     * Check if a table has any rows
+     *
+     * @param string $tableName
+     * @return bool
+     */
+    private function tableHasRows($tableName)
+    {
+        $query = "SELECT COUNT(*) as count FROM `$tableName`";
+
+        try {
+            $stmt = $this->dbh->query($query);
+            if (!$stmt) {
+                $errorInfo = $this->dbh->errorInfo();
+                throw new Exception("Error executing query '$query': " . $errorInfo[2]);
+            }
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row['count'] > 0;
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Get the latest primary key value for a table
+     *
+     * @param string $tableName
+     * @param string $primaryKeyField
+     * @return mixed
+     */
+    private function getLatestPkValue($tableName, $primaryKeyField)
+    {
+        $query = "SELECT `$primaryKeyField` FROM `$tableName` ORDER BY `$primaryKeyField` DESC LIMIT 1";
+
+        try {
+            $stmt = $this->dbh->query($query);
+            if (!$stmt) {
+                $errorInfo = $this->dbh->errorInfo();
+                throw new Exception("Error executing query '$query': " . $errorInfo[2]);
+            }
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            return $row ? $row[$primaryKeyField] : null;
+        } catch (Exception $e) {
+            throw $e;
+        }
+    }
+
+    /**
+     * Drops tables from the database that are not referenced by any foreign key constraint.
+     * Retrieves a list of tables from the database, identifies tables without foreign key constraints,
+     * and presents them for deletion.
+     *
+     * @return void
+     */
+    public function dropDatatable(): void
     {
 
         $sql = 'SELECT 

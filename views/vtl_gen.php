@@ -37,10 +37,12 @@
             <div class="grid-item">
                 <?php echo anchor('vtl_gen/deleteData', 'Delete Data', array("class" => "button")); ?>
             </div>
-            <div class="grid-item" id="showButton">
-                <button class="button" onclick="toggleDropdown()">Show Data</button>
+            <div class="grid-item">
+                <?php echo anchor('vtl_gen/fetchLatestPkValues', 'Latest Pk Values', array("class" => "button")); ?>
             </div>
-            <div class="grid-item"></div>
+            <div class="grid-item" id="showButton">
+                <button class="button" onclick="toggleDropdown()">Show Table Data</button>
+            </div>
 
             <!-- Group Title for Indexes -->
             <div class="grid-item index-heading" colspan="4">Index and Foreign Key Operations</div>
@@ -55,8 +57,9 @@
             <div class="grid-item">
                 <?php echo anchor('vtl_gen/showForeignKeys', 'Show Foreign Keys', array("class" => "button")); ?>
             </div>
-            <!-- Add two more buttons if needed, or leave these empty for now -->
-            <div class="grid-item"></div>
+            <div class="grid-item">
+                <?php echo anchor('vtl_gen/createForeignKey', 'Create Foreign Key', array("class" => "button")); ?>
+            </div>
 
 
             <!-- Group Title for Database Operations -->
