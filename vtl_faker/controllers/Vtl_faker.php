@@ -222,7 +222,8 @@ class Vtl_faker extends Trongate
         $selectedTable = $postData['selectedTable'];
 
         // Now retrieve the column info for the table and find the primary key field
-        $sql = 'SHOW COLUMNS IN ' . $target_tbl;
+        $sql = 'SHOW COLUMNS IN ' . $selectedTable;
+        $this->module('vtl_gen');
         $columns = $this->vtlQuery($sql, 'array');
         $field = '';
         foreach ($columns as $column) {
@@ -236,7 +237,7 @@ class Vtl_faker extends Trongate
 
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
-        $this->module('vtl_gen');
+
         $pictureData = $this->vtl_gen->vtlQuery($sql, 'object');
 
         // Check if there is at least one element in the array
