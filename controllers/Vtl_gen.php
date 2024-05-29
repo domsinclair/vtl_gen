@@ -633,72 +633,76 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
         $this->module('trongate_security');
         $this->trongate_security->_make_sure_allowed();
 
-        $rows = $this->vtlGet(target_tbl: $selectedDataTable);
+        $rows = $this->pdoGet(target_tbl: $selectedDataTable);
         $headline = 'Vtl Data Generator: Show Data';
         $noDataMessage = 'There is no data to display from the table ' . $selectedDataTable;
-        $this->showRowData($rows, $headline, $noDataMessage);
+        $dateFormats = ['date' => 'DATE_SHORT', 'datetime' => 'DATETIME_SHORT'];
+        $this->showRowData($rows, $headline, $noDataMessage, $dateFormats);
 
     }
 
-    /**
-     * Retrieve Data from a Specified Table
-     *
-     * This function retrieves data from a specified database table with optional ordering,
-     * limiting, and offsetting. It also determines the primary key field for ordering
-     * if an order_by column is not provided.
-     *
-     * @param string|null $order_by   The column to order the results by. Defaults to the primary key if not specified.
-     * @param string|null $target_tbl The name of the table to retrieve data from.
-     * @param int|null    $limit      The maximum number of rows to retrieve. Optional.
-     * @param int         $offset     The number of rows to skip before starting to retrieve rows. Defaults to 0.
-     *
-     * @return array An array of objects representing the retrieved rows.
-     */
-    protected function vtlGet(?string $order_by = null, ?string $target_tbl = null, ?int $limit = null, int $offset = 0): array
+    protected function pdoGet(?string $order_by = null, ?string $target_tbl = null, ?int $limit = null, int $offset = 0): array
     {
+        if (is_null($target_tbl)) {
+            throw new InvalidArgumentException('Target table cannot be null');
+        }
 
+        // Create the base SQL query
+        $sql = "SELECT * FROM $target_tbl";
 
-        // Now retrieve the column info for the table and find the primary key field
-        $sql = 'SHOW COLUMNS IN ' . $target_tbl;
-        $columns = $this->vtlQuery($sql, 'array');
-        $field = '';
-        foreach ($columns as $column) {
-            if ($column['Key'] == 'PRI') {
-                $field = $column['Field'];
+        // Add ORDER BY clause
+        if (!is_null($order_by)) {
+            $sql .= " ORDER BY $order_by";
+        } else {
+            // If no order_by is provided, order by the primary key
+            $primary_key = $this->getPrimaryKey($target_tbl);
+            if ($primary_key) {
+                $sql .= " ORDER BY $primary_key";
             }
         }
-        $order_by = $order_by ?? $field;
-
-
-        // Build the base SQL query
-        $sql = "SELECT * FROM $target_tbl ORDER BY $order_by";
 
         // Add LIMIT and OFFSET if provided
         if (!is_null($limit)) {
-            settype($limit, 'int');
-            settype($offset, 'int');
-            $sql = $this->addLimitOffset($sql, $limit, $offset);
+            $sql .= " LIMIT :limit OFFSET :offset";
+        }
+
+        // Prepare the SQL statement
+        $stmt = $this->dbh->prepare($sql);
+
+        // Bind parameters if limit is provided
+        if (!is_null($limit)) {
+            $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
         }
 
 
-        // Prepare and execute the query
-        $stmt = $this->dbh->prepare($sql);
+        // Execute the query
         $stmt->execute();
 
-        // Fetch and return the results
+        // Fetch all rows
         $rows = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+
         return $rows;
     }
 
-    private function addLimitOffset(string $sql, ?int $limit, ?int $offset): string
+
+    protected function getPrimaryKey(string $table): ?string
     {
-        if ((is_numeric($limit)) && (is_numeric($offset))) {
-            $limit_results = true;
-            $sql .= " LIMIT $offset, $limit";
+        $sql = 'SHOW COLUMNS FROM ' . $table;
+        $stmt = $this->dbh->query($sql);
+        $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($columns as $column) {
+            if ($column['Key'] === 'PRI') {
+                return $column['Field'];
+            }
         }
 
-        return $sql;
+        return null;
     }
+
+// Helper method to get the primary key of a table
 
     /**
      * Display row data with pagination and various configuration options.
@@ -711,35 +715,16 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
      *
      * @return void
      */
-    private function showRowData(array $rows, string $headline, string $noDataMessage): void
+    private function showRowData(array $rows, string $headline, string $noDataMessage, array $dateFormats = ['date' => 'DATE_MED', 'datetime' => 'DATETIME_MED']): void
     {
 
-
-        $data['rows'] = $this->_reduce_rows($rows);
-
-
-        //finally pass this to a view.
+        $data['rows'] = $rows;
         $data['headline'] = $headline;
         $data['noDataMessage'] = $noDataMessage;
+        $data['dateFormats'] = $dateFormats; // Add this line to pass formats to the view
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'showdata';
         $this->template('admin', $data);
-    }
-
-    /**
-     * Get the limit for pagination.
-     *
-     * @return int Limit for pagination.
-     */
-    function _get_limit(): int
-    {
-        if (isset($_SESSION['selected_per_page'])) {
-            $limit = $this->per_page_options[$_SESSION['selected_per_page']];
-        } else {
-            $limit = $this->default_limit;
-        }
-
-        return $limit;
     }
 
     /**
@@ -783,6 +768,22 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
     }
 
     /**
+     * Get the limit for pagination.
+     *
+     * @return int Limit for pagination.
+     */
+    function _get_limit(): int
+    {
+        if (isset($_SESSION['selected_per_page'])) {
+            $limit = $this->per_page_options[$_SESSION['selected_per_page']];
+        } else {
+            $limit = $this->default_limit;
+        }
+
+        return $limit;
+    }
+
+    /**
      * @return int|mixed
      */
     function _get_selected_per_page()
@@ -799,11 +800,10 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
     public function fetchLatestPkValues()
     {
         $rows = $this->showLatestPkValues();
-        $paginationRoot = 'vtl_gen/FetchLatestPkValues';
-        $selectedTable = 'LatestPrimary Key Values';
         $headline = 'Vtl Data Generator: Latest Primary Key Values for Tables';
         $noDataMessage = 'There are currently no tables in the database: ' . DATABASE . ' with any rows of data';
-        $this->showRowData($rows, $paginationRoot, $selectedTable, $headline, $noDataMessage);
+        $dateFormats = ['date' => 'DATE_SHORT', 'datetime' => 'DATETIME_SHORT'];
+        $this->showRowData($rows, $headline, $noDataMessage, $dateFormats);
     }
 
     protected function showLatestPkValues()
@@ -817,9 +817,9 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
             if ($primaryKeyField && $this->tableHasRows($table)) {
                 $latestPkValue = $this->getLatestPkValue($table, $primaryKeyField);
                 $tablesWithData[] = [
-                    'table_name' => $table,
-                    'primary_key_field' => $primaryKeyField,
-                    'latest_pk_value' => $latestPkValue
+                    'tableName' => $table,
+                    'primaryKeyField' => $primaryKeyField,
+                    'latestPkValue' => $latestPkValue
                 ];
             }
         }
@@ -976,6 +976,16 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
             return $matches[1];
         }
         return $type; // Return the original type if no match
+    }
+
+    private function addLimitOffset(string $sql, ?int $limit, ?int $offset): string
+    {
+        if ((is_numeric($limit)) && (is_numeric($offset))) {
+            $limit_results = true;
+            $sql .= " LIMIT $offset, $limit";
+        }
+
+        return $sql;
     }
 
     /**

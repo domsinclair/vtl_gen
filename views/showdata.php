@@ -1,3 +1,5 @@
+<?php echo json($data); ?>
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -9,6 +11,8 @@
     <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/tabulator.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/tabulator_midnight.css">
     <script type="text/javascript" src="<?= BASE_URL ?>vtl_gen_module/js/tabulator.js"
+    "></script>
+    <script type="text/javascript" src="<?= BASE_URL ?>vtl_gen_module/js/luxon.min.js"
     "></script>
     <title>Vtl_Generator_ShowData</title>
 </head>
@@ -23,16 +27,54 @@
 
 
 </section>
+
+
 <script>
+
     var tableData = <?php echo json_encode($rows); ?>;
+    var dump
+    (tableData);
+    var dateFormats = <?php echo json_encode($dateFormats); ?>;
+    var noDataMessage = "<?= $noDataMessage ?>";
 
     document.addEventListener('DOMContentLoaded', function () {
+        // Date formatter function
+        function dateFormatter(cell, formatterParams, onRendered) {
+            var value = cell.getValue();
+            var dateTime = luxon.DateTime.fromISO(value);
+            if (dateTime.isValid) {
+                // Use dynamic format based on value type
+                var format = value.includes("T") ? luxon.DateTime[dateFormats.datetime] : luxon.DateTime[dateFormats.date];
+                return dateTime.toLocaleString(format);
+            }
+            return value;
+        }
+
+        // Function to determine if a string is a valid ISO date or datetime
+        function isISODateString(value) {
+            var dateTime = luxon.DateTime.fromISO(value);
+            return dateTime.isValid;
+        }
+
+        // Generate columns dynamically based on the first row of data
+        var columns = Object.keys(tableData[0] || {}).map(field => {
+            return {
+                title: field.charAt(0).toUpperCase() + field.slice(1),
+                field: field,
+                sorter: isISODateString(tableData[0][field]) ? "date" : "string",
+                formatter: isISODateString(tableData[0][field]) ? dateFormatter : undefined
+            };
+        });
+
+        // Create Tabulator table
         var table = new Tabulator("#datatable", {
             data: tableData,
-            autoColumns: true,
+            columns: columns,
             layout: "fitColumns",
             pagination: true,
-            paginationSize: 20
+            paginationSize: 20,
+            autoColumns: false, // We handle columns manually
+            placeholder: noDataMessage
         });
     });
 </script>
