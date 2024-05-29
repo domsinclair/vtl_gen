@@ -6,6 +6,10 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/vtl.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/tabulator.css">
+    <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/tabulator_midnight.css">
+    <script type="text/javascript" src="<?= BASE_URL ?>vtl_gen_module/js/tabulator.js"
+    "></script>
     <title>Vtl_Generator_ShowData</title>
 </head>
 <body>
@@ -15,50 +19,23 @@
         <div class="flex" style="margin-bottom: 15px">
             <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
         </div>
-        <section>
-            <div>
-                <?php echo Pagination::display($pagination_data); ?>
-            </div>
-        </section>
+        <div id="datatable"></div
 
 
-        <?php
-        // Check if rows data exists and has rows
-        if (!empty($rows)) {
-            ?>
-
-            <table>
-                <thead>
-                <tr>
-                    <?php foreach (array_keys((array)$data['rows'][0]) as $header): ?>
-                        <th><?= $header ?></th>
-                    <?php endforeach; ?>
-                </tr>
-                </thead>
-                <tbody>
-                <?php foreach ($data['rows'] as $row): ?>
-                    <tr>
-                        <?php foreach ($row as $value): ?>
-                            <td><?= $value ?></td>
-                        <?php endforeach; ?>
-                    </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
-
-
-            <?php
-            if (count($rows) > 9) {
-                unset($pagination_data['include_showing_statement']);
-                echo Pagination::display($pagination_data);
-            }
-        } else {
-//            echo "There is no data in the table that you selected.";
-            echo $noDataMessage;
-        }
-        ?>
-    </div>
 </section>
+<script>
+    var tableData = <?php echo json_encode($rows); ?>;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var table = new Tabulator("#datatable", {
+            data: tableData,
+            autoColumns: true,
+            layout: "fitColumns",
+            pagination: true,
+            paginationSize: 20
+        });
+    });
+</script>
 </body>
 </html>
 

@@ -634,11 +634,9 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
         $this->trongate_security->_make_sure_allowed();
 
         $rows = $this->vtlGet(target_tbl: $selectedDataTable);
-        $paginationRoot = 'vtl_gen/showData';
-        $selectedTable = $selectedDataTable;
         $headline = 'Vtl Data Generator: Show Data';
         $noDataMessage = 'There is no data to display from the table ' . $selectedDataTable;
-        $this->showRowData($rows, $paginationRoot, $selectedTable, $headline, $noDataMessage);
+        $this->showRowData($rows, $headline, $noDataMessage);
 
     }
 
@@ -713,20 +711,12 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
      *
      * @return void
      */
-    private function showRowData(array $rows, string $paginationRoot, string $selectedTable, string $headline, string $noDataMessage): void
+    private function showRowData(array $rows, string $headline, string $noDataMessage): void
     {
-        $pagination_data['total_rows'] = count($rows);
-        $pagination_data['page_num_segment'] = 3;
-        $pagination_data['limit'] = $this->_get_limit();
-        $pagination_data['pagination_root'] = $paginationRoot;
-        $pagination_data['record_name_plural'] = $selectedTable;
-        $pagination_data['include_showing_statement'] = true;
 
 
         $data['rows'] = $this->_reduce_rows($rows);
-        $data['pagination_data'] = $pagination_data;
-        $data['selected_per_page'] = $this->_get_selected_per_page();
-        $data['per_page_options'] = $this->per_page_options;
+
 
         //finally pass this to a view.
         $data['headline'] = $headline;
