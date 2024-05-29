@@ -1,5 +1,3 @@
-<?php echo json($data); ?>
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -32,23 +30,15 @@
 <script>
 
     var tableData = <?php echo json_encode($rows); ?>;
-    var dump
-    (tableData);
-    var dateFormats = <?php echo json_encode($dateFormats); ?>;
     var noDataMessage = "<?= $noDataMessage ?>";
 
     document.addEventListener('DOMContentLoaded', function () {
         // Date formatter function
+        // Date formatter function
         function dateFormatter(cell, formatterParams, onRendered) {
-            var value = cell.getValue();
-            var dateTime = luxon.DateTime.fromISO(value);
-            if (dateTime.isValid) {
-                // Use dynamic format based on value type
-                var format = value.includes("T") ? luxon.DateTime[dateFormats.datetime] : luxon.DateTime[dateFormats.date];
-                return dateTime.toLocaleString(format);
-            }
-            return value;
+            return cell.getValue(); // Return the value without any formatting
         }
+
 
         // Function to determine if a string is a valid ISO date or datetime
         function isISODateString(value) {

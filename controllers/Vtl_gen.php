@@ -636,8 +636,7 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
         $rows = $this->pdoGet(target_tbl: $selectedDataTable);
         $headline = 'Vtl Data Generator: Show Data';
         $noDataMessage = 'There is no data to display from the table ' . $selectedDataTable;
-        $dateFormats = ['date' => 'DATE_SHORT', 'datetime' => 'DATETIME_SHORT'];
-        $this->showRowData($rows, $headline, $noDataMessage, $dateFormats);
+        $this->showRowData($rows, $headline, $noDataMessage);
 
     }
 
@@ -715,13 +714,12 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
      *
      * @return void
      */
-    private function showRowData(array $rows, string $headline, string $noDataMessage, array $dateFormats = ['date' => 'DATE_MED', 'datetime' => 'DATETIME_MED']): void
+    private function showRowData(array $rows, string $headline, string $noDataMessage): void
     {
 
         $data['rows'] = $rows;
         $data['headline'] = $headline;
         $data['noDataMessage'] = $noDataMessage;
-        $data['dateFormats'] = $dateFormats; // Add this line to pass formats to the view
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'showdata';
         $this->template('admin', $data);
@@ -802,8 +800,7 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
         $rows = $this->showLatestPkValues();
         $headline = 'Vtl Data Generator: Latest Primary Key Values for Tables';
         $noDataMessage = 'There are currently no tables in the database: ' . DATABASE . ' with any rows of data';
-        $dateFormats = ['date' => 'DATE_SHORT', 'datetime' => 'DATETIME_SHORT'];
-        $this->showRowData($rows, $headline, $noDataMessage, $dateFormats);
+        $this->showRowData($rows, $headline, $noDataMessage);
     }
 
     protected function showLatestPkValues()
