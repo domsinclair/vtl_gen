@@ -21,6 +21,7 @@
 </head>
 
 <body>
+
 <h2 class="text-center">Vtl Data Generator: Navigation and Help</h2>
 <section>
     <div class="container">
@@ -69,6 +70,9 @@
             <div class="grid-item dbase-heading" colspan="4">Database Operations</div>
 
             <!-- Database Operation Buttons -->
+            <!--            <div class="grid-item">-->
+            <!--                --><?php //echo anchor('vtl_gen/createDatatable', 'Create Table', array("class" => "button")); ?>
+            <!--            </div>-->
             <div class="grid-item">
                 <?php echo anchor('vtl_gen/dropDatatable', 'Drop Table', array("class" => "button")); ?>
             </div>

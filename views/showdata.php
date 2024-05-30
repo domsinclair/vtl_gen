@@ -15,7 +15,7 @@
     <title>Vtl_Generator_ShowData</title>
 </head>
 <body>
-<h2 class="text-center"><?= $headline ?></h2>
+<h2 class="container, text-center"><?= $headline ?></h2>
 <section>
     <div class="container">
         <div class="flex" style="margin-bottom: 15px">
@@ -61,8 +61,10 @@
             data: tableData,
             columns: columns,
             layout: "fitColumns",
+            responsiveLayout: "hide",
             pagination: true,
             paginationSize: 20,
+            paginationCounter: "pages",
             autoColumns: false, // We handle columns manually
             placeholder: noDataMessage
         });

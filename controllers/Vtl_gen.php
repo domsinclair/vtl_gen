@@ -156,7 +156,6 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
         $this->template('admin', $data);
     }
 
-
     /**
      * @return array
      */
@@ -167,7 +166,6 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
         $tables = array_merge($starterArray, $tables);
         return $tables;
     }
-
 
     /**
      * Get All Tables in the Database
@@ -190,7 +188,6 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
 
         return $tables;
     }
-
 
     /**
      * Execute SQL Query
@@ -224,7 +221,6 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
         // Return null for cases where no result type is expected
         return null;
     }
-
 
     /**
      * Prepare and Execute SQL Statement
@@ -281,6 +277,14 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
             default:
                 return PDO::PARAM_STR;
         }
+    }
+
+    public function createDatatable(): void
+    {
+        $data['headline'] = 'Vtl Data Generator: CreateTable';
+        $data['view_module'] = 'vtl_gen';
+        $data['view_file'] = 'createtable';
+        $this->template('admin', $data);
     }
 
     public function customiseFaker()
@@ -954,11 +958,10 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
     public function showForeignKeys(): void
     {
         $rows = $this->getForeignKeysFromDatabase();
-        $paginationRoot = 'vtl_gen/showForeignKeys';
-        $selectedTable = 'Foreign Keys';
+
         $headline = 'Vtl Data Generator: Foreign Keys in Database';
         $noDataMessage = 'There are currently no foreign keys in the database: ' . DATABASE;
-        $this->showRowData($rows, $paginationRoot, $selectedTable, $headline, $noDataMessage);
+        $this->showRowData($rows, $headline, $noDataMessage);
 
     }
 
