@@ -64,6 +64,8 @@
             responsiveLayout: "hide",
             pagination: true,
             paginationSize: 20,
+            // paginationSizeSelector: [10, 20, 30, 40],
+            movableColumns: true,
             paginationCounter: "pages",
             autoColumns: false, // We handle columns manually
             placeholder: noDataMessage
