@@ -425,6 +425,13 @@ figcaption {
     text-align: center !important;
 }
 
+.button {
+    border-radius: 10px;
+}
+
+button {
+    border-radius: 10px;
+}
 
 h1 {
     color: var(--color-fg);

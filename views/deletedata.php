@@ -87,8 +87,8 @@
         var xhr = new XMLHttpRequest();
 
         // Specify the PHP file or endpoint to handle the data
-        var targetUrl = '<?= BASE_URL ?>vtl_gen-vtl_faker/clearData';  // Adjust the URL accordingly
-        console.log(targetUrl);
+        var targetUrl = '<?= BASE_URL ?>vtl_gen-vtl_faker/clearData';
+
         // Open a POST request to the specified URL
         xhr.open('POST', targetUrl, true);
 
@@ -103,7 +103,7 @@
         //console.log(jsonData);
         // Define a callback function to handle the response
         xhr.onload = function () {
-            console.log(xhr.responseText);
+            
             if (xhr.status === 200) {
                 // Handle the response here
                 var response = xhr.responseText;

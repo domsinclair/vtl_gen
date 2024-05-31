@@ -40,14 +40,31 @@
 <section>
     <div class="container">
         <pre>
-    <code id="sqlCode" class="language-sql">
+            <code id="sqlCode" class="language-sql">
 
-    </code>
-</pre>
+             </code>
+        </pre>
+    </div>
+    <div class="container">
+        <div class="flex">
+            <button id="generate-table">Generate Table</button>
+            <button id="save-sql">Save SQL</button>
+            <button id="use-existing-sql">Use Existing SQL</button>
+            <!--            <button id="create-module">Create Module</button>-->
+        </div>
     </div>
 </section>
-
+<div class="modal" id="tableCreationModal" style="display: none">
+    <div id="modal_header" class="modal-heading">Table Creation</div>
+    <div class="modal-body">
+        <p id="the-response"></p>
+        <p class="text-center">
+            <button onclick="closeModal()" class="alt">Close</button>
+        </p>
+    </div>
+</div>
 <script>
+    var isSqlLoaded = false;
     document.addEventListener('DOMContentLoaded', function () {
         var table = new Tabulator("#datatable", {
             layout: "fitColumns",
@@ -153,8 +170,10 @@
             ]
         });
 
-        table.navigateNext();
 
+        setTimeout(function () {
+            table.addRow({nullable: true, unique: false});
+        }, 0);
 
         document.getElementById('add-row').addEventListener('click', function () {
             table.addRow({nullable: true, unique: false});
@@ -166,6 +185,16 @@
             var sql = generateSQLCreateStatement(tableName, tableData);
             document.getElementById('sqlCode').innerText = sql;
             Prism.highlightAll(); // Re-highlight the code block
+        });
+
+        // Add row above the double-clicked row
+        table.on("rowDblClick", function (e, row) {
+            var rowIndex = row.getPosition();
+            table.addRow({nullable: true, unique: false}, true, rowIndex);
+        });
+
+        table.on("tableBuilt", function () {
+            table.navigateNext();
         });
 
         function deleteIcon(cell, formatterParams, onRendered) {
@@ -232,9 +261,96 @@
             sql += '\n);';
             return sql;
         }
+
+        // Generate Table button functionality
+        document.getElementById('generate-table').addEventListener('click', function () {
+            var tableName = document.getElementById('table-name-input').value;
+            var tableData = table.getData();
+            var sql;
+            if (isSqlLoaded) {
+                // If SQL script is loaded, use the code block content
+                sql = document.getElementById('sqlCode').innerText;
+            } else {
+                // Otherwise, generate SQL statement from table data
+                sql = generateSQLCreateStatement(tableName, tableData);
+            }
+            var xhr = new XMLHttpRequest();
+            var targetUrl = '<?= BASE_URL ?>vtl_gen/createNewDataTable';
+            xhr.open('POST', targetUrl, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({sql: sql}));
+            xhr.onload = function () {
+                var targetEl = document.getElementById('the-response');
+                if (xhr.status === 200) {
+                    // Parse the JSON response
+                    var response = JSON.parse(xhr.responseText);
+                    openModal('tableCreationModal');
+                    if (response.status === 'success') {
+                        targetEl.innerHTML = `<p class="success-message">${response.message}</p>`;
+                    } else {
+                        targetEl.innerHTML = `<p class="error-message">${response.message}</p>`;
+                    }
+                } else {
+                    openModal('tableCreationModal');
+                    targetEl.innerHTML = `<p class="error-message">Error: ${xhr.status}</p>`;
+                }
+            };
+        });
+
+        // Save SQL button functionality
+        document.getElementById('save-sql').addEventListener('click', function () {
+            var tableName = document.getElementById('table-name-input').value;
+            var sql = document.getElementById('sqlCode').innerText;
+            var postData = {
+                tableName: tableName,
+                sql: sql
+            };
+            var xhr = new XMLHttpRequest();
+            var targetUrl = '<?= BASE_URL ?>vtl_gen/saveSqlDataTableCreationScript';
+            xhr.open('POST', targetUrl, true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify(postData));
+            xhr.onload = function () {
+                var targetEl = document.getElementById('the-response');
+                if (xhr.status === 200 && xhr.responseText) {
+                    var response = JSON.parse(xhr.responseText);
+                    openModal('tableCreationModal');
+                    if (response.status === 'success') {
+                        targetEl.innerHTML = `<p class="success-message">${response.message}</p>`;
+                    } else {
+                        targetEl.innerHTML = `<p class="error-message">${response.message}</p>`;
+                    }
+                } else {
+                    openModal('tableCreationModal');
+                    targetEl.innerHTML = `<p class="error-message">Error: ${xhr.status}</p>`;
+                }
+            };
+        });
+
+        // Use Existing SQL button functionality
+        document.getElementById('use-existing-sql').addEventListener('click', function () {
+            isSqlLoaded = false;
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.sql';
+            input.onchange = function (event) {
+                var file = event.target.files[0];
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('sqlCode').innerText = e.target.result;
+                    Prism.highlightAll(); // Re-highlight the code block
+                    isSqlLoaded = true;
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        });
+
     });
+
 </script>
 <script src="<?= BASE_URL ?>vtl_gen_module/js/prism.js"></script>
+<script src="<?= BASE_URL ?>js/app.js"></script>
 </body>
 </html>
 
@@ -277,4 +393,6 @@
     .custom-button-cross:hover {
         color: #37035c;
     }
+
+
 </style>

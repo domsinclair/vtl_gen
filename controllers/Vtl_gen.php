@@ -965,6 +965,80 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
 
     }
 
+    public function createNewDataTable(): void
+    {
+        // Retrieve raw POST data from the request body
+        $rawPostData = file_get_contents('php://input');
+
+        // Decode the JSON data into an associative array
+        $postData = json_decode($rawPostData, true);
+
+        // Extract relevant data from the decoded JSON
+        $sql = $postData['sql'];
+
+        // Initialize response array
+        $response = ['status' => '', 'message' => ''];
+
+        // Execute the SQL statement and handle any exceptions
+        try {
+            $this->dbh->exec($sql);
+            $response['status'] = 'success';
+            $response['message'] = 'Operation completed successfully.';
+        } catch (Exception $e) {
+            $response['status'] = 'error';
+            $response['message'] = 'Operation failed: ' . $e->getMessage();
+        }
+
+        // Return the response as JSON
+        header('Content-Type: application/json');
+        echo json_encode($response);
+    }
+
+    public function saveSqlDataTableCreationScript(): void
+    {
+        // Retrieve raw POST data from the request body
+        $rawPostData = file_get_contents('php://input');
+
+        // Decode the JSON data into an associative array
+        $postData = json_decode($rawPostData, true);
+
+        // Extract relevant data from the decoded JSON
+        $tableName = $postData['tableName'];
+        $sql = $postData['sql'];
+
+        // Initialize response array
+        $response = ['status' => '', 'message' => ''];
+        try {
+            $folderPath = __DIR__ . '/../assets/sqltablescripts';
+            if (is_dir($folderPath)) {
+                // we have a folder
+            } else {
+                if (mkdir($folderPath, 0777, true)) {
+                    // Creates the directory recursively if it doesn't exist
+                } else {
+                    echo "Failed to create folder!";
+                }
+            }
+            // Define the filename with the table name and .sql extension
+            $fileName = $folderPath . '/CreateTable_' . $tableName . '.sql';
+
+            // Save the SQL script to the file
+            if (file_put_contents($fileName, $sql) === false) {
+                throw new Exception("Failed to save SQL script to file!");
+            }
+
+            // Set the response status and message
+            $response['status'] = 'success';
+            $response['message'] = 'SQL script saved successfully.';
+        } catch (Exception $e) {
+            $response['status'] = 'error';
+            $response['message'] = $e->getMessage();
+        }
+        // Return the response as JSON
+        header('Content-Type: application/json');
+        echo json_encode($response);
+    }
+
     /**
      * @param $type
      * @return string
