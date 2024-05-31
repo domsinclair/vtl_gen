@@ -280,19 +280,22 @@
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send(JSON.stringify({sql: sql}));
             xhr.onload = function () {
-                var targetEl = document.getElementById('the-response');
                 if (xhr.status === 200) {
                     // Parse the JSON response
                     var response = JSON.parse(xhr.responseText);
-                    openModal('tableCreationModal');
                     if (response.status === 'success') {
-                        targetEl.innerHTML = `<p class="success-message">${response.message}</p>`;
+                        openModal('tableCreationModal');
+                        const targetEl = document.getElementById('the-response');
+                        targetEl.innerHTML = response.message;
                     } else {
-                        targetEl.innerHTML = `<p class="error-message">${response.message}</p>`;
+                        openModal('tableCreationModal');
+                        const targetEl = document.getElementById('the-response');
+                        targetEl.innerHTML = response.message;
                     }
                 } else {
                     openModal('tableCreationModal');
-                    targetEl.innerHTML = `<p class="error-message">Error: ${xhr.status}</p>`;
+                    const targetEl = document.getElementById('the-response');
+                    targetEl.innerHTML = response.message;
                 }
             };
         });
@@ -311,18 +314,21 @@
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send(JSON.stringify(postData));
             xhr.onload = function () {
-                var targetEl = document.getElementById('the-response');
                 if (xhr.status === 200 && xhr.responseText) {
                     var response = JSON.parse(xhr.responseText);
-                    openModal('tableCreationModal');
                     if (response.status === 'success') {
-                        targetEl.innerHTML = `<p class="success-message">${response.message}</p>`;
+                        openModal('tableCreationModal');
+                        const targetEl = document.getElementById('the-response');
+                        targetEl.innerHTML = response.message;
                     } else {
-                        targetEl.innerHTML = `<p class="error-message">${response.message}</p>`;
+                        openModal('tableCreationModal');
+                        const targetEl = document.getElementById('the-response');
+                        targetEl.innerHTML = response.message;
                     }
                 } else {
                     openModal('tableCreationModal');
-                    targetEl.innerHTML = `<p class="error-message">Error: ${xhr.status}</p>`;
+                    const targetEl = document.getElementById('the-response');
+                    targetEl.innerHTML = response.message;
                 }
             };
         });
