@@ -36,6 +36,8 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
     private $per_page_options = array(10, 20, 50, 100);
 
 
+    //region Constructor
+
     public function __construct()
     {
         parent::__construct();
@@ -61,27 +63,10 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
             die();
         }
     }
-// Function to check if daylight saving time is in effect
+    //endregion
 
-    /**
-     * @return bool
-     * @throws Exception
-     */
-    function isDaylightSavingTime()
-    {
-        $currentTime = time();
-        $timezone = new DateTimeZone(date_default_timezone_get());
-        $transition = $timezone->getTransitions($currentTime, $currentTime);
 
-        foreach ($transition as $t) {
-            if ($t['isdst'] == true) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
+    //region Index
 
     /**
      * Index function - renders the main page
@@ -129,32 +114,12 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
 
         // Get a list of all tables
         $data['tables'] = $this->setupTablesForDropdown();
-        // Construct file paths for markdown files
-        $filepathIntro = __DIR__ . '/../assets/help/help.md';
-
-
-        // Initialize Parsedown
-        $parsedown = new Parsedown();
-
-
-        // Open markdown files
-        $fileIntro = fopen($filepathIntro, 'r');
-
-
-        // Read markdown content and parse it
-        $markdownIntro = $parsedown->text(fread($fileIntro, filesize($filepathIntro)));
-
-
-        // Close markdown files
-        fclose($fileIntro);
-
-
-        // Store parsed markdown content in data array
-        $data['markdownIntro'] = $markdownIntro;
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'vtl_gen';
         $this->template('admin', $data);
     }
+
+    //endregion
 
     /**
      * @return array
@@ -166,6 +131,7 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
         $tables = array_merge($starterArray, $tables);
         return $tables;
     }
+    // Function to check if daylight saving time is in effect
 
     /**
      * Get All Tables in the Database
@@ -279,12 +245,174 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
         }
     }
 
+    //region Main HomePage Redirects
+
+
+    /**
+     * Displays the datatable creation view.
+     *
+     * This function sets the necessary data for the 'createtable' view,
+     * including the headline, view module, and view file, and then renders
+     * the template.
+     *
+     * @return void
+     */
     public function createDatatable(): void
     {
         $data['headline'] = 'Vtl Data Generator: CreateTable';
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'createtable';
         $this->template('admin', $data);
+    }
+
+    /**
+     * Displays the general help documentation.
+     *
+     * This function reads the markdown file located at '../assets/help/help.md',
+     * parses its content to HTML using Parsedown, and then sets the parsed content
+     * along with other necessary data to be used in the 'generalHelp' view.
+     *
+     * @return void
+     */
+    public function showGeneralHelp(): void
+    {
+
+        $filepathIntro = __DIR__ . '/../assets/help/help.md';
+        $parsedown = new Parsedown();
+        $fileIntro = fopen($filepathIntro, 'r');
+        $markdownIntro = $parsedown->text(fread($fileIntro, filesize($filepathIntro)));
+        fclose($fileIntro);
+        $data['headline'] = 'Vtl Data Generator: General Help';
+        $data['markdownIntro'] = $markdownIntro;
+        $data['view_module'] = 'vtl_gen';
+        $data['view_file'] = 'generalHelp';
+        $this->template('admin', $data);
+    }
+
+    /**
+     * Displays the customized Faker help documentation.
+     *
+     * This function reads the markdown file located at '../assets/help/customise.md',
+     * parses its content to HTML using Parsedown, and then sets the parsed content
+     * along with other necessary data to be used in the 'customisefaker' view.
+     *
+     * @return void
+     */
+    public function showCustomiseFakerHelp(): void
+    {
+        $filepathIntro = __DIR__ . '/../assets/help/customise.md';
+        $parsedown = new Parsedown();
+        $fileIntro = fopen($filepathIntro, 'r');
+        $markdownIntro = $parsedown->text(fread($fileIntro, filesize($filepathIntro)));
+        fclose($fileIntro);
+        $data['headline'] = 'Vtl Data Generator: Customise Faker';
+        $data['markdownCustomise'] = $markdownIntro;
+        $data['view_module'] = 'vtl_gen';
+        $data['view_file'] = 'customisefaker';
+        $this->template('admin', $data);
+    }
+
+    public function showPointsOfInterestHelp(): void
+    {
+        $filepathIntro = __DIR__ . '/../assets/help/pointsofinterest.md';
+        $parsedown = new Parsedown();
+        $fileIntro = fopen($filepathIntro, 'r');
+        $markdownIntro = $parsedown->text(fread($fileIntro, filesize($filepathIntro)));
+        fclose($fileIntro);
+        $data['headline'] = 'Vtl Data Generator: Points of Interest';
+        $data['markdownCustomise'] = $markdownIntro;
+        $data['view_module'] = 'vtl_gen';
+        $data['view_file'] = 'pointsofinterest';
+        $this->template('admin', $data);
+    }
+
+
+    /**
+     * Export
+     *
+     * This function prepares the data necessary for exporting a database table.
+     * It gathers the available tables for the database admin, sets up the view data,
+     * and renders the appropriate template.
+     *
+     * @return void
+     */
+    public function export(): void
+    {
+        $data['headline'] = 'Vtl Data Generator: Export Database';
+        $data['tables'] = $this->setupTablesForDatabaseAdmin();
+        $data['view_module'] = 'vtl_gen';
+        $data['view_file'] = 'export';
+        $this->template('admin', $data);
+    }
+
+    /**
+     * @return array
+     */
+    private function setupTablesForDatabaseAdmin(): array
+    {
+        $tables = $this->getAllTables();
+        $tables = array_merge($tables);
+        return $tables;
+    }
+    //endregion
+
+    /**
+     * Drops tables from the database that are not referenced by any foreign key constraint.
+     * Retrieves a list of tables from the database, identifies tables without foreign key constraints,
+     * and presents them for deletion.
+     *
+     * @return void
+     */
+    public function dropDatatable(): void
+    {
+
+        $sql = 'SELECT 
+           referenced_table_name AS \'referenced\' 
+        FROM 
+            information_schema.key_column_usage 
+        WHERE 
+            referenced_table_name IS NOT NULL 
+        AND 
+            table_schema = \'' . DATABASE . '\'';
+
+        $this->module('trongate_security');
+        $this->trongate_security->_make_sure_allowed();
+
+        $referencedTables = $this->vtlQuery($sql, 'array');
+
+        $allTables = $this->setupTablesForDatabaseAdmin();
+
+        // Extracting only the table names from $referencedTables array
+        $referencedTableNames = array_column($referencedTables, 'referenced');
+
+        // Filtering out referenced tables from the list of all tables
+        $tablesToDrop = array_diff($allTables, $referencedTableNames);
+
+        // Now $tablesToDrop contains the list of tables that can be safely dropped
+        $data['headline'] = 'Vtl Data Generator: Drop Table';
+        $data['tables'] = $tablesToDrop;
+        $data['view_module'] = 'vtl_gen';
+        $data['view_file'] = 'dropTable';
+        $this->template('admin', $data);
+    }
+
+    /**
+     * @return bool
+     * @throws Exception
+     */
+    function isDaylightSavingTime()
+    {
+        $currentTime = time();
+        $timezone = new DateTimeZone(date_default_timezone_get());
+        $transition = $timezone->getTransitions($currentTime, $currentTime);
+
+        foreach ($transition as $t) {
+            if ($t['isdst'] == true) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function customiseFaker()
@@ -298,16 +426,14 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
         // Open markdown files
         $fileCustomise = fopen($filepathCustomise, 'r');
 
-
         // Read markdown content and parse it
         $markdownCustomise = $parsedown->text(fread($fileCustomise, filesize($filepathCustomise)));
-
 
         // Close markdown files
         fclose($fileCustomise);
 
-
         // Store parsed markdown content in data array
+        $data['headline'] = 'Vtl Data Generator: Customising Fake Data';
         $data['markdownCustomise'] = $markdownCustomise;
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'customisefaker';
@@ -430,33 +556,6 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
         $data['tables'] = $this->setupTablesForDatabaseAdmin();
         $data['view_module'] = 'vtl_gen';
         $data['view_file'] = 'deletedata';
-        $this->template('admin', $data);
-    }
-
-    /**
-     * @return array
-     */
-    private function setupTablesForDatabaseAdmin(): array
-    {
-        $tables = $this->getAllTables();
-        $tables = array_merge($tables);
-        return $tables;
-    }
-
-    /**
-     * Export
-     *
-     * This function prepares the data necessary for exporting a database table.
-     * It gathers the available tables for the database admin, sets up the view data,
-     * and renders the appropriate template.
-     *
-     * @return void
-     */
-    public function export(): void
-    {
-        $data['tables'] = $this->setupTablesForDatabaseAdmin();
-        $data['view_module'] = 'vtl_gen';
-        $data['view_file'] = 'export';
         $this->template('admin', $data);
     }
 
@@ -906,45 +1005,6 @@ require_once __DIR__ . '/../assets/parsedown/Parsedown.php';
         }
     }
 
-    /**
-     * Drops tables from the database that are not referenced by any foreign key constraint.
-     * Retrieves a list of tables from the database, identifies tables without foreign key constraints,
-     * and presents them for deletion.
-     *
-     * @return void
-     */
-    public function dropDatatable(): void
-    {
-
-        $sql = 'SELECT 
-           referenced_table_name AS \'referenced\' 
-        FROM 
-            information_schema.key_column_usage 
-        WHERE 
-            referenced_table_name IS NOT NULL 
-        AND 
-            table_schema = \'' . DATABASE . '\'';
-
-        $this->module('trongate_security');
-        $this->trongate_security->_make_sure_allowed();
-
-        $referencedTables = $this->vtlQuery($sql, 'array');
-
-        $allTables = $this->setupTablesForDatabaseAdmin();
-
-        // Extracting only the table names from $referencedTables array
-        $referencedTableNames = array_column($referencedTables, 'referenced');
-
-        // Filtering out referenced tables from the list of all tables
-        $tablesToDrop = array_diff($allTables, $referencedTableNames);
-
-        // Now $tablesToDrop contains the list of tables that can be safely dropped
-
-        $data['tables'] = $tablesToDrop;
-        $data['view_module'] = 'vtl_gen';
-        $data['view_file'] = 'dropTable';
-        $this->template('admin', $data);
-    }
 
     /**
      * Show Foreign Keys

@@ -9,7 +9,7 @@
     <title>Vtl_Generator_DropTables</title>
 </head>
 <body>
-<h2 class="text-center">Vtl Data Generator: Drop Table</h2>
+<h2 class="container, text-center"><?= $headline ?></h2>
 <section>
     <div class="container">
         <div class="flex">

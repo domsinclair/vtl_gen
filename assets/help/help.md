@@ -217,13 +217,8 @@ The short answer is yes.
 
 For a more detailed answer click the button below.
 
-<div>
-<button onclick="window.location.href='vtl_gen/customiseFaker'">Customising Fake Data</button>
-</div>
-
-
-
 <br/>
+
 #### Inserting the Data
 
 Vtl_gen checks to see if the table that you have selected to have data generated for has an api associated with it. If

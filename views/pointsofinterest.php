@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/vtl.css">
     <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/prism.css">
-    <title>Vtl_Generator_Customise Fake Data</title>
+    <title>Vtl_Generator_Points of Interest</title>
 </head>
 <body>
 <h2 class="container, text-center"><?= $headline ?></h2>
@@ -29,4 +29,5 @@
 <script src="<?= BASE_URL ?>vtl_gen_module/js/prism.js"></script>
 </body>
 </html>
+
 

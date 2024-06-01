@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="color-scheme" content="dark light">
     <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/vtl.css">
-    <link rel="stylesheet" href="<?= BASE_URL ?>vtl_gen_module/css/prism.css">
+
     <title>Vtl_Generator</title>
     <style>
         .flex {
@@ -84,6 +84,20 @@
             <div class="grid-item"></div>
             <div class="grid-item"></div>
 
+            <!-- Group Title for Help Operations -->
+
+            <div class="grid-item help-heading" colspan="4">Help</div>
+
+            <div class="grid-item">
+                <?php echo anchor('vtl_gen/showGeneralHelp', 'General Help', array("class" => "button")); ?>
+            </div>
+            <div class="grid-item">
+                <?php echo anchor('vtl_gen/showCustomiseFakerHelp', 'Customise Faker', array("class" => "button")); ?>
+            </div>
+            <div class="grid-item">
+                <?php echo anchor('vtl_gen/showPointsOfInterestHelp', 'Interesting Points', array("class" => "button")); ?>
+            </div>
+
         </div>
 
 
@@ -108,22 +122,10 @@
                 ?>
             </div>
         </section>
-        <div class="container  text-center">
-            <h2>Help</h2>
-        </div>
 
-        <section>
-            <div class="container">
-                <div><?php echo $markdownIntro; ?></div>
-                <hr style="height:2px;border-width:0;color:gray;background-color:gray">
-            </div>
-        </section>
     </div>
 </section>
-<a href="#" class="back-to-top">
-    <span><img src="vtl_gen_module/help/images/vtluparrow.svg" </span>
-</a>
-<script src="<?= BASE_URL ?>vtl_gen_module/js/prism.js"></script>
+
 </body>
 </html>
 <script>
@@ -205,7 +207,7 @@
     /*    font-weight: bold;*/
     /*}*/
 
-    .data-heading, .index-heading, .dbase-heading {
+    .data-heading, .index-heading, .dbase-heading, .help-heading {
         grid-column: span 4; /* Span all 4 columns */
         color: #f0f0f0; /* Optional: Add a background color for the headings */
         text-align: center; /* Center the text in headings */

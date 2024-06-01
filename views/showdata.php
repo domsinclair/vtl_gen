@@ -22,7 +22,7 @@
             <?php echo anchor('vtl_gen', 'Back', array("class" => "button")); ?>
         </div>
         <div id="datatable"></div
-
+    </div>
 
 </section>
 
